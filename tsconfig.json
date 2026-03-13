@@ -1,0 +1,1 @@
+{\n  "compilerOptions": {\n    "target": "ES2020",\n    "strict": true,\n    "declaration": true\n  }\n}

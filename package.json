@@ -1,0 +1,1 @@
+{\n  "name": "D12WebX",\n  "version": "1.0.0",\n  "scripts": {\n    "build": "tsc",\n    "start": "node dist/index.js"\n  },\n  "dependencies": {\n    "typescript": "^4.5.0"\n  },\n  "devDependencies": {\n    "ts-node": "^10.0.0"\n  },\n  "main": "dist/index.js"\n}

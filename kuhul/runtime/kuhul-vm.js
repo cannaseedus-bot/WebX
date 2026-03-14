@@ -68,7 +68,8 @@ export class KuhulVM {
       switch (instr.opcode) {
         case 'ALLOC': {
           const [name, , shape] = instr.operands;
-          const size = Array.isArray(shape) ? shape.reduce((a, d) => a * (d === '?' ? 1 : d), 1) : 1;
+          const normDim = (d) => (d === '?' ? 1 : d);
+          const size = Array.isArray(shape) ? shape.reduce((a, d) => a * normDim(d), 1) : 1;
           const id   = mem.allocate(size);
           mem._names = mem._names ?? new Map();
           mem._names.set(name, id);

@@ -92,8 +92,11 @@ export class LLMOptimizer {
     const newTable = new Map(ir.symbolTable);
     for (const [name, type] of newTable) {
       if ((readCount.get(name) ?? 0) > 1) {
-        // Clone the type with a hot hint (symbolTable stores TensorType objects)
-        newTable.set(name, Object.assign(Object.create(Object.getPrototypeOf(type)), type, { hot: true }));
+        // Shallow-clone the TensorType instance and add a hot-path hint
+        const hotType = Object.create(Object.getPrototypeOf(type));
+        Object.assign(hotType, type);
+        hotType.hot = true;
+        newTable.set(name, hotType);
       }
     }
     return new GeometricIR(ir.instructions, newTable, ir.metadata);

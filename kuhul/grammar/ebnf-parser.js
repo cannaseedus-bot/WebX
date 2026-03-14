@@ -176,7 +176,9 @@ function parseTokens(tokens) {
     ) {
       items.push(parseTerm());
     }
-    return seq(items.length ? items : [seq([])]);
+    // Return a sequence of the collected items; an empty items array
+    // represents the epsilon (empty) alternative in EBNF.
+    return seq(items);
   }
 
   /** term = atom [ quantifier ] */

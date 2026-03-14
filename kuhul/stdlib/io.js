@@ -9,19 +9,6 @@
  */
 
 // ------------------------------------------------------------------ //
-// Optional Node.js imports (graceful fallback in browsers)
-// ------------------------------------------------------------------ //
-
-let fsPromises = null;
-try {
-  // Dynamic import avoids bundler errors in browser environments
-  const mod = await import('fs/promises');
-  fsPromises = mod;
-} catch (_) {
-  // Running in a browser or environment without Node.js fs
-}
-
-// ------------------------------------------------------------------ //
 // KuhulIO
 // ------------------------------------------------------------------ //
 
@@ -30,6 +17,24 @@ export class KuhulIO {
   constructor() {
     /** In-memory fallback store. @type {Map<string, string>} */
     this._store = new Map();
+    /** Cached fs/promises module (loaded lazily). @type {object|null} */
+    this._fs    = null;
+  }
+
+  /**
+   * Lazily import `fs/promises` (Node.js only; returns null in browsers).
+   *
+   * @returns {Promise<object|null>}
+   */
+  async _getFs() {
+    if (this._fs !== null) return this._fs;
+    try {
+      this._fs = await import('fs/promises');
+    } catch (_) {
+      // Running in a browser or environment without Node.js fs
+      this._fs = undefined;
+    }
+    return this._fs ?? null;
   }
 
   /**
@@ -39,8 +44,9 @@ export class KuhulIO {
    * @returns {Promise<string>}
    */
   async read(path) {
-    if (fsPromises) {
-      return fsPromises.readFile(path, 'utf8');
+    const fs = await this._getFs();
+    if (fs) {
+      return fs.readFile(path, 'utf8');
     }
     if (this._store.has(path)) return this._store.get(path);
     throw new Error(`KuhulIO: file not found: ${path}`);
@@ -54,8 +60,9 @@ export class KuhulIO {
    * @returns {Promise<void>}
    */
   async write(path, data) {
-    if (fsPromises) {
-      return fsPromises.writeFile(path, data, 'utf8');
+    const fs = await this._getFs();
+    if (fs) {
+      return fs.writeFile(path, data, 'utf8');
     }
     this._store.set(path, String(data));
   }

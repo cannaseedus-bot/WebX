@@ -62,14 +62,14 @@ API Overhead:
 ---
 
 ## Browser Requirements
-
+```
 ✅ Chrome/Edge 91+
 ✅ Firefox 79+
 ✅ Safari 15.2+
 ✅ SharedArrayBuffer (with COOP/COEP headers)
 ✅ Atomics API
 ✅ Web Workers
-
+```
 ---
 
 ## Quick Start

@@ -33,14 +33,14 @@ KUHUL uses Unicode-inspired **glyphs** to represent complex 3D transformations a
 | **(∿)** | Torsion Field | Apply torsion-based mesh deformation | 1.5ms |
 
 ### KUHUL Features
-
+```
 ✅ GPU-Accelerated 3D Transformations
 ✅ Symbolic Glyph Language
 ✅ Volumetric Computing
 ✅ Machine Learning Integration
 ✅ Scientific Computing
 ✅ Real-time Rendering
-
+```
 ---
 
 ## Performance Comparison

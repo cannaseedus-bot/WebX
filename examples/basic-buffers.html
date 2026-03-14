@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPU Buffer Creation Example</title>
+</head>
+<body>
+    <h1>GPU Buffer Creation Example</h1>
+    <script>
+        // Check if WebGPU is supported
+        if (!navigator.gpu) {
+            console.error("WebGPU is not supported. Please use a compatible browser.");
+        }
+
+        async function init() {
+            const adapter = await navigator.gpu.requestAdapter();
+            const device = await adapter.requestDevice();
+
+            // Create a GPU buffer
+            const buffer = device.createBuffer({
+                size: 1024,
+                usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+            });
+
+            console.log('Buffer created:', buffer);
+        }
+
+        init();
+    </script>
+</body>
+</html>

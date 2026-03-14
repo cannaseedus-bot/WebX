@@ -168,6 +168,119 @@ Open directly in a browser (COOP/COEP headers required for `SharedArrayBuffer`):
 |------|-------------|
 | `examples/basic-buffers.html` | Buffer allocation, zero-copy read/write, fences, dispatch |
 | `examples/geometric-substrate.html` | Live point-cloud visualisation, full glyph benchmark, NN pipeline |
+| `examples/mind-binder-demo.html` | **Mind Binder + K++ demo** — 8-phase K'uhul++ neural inference |
+| `examples/neural-network-demo.html` | GPU neural network layer with activation visualisation |
+| `examples/mesh-transform-demo.html` | KUHUL 3D mesh transforms (all glyphs) |
+
+---
+
+## The Mind Binder — K++ Unified Geometric Runtime
+
+The **Mind Binder** is the orchestration layer that merges D12WebX's GPU substrate
+with K'uhul's phase-based control grammar into a single coherent API.  It implements
+the K'UHUL++ (K++) language model directly:
+
+| K++ Token    | MindBinder Method         | Meaning |
+|--------------|---------------------------|---------|
+| `[Pop]`      | `new MindBinder()`        | Enter scope / begin fold |
+| `[Xul]`      | `executeAllPhases()`      | Exit scope / execute |
+| `[Wo]`       | `allocateTensor(n)`       | Allocate tensor in M |
+| `[Yax]`      | `readTensor(id)`          | Read tensor from M |
+| `[Ch'en]`    | `writeTensor(id, data)`   | Write tensor to M |
+| `[Sek ⊗]`   | `applyOperator('⊗', …)`  | Geometric product (matMul) |
+| `[Sek ⊕]`   | `applyOperator('⊕', …)`  | Manifold composition (translate) |
+| `[Sek ⊝]`   | `applyOperator('⊝', …)`  | Clamp / ReLU threshold |
+| `[Sek ⊜]`   | `applyOperator('⊜', …)`  | Constraint validation |
+| `[K'ayab']`  | `beginPhase(idx)`         | Begin phase command recording |
+| `[Kumk'u]`   | `endPhase()`              | End phase command recording |
+| `[Muwan]`    | `executeFold(name)`       | Execute registered fold |
+
+### 8-Phase Execution Cycle
+
+```
+Phase 0      (0)      Init       — Allocate tensors in M
+Phase π/4    (1)      Load       — Upload data to GPU buffers
+Phase π/2    (2)      Compute    — Apply ⊗ ⊕ ⊝ (dense layer)
+Phase 3π/4   (3)      Glyph      — KUHUL 3D geometric transform
+Phase π      (4)      Validate   — ⊜ constraint check
+Phase 5π/4   (5)      Normalise  — Softmax / geometric normalisation
+Phase 3π/2   (6)      Store      — Serialise to SVG-3D
+Phase 7π/4   (7)      Commit     — Fence, release staging buffers
+```
+
+### Quick Start — Mind Binder
+
+```javascript
+import MindBinder, { GEOMETRIC_OPS, PHASES } from './src/mind-binder.js';
+import { GLYPHS } from './src/kuhul.js';
+
+const binder = new MindBinder();
+
+// Register the standard neural-layer fold
+binder.registerNeuralLayerFold();
+
+// Phase 0: allocate tensors  [K'ayab']
+binder.beginPhase(0);
+const X = binder.allocateTensor(1024 * 3);   // [Wo X]
+const W = binder.allocateTensor(1024 * 3);   // [Wo W]
+binder.endPhase();                            // [Kumk'u]
+
+// Phase 1: upload data  [K'ayab']
+binder.beginPhase(1);
+binder.writeTensor(X, inputData);             // [Ch'en X]
+binder.writeTensor(W, weightData);            // [Ch'en W]
+binder.endPhase();
+
+// Phase 2: compute  [K'ayab']
+binder.beginPhase(2);
+const Y = binder.allocateTensor(1024 * 3);
+const result = binder.applyOperator(GEOMETRIC_OPS.CLAMP,
+    binder.applyOperator(GEOMETRIC_OPS.COMPOSE,
+        binder.applyOperator(GEOMETRIC_OPS.PRODUCT, X, W, { aRows: 1024, aCols: 1, bCols: 3 }),
+        [0.1, 0.1, 0.1]),
+    null, { min: 0 });
+binder.writeTensor(Y, result);               // [Ch'en Y]
+binder.endPhase();
+
+// Execute all phases in parallel
+await binder.executeAllPhases();
+
+// Serialise result to SVG-3D (storage format)
+const svg = binder.serializeToSVG(Y);
+console.log(svg);  // <svg viewBox="…"><circle cx="…" …/>…</svg>
+```
+
+### Geometric Operators
+
+| Symbol | Name | Function | Description |
+|--------|------|----------|-------------|
+| `⊗` | Product    | `matMul(A, B, aRows, aCols, bCols)` | Row-major matrix multiply |
+| `⊕` | Compose    | `translate(T, v)`                  | Add translation vector to point cloud |
+| `⊖` | Difference | `subtract(A, B)`                   | Element-wise subtraction |
+| `⊛` | Project    | `project(T, radius)`               | Normalise onto sphere of given radius |
+| `⊜` | Validate   | `validate(T, min, max)`            | AABB constraint check → Uint8Array |
+| `⊝` | Clamp      | `clamp(T, min, max)`               | Clamp / ReLU threshold |
+| `⊞` | Fold       | `foldReduce(T, stride)`            | Sum-reduce across a dimension |
+
+### SVG-3D Tensor Storage
+
+```javascript
+import { encodeToSVG, decodeFromSVG } from './src/svg3d.js';
+
+// Encode a point cloud to SVG-3D
+const svg = encodeToSVG(points, {
+  edges:     [0, 1, 1, 2],       // adjacency pairs
+  phases:    phaseArray,
+  viewWidth: 1024, viewHeight: 768,
+});
+// → '<svg viewBox="0 0 1024 768">
+//      <circle cx="0.4500" cy="0.3100" cz="0.1200" r="0.5700" data-phase="0.785398"/>
+//      …
+//    </svg>'
+
+// Decode back to Float32Array
+const { points, phases, norms } = decodeFromSVG(svg);
+```
 
 ---
 
@@ -188,11 +301,14 @@ Open directly in a browser (COOP/COEP headers required for `SharedArrayBuffer`):
 
 ```
 src/
-├── index.js          Main entry — exports all public APIs
-├── d12webx.js        D12WebX class (createBuffer, createFence, executeParallel, …)
-├── kuhul.js          KuhulD12WebX class + GLYPHS + applyGlyph()
-├── command-list.js   CommandList (dispatch, execute, writeBuffer, copyBuffer)
-└── gpu-allocator.js  GPUMemoryAllocator (SharedArrayBuffer heap)
+├── index.js               Main entry — exports all public APIs
+├── d12webx.js             D12WebX class (createBuffer, createFence, executeParallel, …)
+├── kuhul.js               KuhulD12WebX class + GLYPHS + applyGlyph()
+├── command-list.js        CommandList (dispatch, execute, writeBuffer, copyBuffer)
+├── gpu-allocator.js       GPUMemoryAllocator (SharedArrayBuffer heap)
+├── mind-binder.js         MindBinder — unified K++ geometric runtime
+├── geometric-operators.js Geometric operators ⊗ ⊕ ⊖ ⊛ ⊜ ⊝ ⊞ on Float32Array
+└── svg3d.js               SVG-3D tensor serialisation (encodeToSVG / decodeFromSVG)
 ```
 
 ---

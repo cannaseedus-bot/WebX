@@ -5,3 +5,15 @@ export { default as D12WebX, GPU_FLAGS } from './d12webx.js';
 export { default as KuhulD12WebX, GLYPHS, applyGlyph } from './kuhul.js';
 export { default as CommandList } from './command-list.js';
 export { default as GPUMemoryAllocator } from './gpu-allocator.js';
+export { default as MindBinder, PHASES, PHASE_NAMES, GEOMETRIC_OPS } from './mind-binder.js';
+export { encodeToSVG, decodeFromSVG } from './svg3d.js';
+export {
+    matMul,
+    translate,
+    subtract,
+    project,
+    validate,
+    clamp,
+    foldReduce,
+    softmax,
+} from './geometric-operators.js';

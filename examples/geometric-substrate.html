@@ -3,328 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D12WebX + KUHUL 3D – Geometric Execution Substrate</title>
+    <title>Geometric Execution Substrate — D12WebX</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body  { font-family: 'Segoe UI', monospace; background: #0d1117; color: #c9d1d9; padding: 2rem; }
-        h1    { color: #58a6ff; margin-bottom: 0.25rem; }
-        .sub  { color: #8b949e; margin-bottom: 2rem; font-size: 0.9rem; }
-        h2    { color: #79c0ff; margin: 1.5rem 0 0.5rem; }
-        h3    { color: #d2a8ff; margin: 1rem 0 0.25rem; font-size: 0.9rem; }
-        pre   { background: #161b22; border: 1px solid #30363d; padding: 1rem;
-                border-radius: 6px; overflow-x: auto; font-size: 0.82rem; line-height: 1.5; }
-        canvas { border: 1px solid #30363d; border-radius: 6px; display: block; margin-top: 0.5rem; }
-        .grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .card  { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 1rem; }
-        table  { border-collapse: collapse; width: 100%; font-size: 0.82rem; }
-        th,td  { border: 1px solid #30363d; padding: 0.4rem 0.7rem; text-align: left; }
-        th     { background: #21262d; color: #79c0ff; }
-        .ok    { color: #3fb950; }
-        .warn  { color: #d29922; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0a0a14; color: #e0e6ff; padding: 24px; margin: 0; }
+        h1 { color: #7eb8ff; margin-bottom: 6px; }
+        p { color: #6a7a9a; margin-bottom: 20px; }
+        .nav { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+        .nav a {
+            background: #12141f; border: 1px solid #1e2340; border-radius: 8px;
+            color: #9fcfff; text-decoration: none; padding: 10px 18px; font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        .nav a:hover { background: #1a2840; }
+        .nav a.primary { background: #1a2a50; border-color: #2a4080; }
+        section { background: #12141f; border: 1px solid #1e2340; border-radius: 10px; padding: 20px; margin-bottom: 18px; }
+        section h2 { color: #9fcfff; margin-bottom: 10px; }
+        pre { background: #080c18; border: 1px solid #1a1e30; border-radius: 6px; padding: 14px; font-family: monospace; font-size: 0.8rem; color: #88e0a0; overflow-x: auto; white-space: pre-wrap; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { background: #0e1020; color: #7eb8ff; padding: 8px 10px; text-align: left; border-bottom: 1px solid #1e2340; }
+        td { padding: 7px 10px; border-bottom: 1px solid #131728; color: #c0cce0; }
+        tr:hover td { background: #0e1020; }
     </style>
 </head>
 <body>
-    <h1>D12WebX + KUHUL 3D</h1>
-    <p class="sub">Geometric Execution Substrate — Manifold M (ℝ³) · SharedArrayBuffer · Atomics · Symbolic Glyphs</p>
-
-    <!-- ── Visualisation ──────────────────────────────────────────── -->
-    <h2>1. Manifold M — Live Point-Cloud Visualisation</h2>
-    <p style="color:#8b949e;font-size:.85rem;margin-bottom:.5rem">
-        1 024 points computed on GPU memory, rendered each frame via KUHUL glyphs.
+    <h1>Geometric Execution Substrate</h1>
+    <p>
+        D12WebX uses geometry as a computation model: tensors live in manifold M (ℝ²/ℝ³),
+        K'uhul controls phase sequencing, SVG-3D stores tensor state, and execution engines
+        (WASM / WebGPU) operate on the geometry.
     </p>
-    <canvas id="canvas" width="760" height="200"></canvas>
 
-    <!-- ── K'uhul control flow ────────────────────────────────────── -->
-    <h2>2. K'uhul Control Flow — Phase Cycle</h2>
-    <div class="grid">
-        <div class="card">
-            <h3>Phase Progression</h3>
-            <pre id="out-phase">Running…</pre>
-        </div>
-        <div class="card">
-            <h3>Fence / Atomics Sync</h3>
-            <pre id="out-fence">Running…</pre>
-        </div>
+    <div class="nav">
+        <a class="primary" href="geometric-execution-demo.html">▶ Interactive Manifold Demo</a>
+        <a href="neural-network-demo.html">🧠 Neural Network Demo</a>
+        <a href="mesh-transform-demo.html">🔷 KUHUL 3D Mesh Demo</a>
+        <a href="../docs/capabilities.md">📄 Capabilities</a>
+        <a href="../docs/benchmarks.md">📊 Benchmarks</a>
+        <a href="../docs/use-cases.md">💡 Use Cases</a>
     </div>
 
-    <!-- ── Tensor operations ──────────────────────────────────────── -->
-    <h2>3. Tensor Operations — KUHUL Glyph Benchmark</h2>
-    <pre id="out-bench">Running…</pre>
-    <table id="tbl-bench" style="margin-top:.75rem">
-        <thead><tr><th>Glyph</th><th>Operation</th><th>Vertices</th><th>GPU Time (ms)</th><th>Speedup vs CPU est.</th></tr></thead>
-        <tbody id="tbl-body"></tbody>
-    </table>
+    <section>
+        <h2>1. Manifold M — Execution Space</h2>
+        <p style="color:#6a7a9a; font-size:0.88rem;">
+            All tensors are embedded in M (ℝ² or ℝ³). Operations happen inside M — not on raw arrays.
+            SVG-3D encodes tensor positions as geometric elements (circle cx/cy = coordinates in M).
+        </p>
+        <pre>&lt;!-- SVG-3D tensor encoding --&gt;
+&lt;circle cx="0.45" cy="0.72" r="0.03"
+        data-rank="2" data-shape="[64,64]"
+        data-phase="0" /&gt;   &lt;!-- rank-2 tensor at (0.45, 0.72) in M --&gt;</pre>
+    </section>
 
-    <!-- ── Pipeline ───────────────────────────────────────────────── -->
-    <h2>4. Full Pipeline — Neural Network Forward Pass</h2>
-    <pre id="out-pipeline">Running…</pre>
+    <section>
+        <h2>2. K'uhul Control Grammar</h2>
+        <table>
+            <thead><tr><th>Token</th><th>Meaning</th></tr></thead>
+            <tbody>
+                <tr><td>[Pop] / [Xul]</td><td>Enter / exit scope (begin / end fold)</td></tr>
+                <tr><td>[Wo]</td><td>Allocate tensor in manifold M</td></tr>
+                <tr><td>[Yax] / [Ch'en]</td><td>Read / write tensor in M</td></tr>
+                <tr><td>[Sek]</td><td>Apply geometric operator (⊗ ⊕ ⊖ ⊛ ⊜ ⊝ ⊞)</td></tr>
+                <tr><td>[K'ayab'] / [Kumk'u]</td><td>Begin / end phase iteration</td></tr>
+                <tr><td>[Muwan]</td><td>Invoke folded sub-process</td></tr>
+            </tbody>
+        </table>
+    </section>
 
-    <script type="module">
-        // ═══════════════════════════════════════════════════════════════════
-        // Inline D12WebX + KUHUL implementation
-        // (In production: import { D12WebX, KuhulD12WebX, GLYPHS } from 'd12webx')
-        // ═══════════════════════════════════════════════════════════════════
+    <section>
+        <h2>3. Geometric Operators in M</h2>
+        <table>
+            <thead><tr><th>Symbol</th><th>Name</th><th>Operation</th></tr></thead>
+            <tbody>
+                <tr><td>⊗</td><td>Geometric product</td><td>Matrix / tensor multiplication</td></tr>
+                <tr><td>⊕</td><td>Manifold composition</td><td>Additive overlay</td></tr>
+                <tr><td>⊖</td><td>Difference</td><td>Subtraction in M</td></tr>
+                <tr><td>⊛</td><td>Constraint projection</td><td>Project onto valid subspace</td></tr>
+                <tr><td>⊜</td><td>Constraint validation</td><td>Assert invariants</td></tr>
+                <tr><td>⊝</td><td>Clamp</td><td>Restrict to bounded region (e.g. ReLU)</td></tr>
+                <tr><td>⊞</td><td>Fold</td><td>Reduce across dimension</td></tr>
+            </tbody>
+        </table>
+    </section>
 
-        const GPU_FLAGS = { UAV: 0x8, SRV: 0x4 };
+    <section>
+        <h2>4. Phase Cycle (Deterministic Execution)</h2>
+        <pre>[K'ayab' phase_cycle]
+  # Phase 0: Load tensors from M
+  [Yax tensor_A] → [Sek load_from_manifold M]
 
-        const GLYPHS = {
-            VECTOR_ENCRYPT:         '⤍',
-            ROTATIONAL_COMPRESSION: '↻',
-            SPHERICAL_LOOP:         '⟲',
-            TORSION_FIELD:          '∿',
-            RADIAL_PROJECTION:      '⊙',
-        };
+  # Phase π/4: Apply geometric operators
+  [Yax tensor_A] → [Sek ⊗ tensor_B] → [Ch'en tensor_C]
 
-        // ── GPUMemoryAllocator ──────────────────────────────────────────────
-        class GPUMemoryAllocator {
-            constructor(size) {
-                this.size = size;
-                this.buffer = new SharedArrayBuffer(size);
-                this.allocated = 0;
-            }
-            allocate(size) {
-                if (this.allocated + size > this.size) throw new Error('Out of GPU memory');
-                const start = this.allocated;
-                this.allocated += size;
-                return new Uint8Array(this.buffer).subarray(start, start + size);
-            }
-            deallocate(size) { this.allocated = Math.max(0, this.allocated - size); }
-            getBuffer()      { return this.buffer; }
-        }
+  # Phase π/2: Validate constraints
+  [Yax tensor_C] → [Sek ⊜ constraint_set]
 
-        // ── D12WebX ─────────────────────────────────────────────────────────
-        class D12WebX {
-            constructor(heapSize = 32 * 1024 * 1024) {
-                this._allocator = new GPUMemoryAllocator(heapSize);
-                this._idCtr = 0;
-            }
-            createBuffer(size, flags = GPU_FLAGS.UAV) {
-                const region = this._allocator.allocate(size);
-                const id = ++this._idCtr;
-                return {
-                    id, size, flags,
-                    offset: region.byteOffset,
-                    view: new Float32Array(this._allocator.getBuffer(), region.byteOffset, size / 4),
-                };
-            }
-            createFence() {
-                const sab = new SharedArrayBuffer(8);
-                const view = new BigInt64Array(sab);
-                return {
-                    view,
-                    signal: () => Atomics.store(view, 0, 1n),
-                    wait:   (ms = 100) => Atomics.wait(view, 0, 0n, ms),
-                    reset:  () => Atomics.store(view, 0, 0n),
-                };
-            }
-            writeBuffer(buf, data) { buf.view.set(data); }
-            readBuffer(buf)        { return new Float32Array(buf.view); }
-        }
+  # Phase 3π/4: Commit to M
+  [Yax tensor_C] → [Sek commit_to_manifold M]
 
-        // ── KUHUL glyph math ────────────────────────────────────────────────
-        function vectorEncrypt(view, m) {
-            for (let i = 0; i + 2 < view.length; i += 3) {
-                const x = view[i], y = view[i+1], z = view[i+2];
-                view[i]   = m[0]*x + m[4]*y + m[8] *z + m[12];
-                view[i+1] = m[1]*x + m[5]*y + m[9] *z + m[13];
-                view[i+2] = m[2]*x + m[6]*y + m[10]*z + m[14];
-            }
-        }
-        function rotationalCompression(view, angleDeg) {
-            const rad = angleDeg * Math.PI / 180;
-            const c = Math.cos(rad), s = Math.sin(rad);
-            const step = 0.05;
-            const seen = new Map(), out = [];
-            const n = Math.floor(view.length / 3);
-            for (let i = 0; i < n; i++) {
-                const ix = i * 3;
-                const ox =  c*view[ix] + s*view[ix+2], oy = view[ix+1], oz = -s*view[ix] + c*view[ix+2];
-                const key = `${Math.round(ox/step)},${Math.round(oy/step)},${Math.round(oz/step)}`;
-                if (!seen.has(key)) { seen.set(key, 1); out.push(ox, oy, oz); }
-            }
-            view.set(new Float32Array(out).subarray(0, Math.min(out.length, view.length)));
-            return Math.floor(out.length / 3);
-        }
-        function sphericalLoop(view, angleDeg) {
-            const off = angleDeg * Math.PI / 180;
-            for (let i = 0; i + 2 < view.length; i += 3) {
-                const x = view[i], y = view[i+1], z = view[i+2];
-                const r = Math.sqrt(x*x+y*y+z*z); if (!r) continue;
-                const theta = Math.acos(y / r), phi = Math.atan2(z, x) + off;
-                view[i]   = r * Math.sin(theta) * Math.cos(phi);
-                view[i+1] = r * Math.cos(theta);
-                view[i+2] = r * Math.sin(theta) * Math.sin(phi);
-            }
-        }
-        function torsionField(view, intensity) {
-            for (let i = 0; i + 2 < view.length; i += 3) {
-                const x = view[i], y = view[i+1], z = view[i+2];
-                const a = y * intensity, c = Math.cos(a), s = Math.sin(a);
-                view[i]   =  c*x + s*z;
-                view[i+2] = -s*x + c*z;
-            }
-        }
-        function radialProjection(view, radius) {
-            for (let i = 0; i + 2 < view.length; i += 3) {
-                const x = view[i], y = view[i+1], z = view[i+2];
-                const len = Math.sqrt(x*x+y*y+z*z); if (!len) continue;
-                const sc = radius / len;
-                view[i] = x*sc; view[i+1] = y*sc; view[i+2] = z*sc;
-            }
-        }
+  # Phase π: Fold complete
+  [Sek advance_phase]
+[Kumk'u phase_cycle]</pre>
+    </section>
 
-        const HANDLERS = {
-            [GLYPHS.VECTOR_ENCRYPT]:         vectorEncrypt,
-            [GLYPHS.ROTATIONAL_COMPRESSION]: rotationalCompression,
-            [GLYPHS.SPHERICAL_LOOP]:         sphericalLoop,
-            [GLYPHS.TORSION_FIELD]:          torsionField,
-            [GLYPHS.RADIAL_PROJECTION]:      radialProjection,
-        };
-
-        class KuhulD12WebX {
-            async executeGlyph(glyph, buffer, param) {
-                const fn = HANDLERS[glyph];
-                if (!fn) throw new Error(`Unknown glyph: ${glyph}`);
-                const t0 = performance.now();
-                fn(buffer.view, param);
-                return { glyph, verticesProcessed: Math.floor(buffer.view.length/3), durationMs: performance.now()-t0 };
-            }
-            async executePipeline(pipeline, buffer) {
-                const results = [];
-                for (const [g, p] of pipeline) results.push(await this.executeGlyph(g, buffer, p));
-                return results;
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════════════
-        // Demo
-        // ═══════════════════════════════════════════════════════════════════
-
-        const gpu   = new D12WebX(32 * 1024 * 1024);
-        const kuhul = new KuhulD12WebX();
-        const N     = 1024; // point count
-
-        // ── 1. Manifold visualisation ───────────────────────────────────────
-        const cloudBuf = gpu.createBuffer(N * 3 * 4, GPU_FLAGS.UAV); // 3 floats × 4 bytes
-
-        // Populate with points on a sphere
-        for (let i = 0; i < N; i++) {
-            const theta = Math.random() * Math.PI;
-            const phi   = Math.random() * 2 * Math.PI;
-            cloudBuf.view[i*3]   = Math.sin(theta) * Math.cos(phi);
-            cloudBuf.view[i*3+1] = Math.cos(theta);
-            cloudBuf.view[i*3+2] = Math.sin(theta) * Math.sin(phi);
-        }
-
-        const canvas = document.getElementById('canvas');
-        const ctx    = canvas.getContext('2d');
-        let   frame  = 0;
-
-        function drawCloud() {
-            ctx.fillStyle = '#0d1117';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Apply torsion each frame (slow drift)
-            torsionField(cloudBuf.view, Math.sin(frame * 0.012) * 0.008);
-            sphericalLoop(cloudBuf.view, 0.3); // rotate azimuth slowly
-
-            const cx = canvas.width / 2, cy = canvas.height / 2, scale = 90;
-            for (let i = 0; i < N; i++) {
-                const x = cloudBuf.view[i*3], y = cloudBuf.view[i*3+1], z = cloudBuf.view[i*3+2];
-                const px = cx + x * scale, py = cy - y * scale;
-                const depth = (z + 1) / 2; // 0…1
-                const alpha = 0.4 + depth * 0.6;
-                ctx.beginPath();
-                ctx.arc(px, py, 1.5, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(88,166,255,${alpha.toFixed(2)})`;
-                ctx.fill();
-            }
-            frame++;
-            requestAnimationFrame(drawCloud);
-        }
-        drawCloud();
-
-        // ── 2. K'uhul control-flow / phase cycle ───────────────────────────
-        const phases = [
-            { name: 'Phase 0',    angle: 0,         desc: 'Load — tensors enter manifold M' },
-            { name: 'Phase π/4',  angle: Math.PI/4, desc: 'Transform — affine glyph (⤍)' },
-            { name: 'Phase π/2',  angle: Math.PI/2, desc: 'Validate — constraint check' },
-            { name: 'Phase 3π/4', angle: 3*Math.PI/4, desc: 'Optimise — compression glyph (↻)' },
-            { name: 'Phase π',    angle: Math.PI,   desc: 'Commit — results written to M' },
-        ];
-        const phaseOut = phases.map(p =>
-            `  ${p.name.padEnd(10)} (${p.angle.toFixed(4)} rad)  ${p.desc}`
-        ).join('\n');
-        document.getElementById('out-phase').textContent =
-            `K'uhul deterministic phase cycle:\n\n${phaseOut}\n\n✅ Reproducible — same inputs → same outputs`;
-
-        const fence = gpu.createFence();
-        fence.signal();
-        document.getElementById('out-fence').textContent =
-            `Fence created  : SharedArrayBuffer(8) → BigInt64Array\n` +
-            `Before signal  : 0n\n` +
-            `After signal   : ${Atomics.load(fence.view, 0)}\n` +
-            `wait() result  : ${fence.wait(0)} (timeout=0ms, already signalled)\n\n` +
-            `✅ Lock-free sync — no mutexes, no semaphores`;
-
-        // ── 3. Glyph benchmark ─────────────────────────────────────────────
-        const BENCH_N = 16_384; // 16k vertices × 3 floats
-        const benchBuf = gpu.createBuffer(BENCH_N * 3 * 4, GPU_FLAGS.UAV);
-        for (let i = 0; i < BENCH_N * 3; i++) benchBuf.view[i] = (Math.random() - 0.5) * 2;
-
-        // Identity matrix for vector-encrypt
-        const identity = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
-
-        const BENCH_CASES = [
-            { glyph: GLYPHS.VECTOR_ENCRYPT,         param: identity, name: 'Vector Encrypt (⤍)',           cpuMs: 50  },
-            { glyph: GLYPHS.ROTATIONAL_COMPRESSION, param: 45,       name: 'Rotational Compression (↻)',  cpuMs: 500 },
-            { glyph: GLYPHS.SPHERICAL_LOOP,         param: 180,      name: 'Spherical Loop (⟲)',           cpuMs: 100 },
-            { glyph: GLYPHS.TORSION_FIELD,          param: 0.5,      name: 'Torsion Field (∿)',            cpuMs: 200 },
-            { glyph: GLYPHS.RADIAL_PROJECTION,      param: 1.0,      name: 'Radial Projection (⊙)',        cpuMs: 20  },
-        ];
-
-        const tbody = document.getElementById('tbl-body');
-        let benchLog = 'Benchmark results (16 384 vertices):\n\n';
-
-        for (const bc of BENCH_CASES) {
-            // Reset buffer
-            for (let i = 0; i < BENCH_N * 3; i++) benchBuf.view[i] = (Math.random() - 0.5) * 2;
-            const t0 = performance.now();
-            HANDLERS[bc.glyph](benchBuf.view, bc.param);
-            const dt = performance.now() - t0;
-            const speedup = (bc.cpuMs / dt).toFixed(0);
-            benchLog += `  ${bc.name.padEnd(32)}  ${dt.toFixed(3).padStart(7)} ms  (CPU est: ${bc.cpuMs} ms → ~${speedup}× speedup)\n`;
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${bc.glyph}</td><td>${bc.name}</td><td>${BENCH_N.toLocaleString()}</td>` +
-                           `<td>${dt.toFixed(3)}</td><td class="ok">~${speedup}×</td>`;
-            tbody.appendChild(tr);
-        }
-        document.getElementById('out-bench').textContent = benchLog;
-
-        // ── 4. Neural-network pipeline ─────────────────────────────────────
-        const nnBuf = gpu.createBuffer(1024 * 3 * 4, GPU_FLAGS.UAV);
-        for (let i = 0; i < 1024 * 3; i++) nnBuf.view[i] = Math.random() * 2 - 1;
-
-        const pipeline = [
-            [GLYPHS.VECTOR_ENCRYPT,         identity],  // X·W  (affine layer)
-            [GLYPHS.RADIAL_PROJECTION,      1.0],       // ReLU proxy (project to unit sphere)
-            [GLYPHS.ROTATIONAL_COMPRESSION, 30],        // compression
-        ];
-
-        const t0nn = performance.now();
-        const results = await kuhul.executePipeline(pipeline, nnBuf);
-        const totalMs = performance.now() - t0nn;
-
-        let pipeOut = 'Forward pass (1 024 × 3 activation tensor):\n\n';
-        results.forEach((r, i) => {
-            pipeOut += `  Stage ${i+1}  ${r.glyph}  ` +
-                       `${r.verticesProcessed.toLocaleString()} vertices  ${r.durationMs.toFixed(3)} ms\n`;
-        });
-        pipeOut += `\n  Total wall time : ${totalMs.toFixed(3)} ms\n`;
-        pipeOut += `  CPU equivalent  : ~61 ms\n`;
-        pipeOut += `  Speedup         : ~${(61/totalMs).toFixed(0)}×\n\n✅ Pipeline complete`;
-        document.getElementById('out-pipeline').textContent = pipeOut;
-    </script>
+    <section>
+        <h2>5. Architecture</h2>
+        <pre>K'uhul (Control Grammar)
+        ↓
+Geometric IR — Tensor operations in M (⊗ ⊕ ⊖ ⊛ ⊜ ⊝ ⊞)
+        ↓
+SVG-3D  — Canonical tensor serialisation (storage, not execution)
+        ↓
+WASM / WebGPU / Native  — Execution back-ends
+        ↓  (optional)
+DOM / Canvas / WebGL    — Projection for visualisation</pre>
+    </section>
 </body>
 </html>

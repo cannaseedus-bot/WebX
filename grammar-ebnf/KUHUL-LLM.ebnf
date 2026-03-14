@@ -1,0 +1,1581 @@
+## COMPLETE UNIFIED K'UHUL GRAMMAR - SEMANTIC SCHEMA INTEGRATION
+
+```ebnf
+(*===========================================================================*)
+(* UNIFIED K'UHUL LANGUAGE GRAMMAR v7.0.0                                   *)
+(*===========================================================================*)
+(*                                                                           *)
+(*  COMPLETE SEMANTIC SCHEMA - FROM TOP TO BOTTOM                           *)
+(*                                                                           *)
+(*  INTEGRATED SPECIFICATION:                                                *)
+(*  - Top-level Universe with semantic versioning                           *)
+(*  - Manifold M as geometric execution space                               *)
+(*  - Tensor dimensions & operations                                        *)
+(*  - Compression folds with phase arrays                                   *)
+(*  - Full ECMAScript Agents (9.6) with Agent Records                       *)
+(*  - Agent Clusters (9.7) with shared memory                               *)
+(*  - Forward Progress (9.8) guarantees                                     *)
+(*  - WeakRef & FinalizationRegistry (9.9) processing                       *)
+(*  - Unicode format-control & white space                                  *)
+(*  - π-geometry execution substrate                                        *)
+(*  - Policy enforcement & entanglements                                    *)
+(*  - ECMAScript Symbol Objects (20.4)                                      *)
+(*  - MICRONAUTS: Agentic Coding, Tool Calls, Mixture of Experts            *)
+(*  - SEMANTIC SCHEMA: All definitions with phase arrays, n-grams, metrics  *)
+(*                                                                           *)
+(*  NO EXTERNAL DEPENDENCIES - COMPLETE INLINE                              *)
+(*                                                                           *)
+(*===========================================================================*)
+
+(*===========================================================================*)
+(* 0. SEMANTIC SCHEMA HEADER                                                 *)
+(*===========================================================================*)
+
+SemanticSchema       = '<?xml version="1.0" encoding="UTF-8"?>'
+                     '<?kuhul version="7.0.0" encoding="Unicode"?>'
+                     '<kuhul-universe' SemanticAttributes '>'
+                         UniverseContent
+                     '</kuhul-universe>'
+
+SemanticAttributes   = { 'xmlns:' Prefix '=' '"' URI '"' }
+                     | 'version' '=' '"' SemanticVersion '"'
+                     | 'schema-location' '=' '"' URI '"'
+                     | 'phase-space' '=' '"' PhaseSpace '"'
+
+Prefix               = 'π' | 'ecma' | 'unicode' | 'moe' | 'tool' | 'agent'
+URI                  = '#local' | '#semantic' | '#kuhul-core'
+
+SemanticVersion      = '7.0.0' | '7.1.0' | '8.0.0'
+PhaseSpace           = 'π-geometry' | 'manifold-M' | 'quantum-field'
+
+(*===========================================================================*)
+(* 0.1 TOP-LEVEL UNIVERSE DEFINITION                                         *)
+(*===========================================================================*)
+
+UniverseContent      = MetaDeclaration
+                       ManifoldDeclaration?
+                       SpaceTimeDeclaration?
+                       FoldUniverse?
+                       TensorUniverse?
+                       AgentUniverse?
+                       SymbolUniverse?
+                       MicronautUniverse?
+                       ToolUniverse?
+                       MoEUniverse?
+                       PolicyUniverse?
+                       EntanglementUniverse?
+                       QuantumState?
+
+MetaDeclaration      = '<meta' MetaAttributes '/>'
+MetaAttributes       = 'created' '=' '"' DateTime '"'
+                     | 'author' '=' '"' StringLiteral '"'
+                     | 'description' '=' '"' StringLiteral '"'
+                     | 'phase-count' '=' IntegerLiteral
+                     | 'dimension' '=' IntegerLiteral
+
+DateTime             = Digit Digit Digit Digit '-' Digit Digit '-' Digit Digit
+                       'T' Digit Digit ':' Digit Digit ':' Digit Digit 'Z'
+
+(*===========================================================================*)
+(* 0.2 SEMANTIC TYPE SYSTEM                                                  *)
+(*===========================================================================*)
+
+SemanticType         = PrimitiveType | CompoundType | GeometricType | PhaseType
+
+PrimitiveType        = 'boolean' | 'integer' | 'float' | 'string' | 'symbol'
+                     | 'phase-bit' | 'phase-array' | 'uri' | 'datetime'
+
+CompoundType         = 'list' '[' SemanticType ']'
+                     | 'map' '[' SemanticType '→' SemanticType ']'
+                     | 'tuple' '(' SemanticType {',' SemanticType} ')'
+                     | 'record' '{' FieldName ':' SemanticType {',' FieldName ':' SemanticType} '}'
+
+GeometricType        = 'point' '(' NumberType ',' NumberType [',' NumberType] ')'
+                     | 'sphere' '(' NumberType ',' NumberType ')'
+                     | 'torus' '(' NumberType ',' NumberType ')'
+                     | 'manifold' '(' IntegerLiteral ',' MetricType ')'
+
+PhaseType            = 'phase' '(' FloatLiteral ')'          (* 0 to 2π *)
+                     | 'phase-array' '[' PhaseBit {',' PhaseBit} ']'
+                     | 'phase-space' '(' Dimension ',' Resolution ')'
+
+MetricType           = 'euclidean' | 'riemannian' | 'minkowski' | 'π-harmonic'
+Resolution           = IntegerLiteral                        (* bits per phase *)
+NumberType           = 'float32' | 'float64' | 'int32' | 'int64'
+
+(*===========================================================================*)
+(* 1. LEXICAL STRUCTURE - UNICODE AWARE                                     *)
+(*===========================================================================*)
+
+(*-----------------------------------------------------------------------------
+    Unicode Character Classes
+-----------------------------------------------------------------------------*)
+Letter               = ? Any Unicode code point with category Lu, Ll, Lt, Lm, Lo, Nl ?
+Digit                = ? Any Unicode code point with category Nd ?
+FormatControl        = ? Any Unicode code point with category Cf ?
+SpaceSeparator       = ? Any Unicode code point with category Zs ?
+
+(*-----------------------------------------------------------------------------
+    White Space (ECMAScript Table 35)
+-----------------------------------------------------------------------------*)
+WhiteSpace           = Tab | Vt | Ff | Zwnbsp | SpaceSeparator
+Tab                  = ? U+0009 CHARACTER TABULATION ?
+Vt                   = ? U+000B LINE TABULATION ?
+Ff                   = ? U+000C FORM FEED ?
+Zwnbsp               = ? U+FEFF ZERO WIDTH NO-BREAK SPACE ?
+
+(*-----------------------------------------------------------------------------
+    Line Terminators (ECMAScript Table 36)
+-----------------------------------------------------------------------------*)
+LineTerminator       = Lf | Cr | Ls | Ps
+Lf                   = ? U+000A LINE FEED ?
+Cr                   = ? U+000D CARRIAGE RETURN ?
+Ls                   = ? U+2028 LINE SEPARATOR ?
+Ps                   = ? U+2029 PARAGRAPH SEPARATOR ?
+
+LineTerminatorSequence = Lf
+                       | Cr notFollowedBy Lf
+                       | Ls
+                       | Ps
+                       | Cr Lf          (* Treated as single character *)
+
+(*-----------------------------------------------------------------------------
+    Comments
+-----------------------------------------------------------------------------*)
+Comment              = '(*' {Character} '*)' | '//' {Character} LineTerminator
+
+(*-----------------------------------------------------------------------------
+    Literals
+-----------------------------------------------------------------------------*)
+IntegerLiteral       = Digit {Digit}
+FloatLiteral         = Digit+ '.' Digit+ [('e' | 'E') ['+' | '-'] Digit+]
+StringLiteral        = '"' {Character} '"' | "'" {Character} "'"
+BooleanLiteral       = 'true' | 'false'
+RangeLiteral         = '[' FloatLiteral '..' FloatLiteral ']'
+Percentage           = FloatLiteral '%'
+SymbolLiteral        = 'Symbol(' [StringLiteral] ')'   (* Symbol creation *)
+UndefinedLiteral     = 'undefined'
+NullLiteral          = 'null'
+PhaseBit             = '0' | '1'
+PhaseArray           = '[' PhaseBit {',' PhaseBit} ']'
+PhaseRange           = 'phase(' FloatLiteral ')'      (* Single phase value *)
+PhaseSpace           = 'phase-space[' IntegerLiteral ']' (* Multi-dimensional phase *)
+
+(*-----------------------------------------------------------------------------
+    Identifiers
+-----------------------------------------------------------------------------*)
+Identifier           = (Letter | '_') {Letter | Digit | '_' | '-'}
+Variable             = '$' Identifier
+FoldReference        = '⟁' Identifier '⟁'
+TensorReference      = '⟅' Identifier '⟆'
+AgentReference       = '🤖' Identifier | '🦸' Identifier | '🔮' Identifier | '👨‍💻' Identifier
+MoEReference         = '🧠' Identifier
+SymbolReference      = '@' Identifier                    (* Symbol references *)
+ClusterReference     = '🌐' Identifier                    (* Agent cluster reference *)
+WeakRefReference     = '⚡' Identifier                    (* WeakRef reference *)
+FinalizationRegistryReference = '🧹' Identifier          (* FinalizationRegistry reference *)
+ToolReference        = '🔧' Identifier                    (* Tool reference *)
+ExpertReference      = '🎓' Identifier                    (* Expert reference *)
+PhaseReference       = 'φ' Identifier                     (* Phase space reference *)
+
+(*-----------------------------------------------------------------------------
+    Well-Known Symbols (ECMAScript Table 1)
+-----------------------------------------------------------------------------*)
+WellKnownSymbol      = '@@asyncIterator' | '@@hasInstance' | '@@isConcatSpreadable'
+                     | '@@iterator' | '@@match' | '@@matchAll' | '@@replace'
+                     | '@@search' | '@@species' | '@@split' | '@@toPrimitive'
+                     | '@@toStringTag' | '@@unscopables'
+
+(*-----------------------------------------------------------------------------
+    Geometric & Control Symbols
+-----------------------------------------------------------------------------*)
+CompressOp           = '⟐'                     (* Compression operation *)
+FoldControl          = '⟘' | '⟗' | '⚖️' | '🔄' | '📤' | '📥' | '⟔' | '⟑'
+FoldDelimiter        = '⟁' | '⟅' | '⟆'          (* Fold/tensor boundaries *)
+
+(* Geometric operators - operations in manifold M *)
+GeoProduct           = '⊗'                     (* Matrix multiply / geometric product *)
+GeoTranslate         = '⊕'                     (* Bias / translation in M *)
+GeoDifference        = '⊖'                     (* Subtraction in M *)
+GeoScale             = '⊘'                     (* Scaling relative to M *)
+GeoConvolve          = '⊛'                     (* Convolution in M *)
+GeoValidate          = '⊜'                     (* Constraint validation *)
+GeoProject           = '⊝'                     (* Projection onto subspace *)
+GeoAttend            = '⊞'                     (* Attention composition *)
+
+GeometricOperator    = GeoProduct | GeoTranslate | GeoDifference
+                     | GeoScale | GeoConvolve | GeoValidate
+                     | GeoProject | GeoAttend
+
+(*-----------------------------------------------------------------------------
+    Agent & System Icons
+-----------------------------------------------------------------------------*)
+MicronautIcon        = '🤖'
+SupernautIcon        = '🦸'
+MoEIcon              = '🧠'
+SemanticIcon         = '🔮'
+CoderIcon            = '👨‍💻'
+ReplyIcon            = '💬'
+PolicyIcon           = '⚖️'
+ToolIcon             = '🔧'
+SkillIcon            = '🎯'
+ClusterIcon          = '🌐'
+WeakRefIcon          = '⚡'
+FinalizationIcon     = '🧹'
+ExpertIcon           = '🎓'
+PhaseIcon            = 'φ'
+EntanglementSymbol   = '↔'
+
+(*===========================================================================*)
+(* 2. CORE EXPRESSIONS                                                      *)
+(*===========================================================================*)
+
+Expression           = Literal
+                     | Variable
+                     | FoldReference
+                     | TensorReference
+                     | AgentReference
+                     | MoEReference
+                     | SymbolReference
+                     | ClusterReference
+                     | WeakRefReference
+                     | FinalizationRegistryReference
+                     | ToolReference
+                     | ExpertReference
+                     | PhaseReference
+                     | WellKnownSymbol
+                     | BinaryExpression
+                     | UnaryExpression
+                     | FunctionCall
+                     | PhaseCast
+                     | GeometricCast
+                     | '(' Expression ')'
+
+Literal              = IntegerLiteral
+                     | FloatLiteral
+                     | StringLiteral
+                     | BooleanLiteral
+                     | RangeLiteral
+                     | Percentage
+                     | SymbolLiteral
+                     | UndefinedLiteral
+                     | NullLiteral
+                     | PhaseBit
+                     | PhaseArray
+                     | PhaseRange
+                     | PhaseSpace
+
+PhaseCast            = 'as-phase' '(' Expression ')'          (* Convert to phase value *)
+                     | 'as-phase-array' '(' Expression ',' IntegerLiteral ')'
+
+GeometricCast        = 'embed-in-M' '(' Expression ',' Point3D ')'
+                     | 'project-from-M' '(' Expression ')'
+
+BinaryExpression     = Expression BinaryOperator Expression
+BinaryOperator       = '+' | '-' | '*' | '/' | '^' | '∘' 
+                     | GeometricOperator        (* ⊗ ⊕ ⊖ ⊘ ⊛ ⊜ ⊝ ⊞ *)
+                     | '‖'                      (* Parallel composition *)
+                     | '∧' | '∨'                 (* Logical operators *)
+                     | '∈' | '∉'                 (* Membership *)
+                     | '⊂' | '⊆' | '⊇'           (* Subset relations *)
+
+UnaryExpression      = UnaryOperator Expression
+UnaryOperator        = '-' | '!' | '√' | '∂' | '∫' | '⊝' | '¬'
+
+FunctionCall         = Identifier '(' [ArgumentList] ')'
+ArgumentList         = Expression {',' Expression}
+
+(*===========================================================================*)
+(* 3. TENSOR DEFINITIONS                                                    *)
+(*===========================================================================*)
+
+TensorDefinition     = TensorDeclaration '=' TensorSpec
+TensorDeclaration    = '⟅' Identifier '⟆'
+TensorSpec           = 'tensor' Shape 'of' TensorType
+                     | 'map' 'from' Domain 'to' Codomain
+                     | 'field' 'over' Space 'with' Metric
+
+Shape                = '[' Dimension {',' Dimension} ']'
+Dimension            = IntegerLiteral | Variable | '*' | PhaseRange
+
+TensorType           = 'compression' | 'pattern' | 'efficiency' | 'entropy'
+                     | 'flow' | 'density' | 'gradient' | 'curvature'
+                     | 'scalar' | 'vector' | 'matrix' | 'phase-field'
+
+Domain               = FoldReference | TensorReference | SpaceSpec
+Codomain             = FoldReference | TensorReference | SpaceSpec
+SpaceSpec            = Identifier | StringLiteral | PhaseSpace
+Metric               = Identifier | StringLiteral | 'cosine' | 'euclidean' | 'π-harmonic'
+
+TensorOperation      = 'tensor-product(' TensorRef ',' TensorRef ')'
+                     | 'tensor-sum(' TensorRef ',' TensorRef ')'
+                     | 'contract(' TensorRef ',' Indices ')'
+                     | 'evolve(' TensorRef ',' EvolutionRule ')'
+                     | 'phase-rotate(' TensorRef ',' PhaseRange ')'
+                     | 'embed(' TensorRef ',' Point3D ')'
+
+TensorRef            = TensorReference | Expression
+Indices              = '[' IntegerLiteral {',' IntegerLiteral} ']'
+EvolutionRule        = Expression | StringLiteral | PhaseArray
+
+(*===========================================================================*)
+(* 4. COMPRESSION FOLDS                                                     *)
+(*===========================================================================*)
+
+FoldDefinition       = FoldDeclaration [FoldType] FoldProperties
+FoldDeclaration      = '⟁' Identifier '⟁'
+FoldType             = '::' ('scalar' | 'vector' | 'tensor' | 'matrix' 
+                            | 'field' | 'stream' | 'queue' | 'cache' | 'index'
+                            | 'phase-fold' | 'quantum-fold')
+
+FoldProperties       = '{' [FoldProperty {',' FoldProperty}] '}'
+FoldProperty         = 'compression' ':' Percentage
+                     | 'entropy' ':' RangeLiteral
+                     | 'connected-to' ':' '[' [FoldReference {',' FoldReference}] ']'
+                     | 'efficiency' ':' FloatLiteral
+                     | 'fold-depth' ':' IntegerLiteral
+                     | 'phase' ':' PhaseRange
+                     | 'phase-array' ':' PhaseArray
+                     | 'phase-space' ':' PhaseSpace
+                     | 'position' ':' Point3D
+                     | 'metric' ':' MetricType
+                     | 'dimensionality' ':' IntegerLiteral
+
+CompressionStatement = CompressOp OperationType TargetSpec ['→' CompressionResult]
+OperationType        = 'COMPILE' | 'EXECUTE' | 'OPTIMIZE' | 'VISUALIZE'
+                     | 'TRANSFORM' | 'ANALYZE' | 'VALIDATE'
+                     | 'PHASE-SYNC' | 'PHASE-ROTATE'
+
+TargetSpec           = FoldReference | TensorReference | PatternExpression
+                     | 'all-folds' | 'active-universe' | PhaseSpace
+
+CompressionResult    = FoldReference | TensorReference | EfficiencyMetric | PhaseArray
+
+FoldOperation        = FoldControl Command Target ['with' Parameters]
+Command              = 'COMPRESS' | 'UNFOLD' | 'BALANCE' | 'SYNC'
+                     | 'MERGE' | 'SPLIT' | 'CLONE' | 'DESTROY'
+                     | 'PHASE-ALIGN' | 'PHASE-SHIFT'
+
+Target               = SingleTarget | MultiTarget | AllTargets
+SingleTarget         = FoldReference | AgentReference | TensorReference | PhaseReference
+MultiTarget          = '[' Target {',' Target} ']'
+AllTargets           = '*' | 'UNIVERSE' | 'ALL-PHASES'
+
+Parameters           = '{' Parameter {',' Parameter} '}'
+Parameter            = Identifier ':' Expression
+
+(*===========================================================================*)
+(* 5. GEOMETRIC EXECUTION (MANIFOLD M)                                      *)
+(*===========================================================================*)
+
+ManifoldDefinition   = 'manifold' Identifier '=' ManifoldSpec
+ManifoldSpec         = '{'
+                       'dimension' ':' IntegerLiteral
+                       'bounds' ':' '(' FloatLiteral ',' FloatLiteral [',' FloatLiteral] ')'
+                       'metric' ':' MetricType
+                       [ 'origin' ':' Point3D ]
+                       [ 'phase-space' ':' PhaseSpace ]
+                       [ 'curvature' ':' FloatLiteral ]
+                       [ 'topology' ':' TopologyType ]
+                     '}'
+
+Point3D              = '(' FloatLiteral ',' FloatLiteral ',' FloatLiteral ')'
+TopologyType         = 'euclidean' | 'spherical' | 'hyperbolic' | 'torical'
+
+PhaseSpec            = 'phase' ':' PhaseRange
+                     | 'phase-array' ':' PhaseArray
+                     | 'phase-space' ':' PhaseSpace
+
+GeometricExpression  = Expression GeometricOperator Expression
+                     | GeometricOperator '(' ArgumentList ')'
+                     | 'geodesic(' Point3D ',' Point3D ')'
+                     | 'curvature(' Expression ')'
+
+EmbeddingSpec        = 'embed' TensorReference 'at' Point3D
+                     | 'embed' FoldReference 'with' 'radius' ':' FloatLiteral
+                     | 'embed' AgentReference 'at' Point3D
+                     | 'phase' ':' PhaseRange
+                     | 'phase-array' ':' PhaseArray
+                     | 'phase-space' ':' PhaseSpace
+
+(*===========================================================================*)
+(* 6. ECMASCRIPT SYMBOL OBJECTS (20.4)                                      *)
+(*===========================================================================*)
+
+(*-----------------------------------------------------------------------------
+    20.4.1 The Symbol Constructor
+-----------------------------------------------------------------------------*)
+SymbolConstructor    = 'Symbol' ['(' [Description] ')']
+Description          = Expression              (* Converted via ToString *)
+
+SymbolCreation       = 'Symbol(' [Expression] ')'   (* Returns new Symbol *)
+                     | 'Symbol.for(' Expression ')' (* Global registry symbol *)
+                     | 'Symbol.keyFor(' Expression ')' (* Key from registry *)
+
+(*-----------------------------------------------------------------------------
+    Well-Known Symbols (Table 1)
+-----------------------------------------------------------------------------*)
+AsyncIteratorSymbol  = 'Symbol.asyncIterator'
+HasInstanceSymbol    = 'Symbol.hasInstance'
+IsConcatSpreadableSymbol = 'Symbol.isConcatSpreadable'
+IteratorSymbol       = 'Symbol.iterator'
+MatchSymbol          = 'Symbol.match'
+MatchAllSymbol       = 'Symbol.matchAll'
+ReplaceSymbol        = 'Symbol.replace'
+SearchSymbol         = 'Symbol.search'
+SpeciesSymbol        = 'Symbol.species'
+SplitSymbol          = 'Symbol.split'
+ToPrimitiveSymbol    = 'Symbol.toPrimitive'
+ToStringTagSymbol    = 'Symbol.toStringTag'
+UnscopablesSymbol    = 'Symbol.unscopables'
+
+WellKnownSymbolProperty = AsyncIteratorSymbol | HasInstanceSymbol
+                        | IsConcatSpreadableSymbol | IteratorSymbol
+                        | MatchSymbol | MatchAllSymbol | ReplaceSymbol
+                        | SearchSymbol | SpeciesSymbol | SplitSymbol
+                        | ToPrimitiveSymbol | ToStringTagSymbol
+                        | UnscopablesSymbol
+
+(*-----------------------------------------------------------------------------
+    GlobalSymbolRegistry (Table 63)
+-----------------------------------------------------------------------------*)
+GlobalSymbolRegistry = '{'
+                       '[[Key]]' ':' StringLiteral
+                       '[[Symbol]]' ':' SymbolReference
+                       '[[Phase]]' ':' PhaseRange
+                     '}'
+
+SymbolPhase         = SymbolReference '.' 'phase'              (* Phase of symbol *)
+                    | SymbolReference '.' 'phase-array'
+
+(*===========================================================================*)
+(* 7. FULL ECMASCRIPT AGENTS (9.6)                                          *)
+(*===========================================================================*)
+
+(*-----------------------------------------------------------------------------
+    9.6 Agents - Core Agent Record (Table 29)
+-----------------------------------------------------------------------------*)
+AgentRecord          = '{'
+                       '[[LittleEndian]]' ':' BooleanLiteral
+                       '[[CanBlock]]' ':' BooleanLiteral
+                       '[[Signifier]]' ':' StringLiteral
+                       '[[IsLockFree1]]' ':' BooleanLiteral
+                       '[[IsLockFree2]]' ':' BooleanLiteral
+                       '[[IsLockFree8]]' ':' BooleanLiteral
+                       '[[CandidateExecution]]' ':' CandidateExecutionSpec
+                       '[[KeptAlive]]' ':' '[' [KeptAliveItem {',' KeptAliveItem}] ']'
+                       '[[ModuleAsyncEvaluationCount]]' ':' IntegerLiteral
+                       '[[SymbolRegistry]]' ':' '[' GlobalSymbolRegistry {',' GlobalSymbolRegistry} ']'
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                       '[[PhaseSpace]]' ':' PhaseSpace
+                     '}'
+
+KeptAliveItem        = ObjectReference | SymbolReference
+ObjectReference      = Identifier | 'Object(' Expression ')'
+
+(*-----------------------------------------------------------------------------
+    Candidate Execution Record (Memory Model)
+-----------------------------------------------------------------------------*)
+CandidateExecutionSpec = '{'
+                         '[[EventsRecords]]' ':' '[' AgentEventsRecord {',' AgentEventsRecord} ']'
+                         '[[GlobalPhase]]' ':' PhaseRange
+                       '}'
+
+AgentEventsRecord    = '{'
+                       '[[AgentSignifier]]' ':' StringLiteral
+                       '[[EventList]]' ':' '[' Event {',' Event} ']'
+                       '[[AgentSynchronizesWith]]' ':' '[' AgentReference {',' AgentReference} ']'
+                       '[[PhaseOffset]]' ':' PhaseRange
+                     '}'
+
+Event                = '{'
+                       'time' ':' FloatLiteral
+                       'type' ':' EventType
+                       'address' ':' StringLiteral
+                       [ 'value' ':' Expression ]
+                       [ 'symbol' ':' SymbolReference ]
+                       [ 'phase' ':' PhaseRange ]
+                       [ 'phase-array' ':' PhaseArray ]
+                       [ 'phase-space' ':' PhaseSpace ]
+                     '}'
+
+EventType            = 'read' | 'write' | 'atomic' | 'wait' | 'notify'
+                     | 'read-modify-write' | 'fence' | 'weakRef-deref'
+                     | 'finalization-callback' | 'tool-call' | 'expert-route'
+                     | 'phase-sync' | 'phase-rotate'
+
+(*-----------------------------------------------------------------------------
+    Shared Data Block & WaiterList
+-----------------------------------------------------------------------------*)
+SharedDataBlock      = '{'
+                       '[[Data]]' ':' MemoryBuffer
+                       '[[Size]]' ':' IntegerLiteral
+                       '[[Agents]]' ':' '[' AgentReference {',' AgentReference} ']'
+                       '[[PhaseAlignment]]' ':' PhaseArray
+                     '}'
+
+WaiterList           = '{'
+                       '[[Waiters]]' ':' '[' WaiterRecord {',' WaiterRecord} ']'
+                       '[[Lock]]' ':' LockType
+                       '[[Phase]]' ':' PhaseRange
+                     '}'
+
+WaiterRecord         = '{'
+                       '[[Agent]]' ':' AgentReference
+                       '[[Address]]' ':' IntegerLiteral
+                       '[[Timeout]]' ':' FloatLiteral
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                     '}'
+
+LockType             = 'spin-lock' | 'futex' | 'adaptive' | 'π-phase' | 'phase-lock'
+
+MemoryBuffer         = 'SharedArrayBuffer(' IntegerLiteral ')'
+                     | 'ArrayBuffer(' IntegerLiteral ')'
+
+(*-----------------------------------------------------------------------------
+    9.6.1 AgentSignifier ( )
+-----------------------------------------------------------------------------*)
+AgentSignifier       = 'AgentSignifier()'   (* Returns current agent's [[Signifier]] *)
+
+(*-----------------------------------------------------------------------------
+    9.6.2 AgentCanSuspend ( )
+-----------------------------------------------------------------------------*)
+AgentCanSuspend      = 'AgentCanSuspend()'   (* Returns current agent's [[CanBlock]] *)
+
+(*-----------------------------------------------------------------------------
+    9.6.3 IncrementModuleAsyncEvaluationCount ( )
+-----------------------------------------------------------------------------*)
+IncrementModuleCount = 'IncrementModuleAsyncEvaluationCount()'   (* Returns unique order *)
+
+(*===========================================================================*)
+(* 8. AGENT CLUSTERS (9.7)                                                  *)
+(*===========================================================================*)
+
+AgentCluster         = ClusterIcon Identifier '=' ClusterSpec
+
+ClusterSpec          = '{'
+                       '[[Agents]]' ':' '[' AgentReference {',' AgentReference} ']'
+                       '[[SharedMemory]]' ':' SharedDataBlock
+                       '[[LittleEndian]]' ':' BooleanLiteral   (* Uniform across cluster *)
+                       '[[IsLockFree1]]' ':' BooleanLiteral    (* Uniform across cluster *)
+                       '[[IsLockFree2]]' ':' BooleanLiteral    (* Uniform across cluster *)
+                       '[[IsLockFree8]]' ':' BooleanLiteral    (* Uniform across cluster *)
+                       '[[CandidateExecution]]' ':' CandidateExecutionSpec
+                       '[[WaiterLists]]' ':' '[' WaiterList {',' WaiterList} ']'
+                       '[[EmbeddingPolicy]]' ':' EmbeddingPolicy
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                       '[[PhaseSpace]]' ':' PhaseSpace
+                       '[[ClusterPhase]]' ':' PhaseRange
+                     '}'
+
+EmbeddingPolicy      = '{'
+                       '[[CanDeactivate]]' ':' BooleanLiteral
+                       '[[DeactivationStrategy]]' ':' ('balance' | 'rotate' | 'suspend-all' | 'phase-suspend')
+                       '[[TerminationStrategy]]' ':' ('terminate-all' | 'detection-api' | 'phase-terminate')
+                     '}'
+
+(*-----------------------------------------------------------------------------
+    Cluster Uniformity Constraints
+-----------------------------------------------------------------------------*)
+ClusterUniformity    = 'uniform(' ClusterReference ',' Field ')'
+Field                = '[[LittleEndian]]' | '[[IsLockFree1]]' | '[[IsLockFree2]]' | '[[Phase]]'
+
+ClusterMembership    = 'member(' AgentReference ',' ClusterReference ')'
+UniqueSignifier      = 'unique(' AgentReference ',' ClusterReference ')'
+PhaseCoherence       = 'coherent(' ClusterReference ',' PhaseRange ')'
+
+(*-----------------------------------------------------------------------------
+    Embedding Control
+-----------------------------------------------------------------------------*)
+EmbeddingOperation   = 'activate(' AgentReference ')'
+                     | 'deactivate(' AgentReference ')'
+                     | 'terminate(' AgentReference ')'
+                     | 'terminate-cluster(' ClusterReference ')'
+                     | 'detect-termination(' AgentReference ')' '→' TerminationData
+                     | 'phase-sync(' ClusterReference ')'
+                     | 'phase-rotate(' ClusterReference ',' PhaseRange ')'
+
+TerminationData      = '{'
+                       '[[TerminatedAgent]]' ':' AgentReference
+                       '[[Time]]' ':' FloatLiteral
+                       '[[Reason]]' ':' StringLiteral
+                       '[[PhaseAtTermination]]' ':' PhaseRange
+                     '}'
+
+(*===========================================================================*)
+(* 9. FORWARD PROGRESS (9.8)                                                *)
+(*===========================================================================*)
+
+ForwardProgress      = '{'
+                       '[[UnblockedAgents]]' ':' '[' AgentReference {',' AgentReference} ']'
+                       '[[SharedThreadAgents]]' ':' '[' AgentGroup {',' AgentGroup} ']'
+                       '[[ProgressGuarantee]]' ':' GuaranteeType
+                       '[[PhaseProgress]]' ':' '[' PhaseProgressRecord {',' PhaseProgressRecord} ']'
+                     '}'
+
+AgentGroup           = '{'
+                       '[[Thread]]' ':' ThreadReference
+                       '[[Agents]]' ':' '[' AgentReference {',' AgentReference} ']'
+                       '[[CanBlockAny]]' ':' BooleanLiteral
+                       '[[GroupPhase]]' ':' PhaseArray
+                     '}'
+
+PhaseProgressRecord  = '{'
+                       '[[Agent]]' ':' AgentReference
+                       '[[CurrentPhase]]' ':' PhaseRange
+                       '[[NextPhase]]' ':' PhaseRange
+                       '[[PhaseProgress]]' ':' FloatLiteral
+                     '}'
+
+GuaranteeType        = 'dedicated-thread-progress'
+                     | 'shared-thread-progress'
+                     | 'non-blocking-guarantee'
+                     | 'phase-progress-guarantee'
+
+BlockedState         = 'blocked(' AgentReference ',' WaitingOn ')'
+WaitingOn            = 'lock' | 'waiter' | 'atomic' | 'external-event' | 'phase-barrier'
+
+UnblockedState       = 'unblocked(' AgentReference ')'
+
+ProgressAssertion    = 'assert-progress(' AgentReference ')'
+                     | 'assert-eventual-observation(' WriteEvent ')'
+                     | 'assert-phase-advance(' AgentReference ')'
+
+(*===========================================================================*)
+(* 10. WEAKREF & FINALIZATIONREGISTRY (9.9)                                 *)
+(*===========================================================================*)
+
+(*-----------------------------------------------------------------------------
+    9.9.1 WeakRef Object
+-----------------------------------------------------------------------------*)
+WeakRefDefinition    = WeakRefIcon Identifier '=' WeakRefSpec
+
+WeakRefSpec          = '{'
+                       '[[WeakRefTarget]]' ':' (ObjectReference | SymbolReference | 'empty')
+                       '[[Holder]]' ':' AgentReference
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                       '[[ExpirationPhase]]' ':' PhaseRange
+                     '}'
+
+WeakRefOperation     = 'new WeakRef(' Target ')'
+                     | WeakRefReference '.' 'deref()' '→' (Target | 'undefined')
+                     | 'WeakRefDeref(' WeakRefReference ')'
+                     | WeakRefReference '.' 'phase()' '→' PhaseRange
+
+Target               = ObjectReference | SymbolReference
+
+(*-----------------------------------------------------------------------------
+    9.9.2 FinalizationRegistry
+-----------------------------------------------------------------------------*)
+FinalizationRegistryDefinition = FinalizationIcon Identifier '=' FinalizationRegistrySpec
+
+FinalizationRegistrySpec = '{'
+                           '[[Cells]]' ':' '[' CellRecord {',' CellRecord} ']'
+                           '[[CleanupCallback]]' ':' FunctionReference
+                           '[[HostDefined]]' ':' HostInfo
+                           '[[Phase]]' ':' PhaseRange
+                           '[[PhaseArray]]' ':' PhaseArray
+                           '[[CleanupPhase]]' ':' PhaseRange
+                         '}'
+
+CellRecord           = '{'
+                       '[[WeakRefTarget]]' ':' (ObjectReference | SymbolReference | 'empty')
+                       '[[HeldValue]]' ':' Expression
+                       '[[UnregisterToken]]' ':' (ObjectReference | SymbolReference | 'empty')
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                     '}'
+
+FinalizationOperation = 'new FinalizationRegistry(' Callback ')'
+                       | FinalizationRegistryReference '.' 'register(' Target ',' HeldValue [',' UnregisterToken] ')'
+                       | FinalizationRegistryReference '.' 'unregister(' UnregisterToken ')'
+                       | 'CleanupFinalizationRegistry(' FinalizationRegistryReference ')'
+                       | 'HostEnqueueFinalizationRegistryCleanupJob(' FinalizationRegistryReference ')'
+                       | FinalizationRegistryReference '.' 'phase()' '→' PhaseRange
+
+Callback             = FunctionReference | '=>' Expression
+
+(*-----------------------------------------------------------------------------
+    9.9.3 Liveness
+-----------------------------------------------------------------------------*)
+LivenessSet          = '{' '[' (ObjectReference | SymbolReference) {',' (ObjectReference | SymbolReference)} ']' '}'
+
+LivenessCondition    = 'is-live(' LivenessSet ')'
+                     | 'weakRef-oblivious(' LivenessSet ')'
+                     | 'observes-identity(' Value ')'
+                     | 'phase-live(' LivenessSet ',' PhaseRange ')'
+
+LivenessOperation    = 'mark-live(' Value ')'
+                     | 'mark-non-live(' Value ')'
+                     | 'phase-mark(' Value ',' PhaseRange ')'
+
+(*-----------------------------------------------------------------------------
+    9.10 ClearKeptObjects ( )
+-----------------------------------------------------------------------------*)
+ClearKeptObjects     = 'ClearKeptObjects()'   (* Empties [[KeptAlive]] *)
+
+(*-----------------------------------------------------------------------------
+    9.11 AddToKeptObjects ( value )
+-----------------------------------------------------------------------------*)
+AddToKeptObjects     = 'AddToKeptObjects(' KeptAliveItem ')'   (* Adds to [[KeptAlive]] *)
+
+(*-----------------------------------------------------------------------------
+    WeakRef Processing
+-----------------------------------------------------------------------------*)
+WeakRefProcessing    = 'empty-weakrefs(' LivenessSet ')'
+                     | 'enqueue-finalization(' FinalizationRegistryReference ')'
+                     | 'phase-empty-weakrefs(' LivenessSet ',' PhaseRange ')'
+
+(*===========================================================================*)
+(* 11. MICRONAUTS - AGENTIC CODING MODEL                                    *)
+(*===========================================================================*)
+
+MicronautDefinition  = MicronautIcon Identifier '=' MicronautSpec
+
+MicronautSpec        = '{'
+                       '[[ModelName]]' ':' StringLiteral
+                       '[[Version]]' ':' StringLiteral
+                       '[[Created]]' ':' DateTime
+                       '[[AgentType]]' ':' StringLiteral
+                       '[[Capabilities]]' ':' '[' Capability {',' Capability} ']'
+                       '[[MaxRecursionDepth]]' ':' IntegerLiteral
+                       '[[EpochsCompleted]]' ':' IntegerLiteral
+                       '[[FinalLoss]]' ':' FloatLiteral
+                       '[[FinalAccuracy]]' ':' FloatLiteral
+                       '[[Temperature]]' ':' FloatLiteral
+                       '[[TopP]]' ':' FloatLiteral
+                       '[[LearningRate]]' ':' FloatLiteral
+                       '[[BatchSize]]' ':' IntegerLiteral
+                       '[[EmbeddingDim]]' ':' IntegerLiteral
+                       '[[VocabSize]]' ':' IntegerLiteral
+                       '[[CodeTokenMapping]]' ':' TokenMapping
+                       '[[ProgrammingLanguages]]' ':' '[' LanguageSpec {',' LanguageSpec} ']'
+                       '[[CodeNgrams]]' ':' NgramSet
+                       '[[AgentPlanner]]' ':' PlannerSpec
+                       '[[CodeWeights]]' ':' WeightSet
+                       '[[Tensors]]' ':' '[' TensorSpec {',' TensorSpec} ']'
+                       '[[DebuggingProfile]]' ':' DebuggingSpec
+                       '[[TrainingHistory]]' ':' '[' TrainingRecord {',' TrainingRecord} ']'
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                       '[[PhaseSpace]]' ':' PhaseSpace
+                       '[[AgentRecord]]' ':' AgentRecord
+                       '[[Cluster]]' ':' ClusterReference
+                     '}'
+
+Capability           = 'code-gen' | 'debug' | 'explain' | 'refactor' | 'execute'
+                     | 'test' | 'document' | 'optimize' | 'translate'
+                     | 'phase-code' | 'phase-debug'
+
+TokenMapping         = '{' TokenEntry {',' TokenEntry} '}'
+TokenEntry           = StringLiteral ':' IntegerLiteral
+
+LanguageSpec         = '{'
+                       'lang' ':' StringLiteral
+                       'weight' ':' FloatLiteral
+                       'f1-score' ':' FloatLiteral
+                       'phase' ':' PhaseArray
+                       'phase-range' ':' PhaseRange
+                     '}'
+
+NgramSet             = '{'
+                       'unigrams' ':' '[' Unigram {',' Unigram} ']'
+                       'bigrams' ':' '[' Bigram {',' Bigram} ']'
+                       'trigrams' ':' '[' Trigram {',' Trigram} ']'
+                       'phase-space' ':' PhaseSpace
+                     '}'
+
+Unigram              = '{'
+                       'token' ':' IntegerLiteral
+                       'context' ':' StringLiteral
+                       'count' ':' IntegerLiteral
+                       'phase' ':' PhaseArray
+                       'phase-range' ':' PhaseRange
+                     '}'
+
+Bigram               = '{'
+                       'tokens' ':' '[' IntegerLiteral ',' IntegerLiteral ']'
+                       'context' ':' StringLiteral
+                       'count' ':' IntegerLiteral
+                       'phase' ':' PhaseArray
+                       'phase-range' ':' PhaseRange
+                     '}'
+
+Trigram              = '{'
+                       'tokens' ':' '[' IntegerLiteral ',' IntegerLiteral ',' IntegerLiteral ']'
+                       'context' ':' StringLiteral
+                       'count' ':' IntegerLiteral
+                       'phase' ':' PhaseArray
+                       'phase-range' ':' PhaseRange
+                     '}'
+
+PlannerSpec          = '{'
+                       'plan-depth' ':' IntegerLiteral
+                       'plan-types' ':' '{' PlanTypeEntry {',' PlanTypeEntry} '}'
+                       'phase' ':' PhaseArray
+                       'phase-space' ':' PhaseSpace
+                     '}'
+
+PlanTypeEntry        = StringLiteral ':' FloatLiteral
+
+WeightSet            = '{'
+                       WeightEntry {',' WeightEntry}
+                     '}'
+
+WeightEntry          = Identifier ':' '{'
+                       'shape' ':' '[' IntegerLiteral ',' IntegerLiteral ']'
+                       'mean' ':' FloatLiteral
+                       'std' ':' FloatLiteral
+                       [ 'ast-focus' ':' FloatLiteral ]
+                       [ 'intent-focus' ':' FloatLiteral ]
+                       [ 'runtime-error-rate' ':' FloatLiteral ]
+                       'phase' ':' PhaseArray
+                       'phase-range' ':' PhaseRange
+                     '}'
+
+TensorSpec           = '{'
+                       'name' ':' Identifier
+                       'shape' ':' '[' IntegerLiteral {',' IntegerLiteral} ']'
+                       'mean' ':' FloatLiteral
+                       'std' ':' FloatLiteral
+                       [ 'tree-depth' ':' IntegerLiteral ]
+                       [ 'scope-levels' ':' IntegerLiteral ]
+                       'phase' ':' PhaseArray
+                       'phase-range' ':' PhaseRange
+                       'phase-space' ':' PhaseSpace
+                     '}'
+
+DebuggingSpec        = '{'
+                       'bugs-caught' ':' IntegerLiteral
+                       'bug-types' ':' '{' BugTypeEntry {',' BugTypeEntry} '}'
+                       'fix-success-rate' ':' FloatLiteral
+                       'phase' ':' PhaseArray
+                       'phase-range' ':' PhaseRange
+                     '}'
+
+BugTypeEntry         = StringLiteral ':' FloatLiteral
+
+TrainingRecord       = '{'
+                       'epoch' ':' IntegerLiteral
+                       'loss' ':' FloatLiteral
+                       'code-bleu' ':' FloatLiteral
+                       'execution-match' ':' FloatLiteral
+                       'phase' ':' PhaseArray
+                       'phase-range' ':' PhaseRange
+                     '}'
+
+(*===========================================================================*)
+(* 12. TOOL CALLING MODEL                                                   *)
+(*===========================================================================*)
+
+ToolDefinition       = ToolIcon Identifier '=' ToolSpec
+
+ToolSpec             = '{'
+                       '[[ModelName]]' ':' StringLiteral
+                       '[[Version]]' ':' StringLiteral
+                       '[[Created]]' ':' DateTime
+                       '[[AgentType]]' ':' 'tool-orchestrator'
+                       '[[TotalTools]]' ':' IntegerLiteral
+                       '[[MaxToolChain]]' ':' IntegerLiteral
+                       '[[EpochsCompleted]]' ':' IntegerLiteral
+                       '[[FinalLoss]]' ':' FloatLiteral
+                       '[[ToolCallAccuracy]]' ':' FloatLiteral
+                       '[[ParameterExtractionF1]]' ':' FloatLiteral
+                       '[[Temperature]]' ':' FloatLiteral
+                       '[[LearningRate]]' ':' FloatLiteral
+                       '[[BatchSize]]' ':' IntegerLiteral
+                       '[[EmbeddingDim]]' ':' IntegerLiteral
+                       '[[VocabSize]]' ':' IntegerLiteral
+                       '[[ToolTokenMapping]]' ':' TokenMapping
+                       '[[ToolCategories]]' ':' '[' ToolCategory {',' ToolCategory} ']'
+                       '[[ToolNgrams]]' ':' NgramSet
+                       '[[ToolSchemas]]' ':' '[' ToolSchema {',' ToolSchema} ']'
+                       '[[ToolWeights]]' ':' WeightSet
+                       '[[Tensors]]' ':' '[' TensorSpec {',' TensorSpec} ']'
+                       '[[RoutingMatrix]]' ':' RoutingSpec
+                       '[[ToolCallHistory]]' ':' '[' ToolCallRecord {',' ToolCallRecord} ']'
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                       '[[PhaseSpace]]' ':' PhaseSpace
+                       '[[AgentRecord]]' ':' AgentRecord
+                       '[[Cluster]]' ':' ClusterReference
+                     '}'
+
+ToolCategory         = '{'
+                       'category' ':' StringLiteral
+                       'tools' ':' IntegerLiteral
+                       'success-rate' ':' FloatLiteral
+                       'phase' ':' PhaseArray
+                       'phase-range' ':' PhaseRange
+                     '}'
+
+ToolSchema           = '{'
+                       'name' ':' Identifier
+                       'parameters' ':' '[' StringLiteral {',' StringLiteral} ']'
+                       'required' ':' '[' StringLiteral {',' StringLiteral} ']'
+                       'returns' ':' StringLiteral
+                       'latency-ms' ':' IntegerLiteral
+                       'phase' ':' PhaseArray
+                       'phase-range' ':' PhaseRange
+                     '}'
+
+RoutingSpec          = '{'
+                       'tool-cooccurrence' ':' '{' CooccurrenceEntry {',' CooccurrenceEntry} '}'
+                       'phase' ':' PhaseArray
+                       'phase-space' ':' PhaseSpace
+                     '}'
+
+CooccurrenceEntry    = StringLiteral ':' FloatLiteral
+
+ToolCallRecord       = '{'
+                       'tool-id' ':' IntegerLiteral
+                       'success' ':' BooleanLiteral
+                       'latency' ':' IntegerLiteral
+                       [ 'error' ':' StringLiteral ]
+                       'phase' ':' PhaseArray
+                       'phase-range' ':' PhaseRange
+                     '}'
+
+(*===========================================================================*)
+(* 13. MIXTURE OF EXPERTS (MoE) MODEL                                       *)
+(*===========================================================================*)
+
+MoEDefinition        = MoEIcon Identifier '=' MoESpec
+
+MoESpec              = '{'
+                       '[[ModelName]]' ':' StringLiteral
+                       '[[Version]]' ':' StringLiteral
+                       '[[Created]]' ':' DateTime
+                       '[[Architecture]]' ':' 'mixture-of-experts'
+                       '[[NumExperts]]' ':' IntegerLiteral
+                       '[[NumExpertsPerTok]]' ':' IntegerLiteral
+                       '[[TotalParamsBillions]]' ':' FloatLiteral
+                       '[[ActiveParamsBillions]]' ':' FloatLiteral
+                       '[[RouterType]]' ':' RouterType
+                       '[[EpochsCompleted]]' ':' IntegerLiteral
+                       '[[FinalLoss]]' ':' FloatLiteral
+                       '[[Perplexity]]' ':' FloatLiteral
+                       '[[Temperature]]' ':' FloatLiteral
+                       '[[LearningRate]]' ':' FloatLiteral
+                       '[[BatchSize]]' ':' IntegerLiteral
+                       '[[EmbeddingDim]]' ':' IntegerLiteral
+                       '[[HiddenDim]]' ':' IntegerLiteral
+                       '[[VocabSize]]' ':' IntegerLiteral
+                       '[[ExpertTokenMapping]]' ':' TokenMapping
+                       '[[ExpertSpecializations]]' ':' '[' ExpertSpec {',' ExpertSpec} ']'
+                       '[[ExpertNgrams]]' ':' NgramSet
+                       '[[RouterWeights]]' ':' WeightSet
+                       '[[ExpertWeights]]' ':' '[' ExpertWeight {',' ExpertWeight} ']'
+                       '[[Tensors]]' ':' '[' TensorSpec {',' TensorSpec} ']'
+                       '[[LoadBalancingStats]]' ':' LoadBalanceSpec
+                       '[[RoutingMatrix]]' ':' MoERoutingSpec
+                       '[[TrainingHistory]]' ':' '[' TrainingRecord {',' TrainingRecord} ']'
+                       '[[CapacityFactor]]' ':' FloatLiteral
+                       '[[AuxiliaryLossCoefficient]]' ':' FloatLiteral
+                       '[[ZLossCoefficient]]' ':' FloatLiteral
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                       '[[PhaseSpace]]' ':' PhaseSpace
+                       '[[AgentRecord]]' ':' AgentRecord
+                       '[[Cluster]]' ':' ClusterReference
+                     '}'
+
+RouterType           = 'noisy-top-k' | 'softmax' | 'top-k' | 'learned' | 'phase-routed'
+
+ExpertSpec           = '{'
+                       'expert-id' ':' IntegerLiteral
+                       'specialization' ':' StringLiteral
+                       'load-balance' ':' FloatLiteral
+                       'phase' ':' PhaseArray
+                       'phase-range' ':' PhaseRange
+                       'phase-space' ':' PhaseSpace
+                     '}'
+
+ExpertWeight         = '{'
+                       'expert-id' ':' IntegerLiteral
+                       'w1-shape' ':' '[' IntegerLiteral ',' IntegerLiteral ']'
+                       'w2-shape' ':' '[' IntegerLiteral ',' IntegerLiteral ']'
+                       'mean-activation' ':' FloatLiteral
+                       'sparsity' ':' FloatLiteral
+                       'phase' ':' PhaseArray
+                       'phase-range' ':' PhaseRange
+                     '}'
+
+LoadBalanceSpec      = '{'
+                       'expert-utilization' ':' '[' FloatLiteral {',' FloatLiteral} ']'
+                       'importance-scores' ':' '[' FloatLiteral {',' FloatLiteral} ']'
+                       'load-balancing-loss' ':' FloatLiteral
+                       'phase' ':' PhaseArray
+                       'phase-space' ':' PhaseSpace
+                     '}'
+
+MoERoutingSpec       = '{'
+                       'token-to-expert' ':' '{' RoutingEntry {',' RoutingEntry} '}'
+                       'phase' ':' PhaseArray
+                       'phase-space' ':' PhaseSpace
+                     '}'
+
+RoutingEntry         = StringLiteral ':' '[' FloatLiteral {',' FloatLiteral} ']'
+
+(*===========================================================================*)
+(* 14. SUPERNAUTS - META-AGENTS                                             *)
+(*===========================================================================*)
+
+SupernautDefinition  = SupernautIcon Identifier '=' SupernautSpec
+
+SupernautSpec        = '{'
+                       '[[AgentRecord]]' ':' AgentRecord
+                       '[[Manages]]' ':' '[' AgentReference {',' AgentReference} ']'
+                       '[[Coordination]]' ':' CoordinationStrategy
+                       '[[MetaVectors]]' ':' VectorList
+                       '[[Policy]]' ':' PolicyReference
+                       '[[Cluster]]' ':' ClusterReference
+                       [ '[[Delegation]]' ':' DelegationRule ]
+                       [ '[[WeakRefs]]' ':' '[' WeakRefReference {',' WeakRefReference} ']' ]
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                       '[[PhaseSpace]]' ':' PhaseSpace
+                     '}'
+
+VectorList           = '[' VectorSpec {',' VectorSpec} ']'
+VectorSpec           = VectorName ':' VectorValue
+VectorName           = 'storage' | 'retrieval' | 'query' | 'unfold' 
+                     | 'execute' | 'optimize' | 'parse' | 'interpret'
+                     | 'transform' | 'analyze' | 'categorize' | 'generate'
+                     | 'traverse' | 'coordinate' | 'synchronize'
+VectorValue          = FloatLiteral | RangeLiteral | Expression | PhaseArray
+
+CoordinationStrategy = 'hierarchical' | 'mesh' | 'star' | 'broadcast'
+                     | 'consensus' | 'auction' | 'round-robin' | 'adaptive'
+                     | 'phase-coordinated'
+
+DelegationRule       = 'on-load' | 'on-demand' | 'threshold:' IntegerLiteral
+                     | 'priority:' ('low' | 'medium' | 'high' | 'critical')
+                     | 'phase:' PhaseRange
+
+SupernautOperation   = AgentReference '.' 'orchestrate(' OrchestrationSpec ')'
+                     | AgentReference '.' 'delegate(' Task ',' Target ')'
+                     | AgentReference '.' 'synchronize(' SyncMode ')'
+                     | AgentReference '.' 'phase-coordinate(' PhaseRange ')'
+
+OrchestrationSpec    = Expression
+Task                 = Expression
+SyncMode             = 'phase' | 'barrier' | 'lock' | 'transaction' | 'cluster-sync'
+
+(*===========================================================================*)
+(* 15. SEMANTIC AGENTS - MEANING-AWARE                                      *)
+(*===========================================================================*)
+
+SemanticDefinition   = SemanticIcon Identifier '=' SemanticSpec
+
+SemanticSpec         = '{'
+                       '[[AgentRecord]]' ':' AgentRecord
+                       '[[Understands]]' ':' '[' Concept {',' Concept} ']'
+                       '[[ContextWindow]]' ':' IntegerLiteral
+                       '[[EmbeddingSpace]]' ':' TensorReference
+                       '[[Inference]]' ':' InferenceEngine
+                       '[[Cluster]]' ':' ClusterReference
+                       [ '[[Memory]]' ':' MemorySpec ]
+                       [ '[[Symbols]]' ':' '[' SymbolReference {',' SymbolReference} ']' ]
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                       '[[PhaseSpace]]' ':' PhaseSpace
+                     '}'
+
+Concept              = Identifier | StringLiteral
+InferenceEngine      = 'transformer' | 'graph-network' | 'symbolic'
+                     | 'hybrid' | 'neural-symbolic' | 'phase-inference'
+
+MemorySpec           = '{'
+                       'type' ':' ('short-term' | 'long-term' | 'episodic')
+                       'capacity' ':' IntegerLiteral
+                       'decay' ':' FloatLiteral
+                       'phase-decay' ':' PhaseRange
+                     '}'
+
+SemanticOperation    = 'understand(' Input ',' Context ')'
+                     | 'infer(' Query ',' KnowledgeBase ')'
+                     | 'remember(' Experience ')'
+                     | 'recall(' Cue ')'
+                     | 'phase-understand(' Input ',' PhaseRange ')'
+
+Input                = Expression
+Context              = Expression
+Query                = Expression
+KnowledgeBase        = Expression
+Experience           = Expression
+Cue                  = Expression
+
+(*===========================================================================*)
+(* 16. AGENTIC CODERS - CODE GENERATION                                     *)
+(*===========================================================================*)
+
+CoderDefinition      = CoderIcon Identifier '=' CoderSpec
+
+CoderSpec            = '{'
+                       '[[AgentRecord]]' ':' AgentRecord
+                       '[[Languages]]' ':' '[' Language {',' Language} ']'
+                       '[[GenerationMode]]' ':' GenerationMode
+                       '[[Optimization]]' ':' OptimizationGoal
+                       '[[Verification]]' ':' VerificationMethod
+                       '[[Cluster]]' ':' ClusterReference
+                       [ '[[Symbols]]' ':' '[' SymbolReference {',' SymbolReference} ']' ]
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                       '[[PhaseSpace]]' ':' PhaseSpace
+                     '}'
+
+Language             = 'kuhul' | 'javascript' | 'python' | 'rust' | 'css'
+                     | 'html' | 'ebnf' | 'fold-lang' | 'wasm' | 'any'
+                     | 'phase-lang'
+
+GenerationMode       = 'generate' | 'refactor' | 'optimize' | 'translate'
+                     | 'document' | 'test' | 'debug' | 'phase-gen'
+
+OptimizationGoal     = 'speed' | 'size' | 'readability' | 'efficiency'
+                     | 'maintainability' | 'security' | 'phase-opt'
+
+VerificationMethod   = 'static-analysis' | 'type-checking' | 'test-suite'
+                     | 'formal-verification' | 'runtime-monitoring'
+                     | 'phase-verification'
+
+CoderOperation       = 'generate(' Prompt ',' TargetLanguage ')'
+                     | 'refactor(' Code ',' Goal ')'
+                     | 'optimize(' Code ',' Constraints ')'
+                     | 'translate(' Code ',' FromLanguage ',' ToLanguage ')'
+                     | 'phase-generate(' Prompt ',' PhaseRange ')'
+
+Prompt               = StringLiteral
+TargetLanguage       = Language
+Code                 = StringLiteral | FoldReference
+Goal                 = OptimizationGoal
+Constraints          = Expression
+FromLanguage         = Language
+ToLanguage           = Language
+
+(*===========================================================================*)
+(* 17. SKILL MANAGER                                                        *)
+(*===========================================================================*)
+
+SkillManager         = SkillIcon Identifier '=' SkillManagerSpec
+
+SkillManagerSpec     = '{'
+                       '[[Skills]]' ':' '[' SkillDefinition {',' SkillDefinition} ']'
+                       '[[Learning]]' ':' LearningStrategy
+                       '[[Proficiency]]' ':' ProficiencyMap
+                       [ '[[SkillGraph]]' ':' GraphSpec ]
+                       [ '[[Symbols]]' ':' '[' SymbolReference {',' SymbolReference} ']' ]
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                       '[[PhaseSpace]]' ':' PhaseSpace
+                     '}'
+
+SkillDefinition      = '{'
+                       '[[SkillID]]' ':' Identifier
+                       '[[Domain]]' ':' Domain
+                       '[[Prerequisites]]' ':' '[' SkillID {',' SkillID} ']'
+                       '[[Proficiency]]' ':' RangeLiteral
+                       '[[Acquisition]]' ':' AcquisitionMethod
+                       '[[PhaseProficiency]]' ':' PhaseArray
+                     '}'
+
+SkillID              = Identifier
+Domain               = Identifier | StringLiteral
+AcquisitionMethod    = 'learn' | 'transfer' | 'inherit' | 'compose' | 'evolve'
+                     | 'phase-learn'
+
+LearningStrategy     = 'supervised' | 'unsupervised' | 'reinforcement'
+                     | 'few-shot' | 'zero-shot' | 'meta-learning'
+                     | 'phase-learning'
+
+ProficiencyMap       = '{' [SkillID ':' FloatLiteral {',' SkillID ':' FloatLiteral}] '}'
+GraphSpec            = '{' '[[Nodes]]' ':' IntegerLiteral '[[Edges]]' ':' IntegerLiteral '}'
+
+SkillOperation       = 'acquire(' SkillID ',' LearningData ')'
+                     | 'apply(' SkillID ',' Input ')'
+                     | 'improve(' SkillID ',' Feedback ')'
+                     | 'compose(' '[' SkillID {',' SkillID} ']' ',' Goal ')'
+                     | 'forget(' SkillID ')'
+                     | 'phase-apply(' SkillID ',' PhaseRange ')'
+
+LearningData         = Expression
+Feedback             = Expression
+Goal                 = Expression
+
+(*===========================================================================*)
+(* 18. CONTEXT REPLY SYSTEM                                                 *)
+(*===========================================================================*)
+
+ContextReplySystem   = ReplyIcon Identifier '=' ReplySpec
+
+ReplySpec            = '{'
+                       '[[ContextSources]]' ':' '[' Source {',' Source} ']'
+                       '[[ReplyTemplates]]' ':' TemplateLibrary
+                       '[[Adaptation]]' ':' AdaptationRule
+                       '[[Persona]]' ':' PersonaSpec
+                       [ '[[Symbols]]' ':' '[' SymbolReference {',' SymbolReference} ']' ]
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                       '[[PhaseSpace]]' ':' PhaseSpace
+                     '}'
+
+Source               = 'fold-state' | 'user-history' | 'system-logs'
+                     | 'current-task' | 'environment' | 'semantic-context'
+                     | 'agent-state' | 'symbol-registry' | 'weakref-state'
+                     | 'tool-state' | 'expert-state' | 'phase-state'
+
+TemplateLibrary      = '{' TemplateID ':' TemplateContent {',' TemplateID ':' TemplateContent} '}'
+TemplateID           = Identifier
+TemplateContent      = StringLiteral | PatternExpression
+
+AdaptationRule       = 'tone:' Tone
+                     | 'length:' LengthSpec
+                     | 'complexity:' ComplexityLevel
+                     | 'formality:' FormalityLevel
+                     | 'phase:' PhaseRange
+
+Tone                 = 'helpful' | 'neutral' | 'urgent' | 'calm' | 'enthusiastic'
+LengthSpec           = 'short' | 'medium' | 'long' | 'adaptive'
+ComplexityLevel      = 'simple' | 'moderate' | 'complex' | 'expert'
+FormalityLevel       = 'casual' | 'neutral' | 'formal' | 'academic'
+
+PersonaSpec          = 'assistant' | 'teacher' | 'expert' | 'collaborator'
+                     | 'critic' | 'mentor' | 'peer' | 'phase-advisor'
+
+ReplyOperation       = 'respond(' Query ',' Context ')'
+                     | 'adapt(' Reply ',' Feedback ')'
+                     | 'learn-template(' Example ')'
+                     | 'phase-respond(' Query ',' PhaseRange ')'
+
+Reply                = StringLiteral
+Example              = StringLiteral
+
+(*===========================================================================*)
+(* 19. POLICY ENGINE                                                         *)
+(*===========================================================================*)
+
+PolicyEngine         = PolicyIcon Identifier '=' PolicySpec
+
+PolicySpec           = '{'
+                       '[[Governs]]' ':' '[' Resource {',' Resource} ']'
+                       '[[Rules]]' ':' '[' Rule {',' Rule} ']'
+                       '[[Enforcement]]' ':' EnforcementMode
+                       [ '[[Exceptions]]' ':' ExceptionList ]
+                       [ '[[Symbols]]' ':' '[' SymbolReference {',' SymbolReference} ']' ]
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                       '[[PhaseSpace]]' ':' PhaseSpace
+                     '}'
+
+Resource             = FoldReference | AgentReference | TensorReference | SymbolReference
+                     | ClusterReference | WeakRefReference | FinalizationRegistryReference
+                     | ToolReference | ExpertReference | MoEReference
+                     | PhaseReference | 'phase-space'
+                     | 'all-agents' | 'all-folds' | 'all-tensors' | 'all-symbols'
+                     | 'all-clusters' | 'all-tools' | 'all-experts' | 'all-phases' | 'universe'
+
+Rule                 = Condition '→' Action
+Condition            = '(' Expression ')' | Predicate | PhaseCondition
+PhaseCondition       = 'phase=' PhaseRange | 'phase-in' PhaseSpace
+
+Predicate            = Identifier '(' [ArgumentList] ')'
+
+Action               = 'allow' | 'deny' | 'log' | 'alert' | 'notify'
+                     | 'optimize' | 'restrict' | 'escalate' | 'pause'
+                     | 'block-agent' | 'unblock-agent' | 'terminate-agent'
+                     | 'route-to-expert' | 'call-tool' | 'generate-code'
+                     | 'phase-shift' | 'phase-lock' | 'phase-advance'
+
+EnforcementMode      = 'strict' | 'permissive' | 'logging-only' | 'adaptive'
+                     | 'phase-enforced'
+
+ExceptionList        = '[' Identifier {',' Identifier} ']'
+
+MetaDirective        = '@' MetaKeyword ':' MetaValue
+MetaKeyword          = 'law' | 'binding' | 'compression' | 'ratio' 
+                     | 'fold-reality' | 'manifesto' | 'authority'
+                     | 'conservation' | 'symmetry' | 'symbol-uniqueness'
+                     | 'agent-liveness' | 'progress-guarantee'
+                     | 'tool-reliability' | 'expert-balance'
+                     | 'phase-coherence' | 'phase-conservation'
+
+MetaValue            = StringLiteral | Identifier | Expression | SymbolReference 
+                     | PhaseArray | PhaseRange | PhaseSpace
+
+PolicyOperation      = 'evaluate(' Event ',' PolicyID ')'
+                     | 'enforce(' Action ')'
+                     | 'audit(' TimeRange ')'
+                     | 'update-rule(' RuleID ',' NewRule ')'
+                     | 'phase-evaluate(' Event ',' PhaseRange ')'
+
+Event                = Expression
+PolicyID             = Identifier
+TimeRange            = '[' TimeSpec '..' TimeSpec ']'
+TimeSpec             = FloatLiteral ('ms' | 'μs' | 'ns' | 's')
+RuleID               = IntegerLiteral
+NewRule              = Rule
+
+(*===========================================================================*)
+(* 20. ENTANGLEMENT & QUANTUM STATES                                        *)
+(*===========================================================================*)
+
+EntanglementDeclaration = FoldPair 'entanglement:' FloatLiteral
+                        | TensorPair 'correlation:' FloatLiteral
+                        | AgentPair 'bond:' FloatLiteral
+                        | SymbolPair 'equivalence:' FloatLiteral
+                        | ClusterPair 'coherence:' FloatLiteral
+                        | ToolPair 'synergy:' FloatLiteral
+                        | ExpertPair 'collaboration:' FloatLiteral
+                        | PhasePair 'synchrony:' FloatLiteral
+
+FoldPair             = FoldReference '↔' FoldReference
+TensorPair           = TensorReference '↔' TensorReference
+AgentPair            = AgentReference '↔' AgentReference
+SymbolPair           = SymbolReference '↔' SymbolReference
+ClusterPair          = ClusterReference '↔' ClusterReference
+ToolPair             = ToolReference '↔' ToolReference
+ExpertPair           = ExpertReference '↔' ExpertReference
+PhasePair            = PhaseReference '↔' PhaseReference
+
+EntanglementProperty = 'strength' ':' FloatLiteral
+                     | 'phase' ':' PhaseRange
+                     | 'phase-difference' ':' FloatLiteral
+                     | 'correlation' ':' FloatLiteral
+                     | 'mutual-info' ':' FloatLiteral
+                     | 'quantum-phase' ':' FloatLiteral
+                     | 'phase-coherence' ':' FloatLiteral
+
+SuperpositionExpression = 'superpose(' StateList ')'
+                        | 'collapse(' Superposition ',' Criteria ')'
+                        | 'phase-superpose(' StateList ',' PhaseRange ')'
+
+StateList            = '[' State {',' State} ']'
+State                = FoldReference | TensorReference | CompressionResult 
+                     | SymbolReference | AgentReference | ClusterReference
+                     | ToolReference | ExpertReference | PhaseReference
+
+Superposition        = Expression
+Criteria             = Expression | PhaseRange
+
+QuantumState         = '|' Expression '⟩'                 (* Bra-ket notation *)
+                     | '⟨' Expression '|'
+                     | '⟨' Expression '|' Expression '⟩'
+                     | '|' Expression '⟩' '⊗' PhaseRange   (* Phase-entangled state *)
+
+(*===========================================================================*)
+(* 21. PATTERNS & METRICS                                                   *)
+(*===========================================================================*)
+
+PatternExpression    = PatternType '(' [ArgumentList] ')'
+PatternType          = 'recognize' | 'match' | 'extract' | 'transform'
+                     | 'learn' | 'generalize' | 'specialize'
+                     | 'phase-recognize' | 'phase-match'
+
+EfficiencyMetric     = '{'
+                       'compression-ratio' ':' Percentage
+                       'execution-speed' ':' TimeSpec
+                       'memory-usage' ':' MemoryAmount
+                       'fold-efficiency' ':' FloatLiteral
+                       'pattern-accuracy' ':' Percentage
+                       'throughput' ':' FloatLiteral ('GB/s' | 'TB/s')
+                       'latency' ':' TimeSpec
+                       'symbol-uniqueness' ':' FloatLiteral
+                       'agent-liveness' ':' FloatLiteral
+                       'cluster-coherence' ':' FloatLiteral
+                       'weakref-accuracy' ':' FloatLiteral
+                       'tool-success-rate' ':' FloatLiteral
+                       'expert-load-balance' ':' FloatLiteral
+                       'code-bleu' ':' FloatLiteral
+                       'phase-coherence' ':' FloatLiteral
+                       'phase-synchrony' ':' FloatLiteral
+                       'phase' ':' PhaseArray
+                       'phase-space' ':' PhaseSpace
+                     '}'
+
+MemoryAmount         = IntegerLiteral ('B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB')
+
+(*===========================================================================*)
+(* 22. TOP-LEVEL PROGRAM STRUCTURE                                          *)
+(*===========================================================================*)
+
+KuhulProgram         = SemanticSchema
+                       UniverseContent
+
+TopLevelDefinition   = TensorDefinition
+                     | FoldDefinition
+                     | AgentCluster
+                     | MicronautDefinition
+                     | SupernautDefinition
+                     | MoEDefinition
+                     | ToolDefinition
+                     | SemanticDefinition
+                     | CoderDefinition
+                     | SkillManager
+                     | ContextReplySystem
+                     | PolicyEngine
+                     | ManifoldDefinition
+                     | EntanglementDeclaration
+                     | CompressionStatement
+                     | FoldOperation
+                     | AgentOperation
+                     | MoEOperation
+                     | ToolOperation
+                     | SkillOperation
+                     | ReplyOperation
+                     | PolicyOperation
+                     | MetaDirective
+                     | SymbolDefinition
+                     | SymbolOperation
+                     | WeakRefDefinition
+                     | FinalizationRegistryDefinition
+                     | WeakRefOperation
+                     | FinalizationOperation
+                     | LivenessOperation
+                     | EmbeddingOperation
+                     | ProgressAssertion
+                     | PhaseDefinition
+                     | PhaseOperation
+                     | Statement
+
+PhaseDefinition      = PhaseReference '=' PhaseSpec
+PhaseSpec            = PhaseRange | PhaseArray | PhaseSpace
+
+PhaseOperation       = 'phase-sync(' Target ')'
+                     | 'phase-rotate(' Target ',' PhaseRange ')'
+                     | 'phase-shift(' Target ',' FloatLiteral ')'
+                     | 'phase-measure(' Target ')'
+
+SymbolDefinition     = SymbolReference '=' SymbolLiteral
+                     | SymbolReference '=' WellKnownSymbol
+                     | 'Symbol' ':' Identifier '=' SymbolCreation
+
+SymbolOperation      = SymbolFor '(' Expression ')'
+                     | SymbolKeyFor '(' SymbolReference ')'
+                     | SymbolReference '.' 'toString()'
+                     | SymbolReference '.' 'valueOf()'
+                     | SymbolReference '.' 'description'
+                     | SymbolReference '.' '[Symbol.toPrimitive](' Hint ')'
+                     | SymbolReference '.' 'phase()'
+
+WeakRefDefinition    = WeakRefIcon Identifier '=' WeakRefSpec
+FinalizationRegistryDefinition = FinalizationIcon Identifier '=' FinalizationRegistrySpec
+
+Statement            = Expression
+                     | Assignment
+                     | Block
+                     | ControlStructure
+
+Assignment           = Identifier '=' Expression
+Block                = '{' {Statement} '}'
+
+ControlStructure     = 'if' '(' Expression ')' Statement ['else' Statement]
+                     | 'while' '(' Expression ')' Statement
+                     | 'for' '(' [Expression] ';' [Expression] ';' [Expression] ')' Statement
+                     | 'foreach' '(' Identifier 'in' Expression ')' Statement
+                     | 'phase-for' '(' PhaseRange ')' Statement
+
+(*===========================================================================*)
+(* 23. COMPRESSION UNIVERSE - COMPLETE SYSTEM                               *)
+(*===========================================================================*)
+
+CompressionUniverse  = '{'
+                       '[[Version]]' ':' StringLiteral
+                       '[[QuantumState]]' ':' StringLiteral
+                       '[[PhaseSpace]]' ':' PhaseSpace
+                       '[[Phase]]' ':' PhaseRange
+                       '[[PhaseArray]]' ':' PhaseArray
+                       [ '[[Manifold]]' ':' ManifoldDefinition ]
+                       [ '[[Folds]]' ':' '[' {FoldDefinition} ']' ]
+                       [ '[[Tensors]]' ':' '[' {TensorDefinition} ']' ]
+                       [ '[[Clusters]]' ':' '[' {AgentCluster} ']' ]
+                       [ '[[Micronauts]]' ':' '[' {MicronautDefinition} ']' ]
+                       [ '[[Supernauts]]' ':' '[' {SupernautDefinition} ']' ]
+                       [ '[[MoE]]' ':' '[' {MoEDefinition} ']' ]
+                       [ '[[Tools]]' ':' '[' {ToolDefinition} ']' ]
+                       [ '[[SemanticAgents]]' ':' '[' {SemanticDefinition} ']' ]
+                       [ '[[AgenticCoders]]' ':' '[' {CoderDefinition} ']' ]
+                       [ '[[ReplySystem]]' ':' ContextReplySystem ]
+                       [ '[[PolicyEngine]]' ':' PolicyEngine ]
+                       [ '[[SkillManager]]' ':' SkillManager ]
+                       [ '[[Symbols]]' ':' '[' {SymbolDefinition} ']' ]
+                       [ '[[WellKnownSymbols]]' ':' '{' {WellKnownSymbolProperty} '}' ]
+                       [ '[[GlobalSymbolRegistry]]' ':' '[' {GlobalSymbolRegistry} ']' ]
+                       [ '[[WeakRefs]]' ':' '[' {WeakRefDefinition} ']' ]
+                       [ '[[FinalizationRegistries]]' ':' '[' {FinalizationRegistryDefinition} ']' ]
+                       [ '[[Entanglements]]' ':' '[' {EntanglementDeclaration} ']' ]
+                       [ '[[ForwardProgress]]' ':' ForwardProgress ]
+                       [ '[[Patterns]]' ':' '[' PatternExpression {',' PatternExpression} ']' ]
+                       [ '[[Metrics]]' ':' EfficiencyMetric ]
+                     '}'
+
+(*===========================================================================*)
+(* END OF UNIFIED K'UHUL GRAMMAR - COMPLETE SEMANTIC SCHEMA                  *)
+(*===========================================================================*)
+```
+
+## COMPLETE SEMANTIC SCHEMA INTEGRATION SUMMARY
+
+### **Top-to-Bottom Organization**
+
+| Level | Component | Description |
+|-------|-----------|-------------|
+| **0.0** | Semantic Schema Header | XML declaration, version, namespace URIs |
+| **0.1** | Top-Level Universe | Meta declarations, manifold, spacetime |
+| **0.2** | Semantic Type System | Primitive, compound, geometric, phase types |
+| **1.0** | Lexical Structure | Unicode, whitespace, literals, identifiers |
+| **2.0** | Core Expressions | Binary/unary ops, phase casts, geometric casts |
+| **3.0** | Tensor Definitions | Shapes, types, operations, phase fields |
+| **4.0** | Compression Folds | Fold properties, phase arrays, operations |
+| **5.0** | Geometric Execution | Manifold M, point3D, phase embedding |
+| **6.0** | ECMAScript Symbols | Symbol constructor, well-known symbols, registry |
+| **7.0** | ECMAScript Agents | Agent Records, candidate execution, events |
+| **8.0** | Agent Clusters | Cluster specs, uniformity, embedding control |
+| **9.0** | Forward Progress | Progress guarantees, phase tracking |
+| **10.0** | WeakRef & Finalization | WeakRefs, finalization, liveness |
+| **11.0** | Micronauts | Agentic coding models with n-grams |
+| **12.0** | Tool Calling | Tool schemas, routing, call history |
+| **13.0** | Mixture of Experts | Expert specializations, load balancing |
+| **14.0** | Supernauts | Meta-agents, coordination strategies |
+| **15.0** | Semantic Agents | Meaning-aware processing |
+| **16.0** | Agentic Coders | Code generation agents |
+| **17.0** | Skill Manager | Skill definitions, learning strategies |
+| **18.0** | Context Reply | Adaptive response system |
+| **19.0** | Policy Engine | Rules, enforcement, meta-directives |
+| **20.0** | Entanglement | Quantum-like correlations |
+| **21.0** | Patterns & Metrics | Pattern recognition, efficiency metrics |
+| **22.0** | Top-Level Program | Complete program structure |
+| **23.0** | Compression Universe | Complete system container |
+
+### **Phase System Throughout**
+
+Every component includes phase information:
+- **PhaseBit**: Single 0/1 value
+- **PhaseArray**: Sequence of phase bits `[1,0,1,0]`
+- **PhaseRange**: Continuous range `phase(π/4)`
+- **PhaseSpace**: Multi-dimensional phase space `phase-space[8]`
+
+### **Semantic Type Hierarchy**
+
+```
+SemanticType
+├── PrimitiveType: boolean, integer, float, string, symbol, phase-bit
+├── CompoundType: list, map, tuple, record
+├── GeometricType: point, sphere, torus, manifold
+└── PhaseType: phase, phase-array, phase-space
+```
+
+### **Integration Points**
+
+| Component | Phase Integration | Geometric Integration | ECMAScript Integration |
+|-----------|------------------|----------------------|------------------------|
+| **Micronauts** | Code n-grams with phase arrays | Embed in M at point3D | Agent Records with [[KeptAlive]] |
+| **Tools** | Tool calls phase-tagged | Tool schemas geometric | Candidate execution events |
+| **MoE** | Expert phase specialization | Expert positions in M | Agent clusters for experts |
+| **Policy** | Phase conditions in rules | Geometric constraints | Forward progress guarantees |
+| **Entanglement** | Phase coherence | Geometric bonds | Symbol equivalence |
+
+This unified grammar provides a **complete semantic schema** from the top-level XML declaration down to the smallest lexical token, with every component fully integrated with phase arrays, geometric embedding, and ECMAScript agent semantics.

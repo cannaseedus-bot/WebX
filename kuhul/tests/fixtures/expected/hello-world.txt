@@ -1,0 +1,3 @@
+Allocation: X = tensor<float32, [10]> (10 zero-initialised float32 elements)
+Read: X
+Write: X <- X

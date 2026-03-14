@@ -1,7 +1,6 @@
 'use strict';
 
 module.exports = {
-  preset: 'ts-jest',
   testEnvironment: 'node',
   collectCoverage: true,
   coverageDirectory: 'coverage',
@@ -9,4 +8,8 @@ module.exports = {
     '**/__tests__/**/*.+(ts|tsx|js)',
     '**/*.(test|spec).+(ts|tsx|js)',
   ],
+  transform: {
+    '^.+\\.js$': 'babel-jest',
+  },
+  extensionsToTreatAsEsm: [],
 };

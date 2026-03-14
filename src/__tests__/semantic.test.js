@@ -1,7 +1,7 @@
 // Tests for K'UHUL++ v2.0 Semantic Analyzer
 
 import { tokenize } from '../compiler/lexer.js';
-import { parse } from '../compiler/parser.js';
+import { parse, NodeKind } from '../compiler/parser.js';
 import { analyze, SemanticError } from '../compiler/semantic.js';
 
 function analyzeSource(source) {
@@ -69,9 +69,6 @@ describe('Semantic Analyzer — analyze()', () => {
 
     test('reports error for unknown glyph', () => {
         // Inject an unknown glyph via a patched AST
-        const { analyze } = require('../compiler/semantic.js');
-        const { NodeKind } = require('../compiler/parser.js');
-
         const fakeAst = {
             kind: NodeKind.Program,
             body: [{
@@ -86,9 +83,6 @@ describe('Semantic Analyzer — analyze()', () => {
     });
 
     test('reports error for unknown glyph in foreach glyph list', () => {
-        const { analyze } = require('../compiler/semantic.js');
-        const { NodeKind } = require('../compiler/parser.js');
-
         const fakeAst = {
             kind: NodeKind.Program,
             body: [{

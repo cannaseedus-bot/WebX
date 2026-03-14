@@ -5,15 +5,11 @@ export { default as D12WebX, GPU_FLAGS } from './d12webx.js';
 export { default as KuhulD12WebX, GLYPHS, applyGlyph } from './kuhul.js';
 export { default as CommandList } from './command-list.js';
 export { default as GPUMemoryAllocator } from './gpu-allocator.js';
-export { default as MindBinder, PHASES, PHASE_NAMES, GEOMETRIC_OPS } from './mind-binder.js';
-export { encodeToSVG, decodeFromSVG } from './svg3d.js';
-export {
-    matMul,
-    translate,
-    subtract,
-    project,
-    validate,
-    clamp,
-    foldReduce,
-    softmax,
-} from './geometric-operators.js';
+
+// K'UHUL++ v2.0 Compiler
+export { tokenize, TokenType, KEYWORDS, GLYPHS as GLYPH_SYMBOLS, LexerError } from './compiler/lexer.js';
+export { parse, NodeKind, ParseError } from './compiler/parser.js';
+export { analyze, SemanticError } from './compiler/semantic.js';
+
+// K'UHUL++ v2.0 Runtime
+export { KuhulRuntime, RuntimeError, run } from './runtime/runtime.js';

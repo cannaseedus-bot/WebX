@@ -6,11 +6,12 @@
  * Use these with KuhulD12WebX.executeGlyph() or D12WebX CommandList.execute().
  */
 export const GLYPHS = {
-    VECTOR_ENCRYPT: '⤍',   // Affine transform on a vector field
-    ROTATIONAL_COMPRESSION: '↻', // Geometry compression via rotation matrices
-    SPHERICAL_LOOP: '⟲',    // Cartesian ↔ spherical coordinate transform
-    TORSION_FIELD: '∿',     // Torsion/twisting mesh deformation
-    RADIAL_PROJECTION: '⊙', // Radial basis function projection
+    VECTOR_ENCRYPT:          '⤍', // Affine transform on a vector field
+    ROTATIONAL_COMPRESSION:  '↻', // Geometry compression via rotation matrices
+    SPHERICAL_LOOP:          '⟲', // Cartesian ↔ spherical coordinate transform
+    TORSION_FIELD:           '∿', // Torsion/twisting mesh deformation
+    RADIAL_PROJECTION:       '⊙', // Radial basis function projection
+    WAVE_MODULATION:         '≋', // Wave functions applied to mesh surfaces
 };
 
 // ------------------------------------------------------------------ //
@@ -139,16 +140,44 @@ function radialProjection(view, radius) {
     }
 }
 
+/**
+ * (≋) Wave Modulation — apply a standing-wave displacement to the mesh.
+ * Each vertex is displaced along its normal (approximated as radial direction)
+ * by `amplitude * sin(frequency * r + phase)`, where r is the distance from origin.
+ *
+ * @param {Float32Array} view      - Buffer view (stride: 3 floats)
+ * @param {object|number} param
+ *   If a number, treated as `amplitude`.
+ *   As an object: { amplitude=0.1, frequency=2, phase=0 }
+ */
+function waveModulation(view, param) {
+    const amplitude = (param && typeof param === 'object') ? (param.amplitude || 0.1) : (param || 0.1);
+    const frequency = (param && typeof param === 'object') ? (param.frequency || 2)   : 2;
+    const phaseOff  = (param && typeof param === 'object') ? (param.phase    || 0)    : 0;
+
+    for (let i = 0; i + 2 < view.length; i += 3) {
+        const x = view[i], y = view[i + 1], z = view[i + 2];
+        const r = Math.sqrt(x * x + y * y + z * z);
+        if (r === 0) continue;
+        const disp = amplitude * Math.sin(frequency * r + phaseOff);
+        const scale = (r + disp) / r;
+        view[i]     = x * scale;
+        view[i + 1] = y * scale;
+        view[i + 2] = z * scale;
+    }
+}
+
 // ------------------------------------------------------------------ //
 // Dispatch table
 // ------------------------------------------------------------------ //
 
 const GLYPH_HANDLERS = {
-    [GLYPHS.VECTOR_ENCRYPT]:          vectorEncrypt,
-    [GLYPHS.ROTATIONAL_COMPRESSION]:  rotationalCompression,
-    [GLYPHS.SPHERICAL_LOOP]:          sphericalLoop,
-    [GLYPHS.TORSION_FIELD]:           torsionField,
-    [GLYPHS.RADIAL_PROJECTION]:       radialProjection,
+    [GLYPHS.VECTOR_ENCRYPT]:         vectorEncrypt,
+    [GLYPHS.ROTATIONAL_COMPRESSION]: rotationalCompression,
+    [GLYPHS.SPHERICAL_LOOP]:         sphericalLoop,
+    [GLYPHS.TORSION_FIELD]:          torsionField,
+    [GLYPHS.RADIAL_PROJECTION]:      radialProjection,
+    [GLYPHS.WAVE_MODULATION]:        waveModulation,
 };
 
 /**

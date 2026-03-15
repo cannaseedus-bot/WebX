@@ -169,3 +169,88 @@ Property             = (Identifier | StringLiteral) ':' Expression
 (* NOTE: This is an excerpt. See grammar-ebnf/KUHUL-LLM.ebnf for full spec. *)
 (*===========================================================================*)
 ```
+(*
+  KUHUL Language Grammar – EBNF
+  ==============================
+  KUHUL is a tensor-oriented language that uses bracket-based syntax.
+  Every statement is enclosed in square brackets: [Keyword args...].
+  Folds (blocks) are delimited by [Pop]...[Xul].
+  Phase cycles are delimited by [K'ayab']...[Kumk'u].
+*)
+
+program       = { statement } ;
+
+statement     = fold
+              | allocation
+              | read
+              | write
+              | operation
+              | phase_cycle
+              | invocation
+              ;
+
+(* [Pop] ... [Xul] *)
+fold          = "[" "Pop" "]"
+                  { statement }
+                "[" "Xul" "]"
+              ;
+
+(* [Wo identifier tensor<elementType, shape>] *)
+allocation    = "[" "Wo" identifier tensor_type_spec "]" ;
+
+(* [Yax identifier] *)
+read          = "[" "Yax" identifier "]" ;
+
+(* [Ch'en identifier value] *)
+write         = "[" "Ch'en" identifier value "]" ;
+
+(* [Sek glyph operand+] *)
+operation     = "[" "Sek" glyph operand { operand } "]" ;
+
+(* [K'ayab'] ... [Kumk'u] *)
+phase_cycle   = "[" "K'ayab'" "]"
+                  { statement }
+                "[" "Kumk'u" "]"
+              ;
+
+(* [Muwan identifier arg*] *)
+invocation    = "[" "Muwan" identifier { value } "]" ;
+
+(* tensor<elementType, shape> *)
+tensor_type_spec = "tensor" "<" element_type "," shape ">" ;
+
+element_type  = "float32" | "float64" | "int32" | "int64"
+              | "uint8"   | "bool"    | "complex64"
+              ;
+
+(* shape = [ dim {, dim} ] *)
+shape         = "[" dim { "," dim } "]" ;
+dim           = integer | "?" ;
+
+(* operand in an operation *)
+operand       = identifier | number | string ;
+
+(* a value that can be stored or passed *)
+value         = identifier | number | string | tensor_literal ;
+
+(* inline tensor literal [ num {, num} ] *)
+tensor_literal = "[" number { "," number } "]" ;
+
+(* KUHUL glyph symbols *)
+glyph         = "⊗"  (* tensor product / matmul      *)
+              | "⊕"  (* addition / union              *)
+              | "⊖"  (* subtraction / difference      *)
+              | "⊛"  (* convolution                   *)
+              | "⊜"  (* equality / assign             *)
+              | "⊝"  (* negation / complement         *)
+              | "⊞"  (* direct sum / concatenation    *)
+              ;
+
+identifier    = letter { letter | digit | "_" | "'" } ;
+number        = [ "-" ] digit { digit } [ "." digit { digit } ] ;
+string        = '"' { any_char } '"' ;
+integer       = digit { digit } ;
+
+letter        = "A" | … | "Z" | "a" | … | "z" ;
+digit         = "0" | … | "9" ;
+any_char      = (* any Unicode character except '"' *) ;

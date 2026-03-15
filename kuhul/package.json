@@ -1,0 +1,14 @@
+{
+  "name": "@webx/kuhul",
+  "version": "1.0.0",
+  "description": "KUHUL Language Implementation for D12WebX",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-vm-modules ../../node_modules/.bin/jest --testPathPattern=kuhul/tests",
+    "lint": "../../node_modules/.bin/eslint .",
+    "build": "echo 'No build step needed for ESM'"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

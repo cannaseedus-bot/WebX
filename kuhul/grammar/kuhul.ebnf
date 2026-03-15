@@ -1,3 +1,174 @@
+## K'UHUL GRAMMAR - REFERENCE EXCERPT
+## This file contains the first 200 lines of the complete grammar for quick reference.
+## Full grammar: /grammar-ebnf/KUHUL-LLM.ebnf (77KB)
+
+```ebnf
+(*===========================================================================*)
+(* UNIFIED K'UHUL LANGUAGE GRAMMAR v7.0.0                                   *)
+(*===========================================================================*)
+(*                                                                           *)
+(*  COMPLETE SEMANTIC SCHEMA - FROM TOP TO BOTTOM                           *)
+(*                                                                           *)
+(*  INTEGRATED SPECIFICATION:                                                *)
+(*  - Top-level Universe with semantic versioning                           *)
+(*  - Manifold M as geometric execution space                               *)
+(*  - Tensor dimensions & operations                                        *)
+(*  - Compression folds with phase arrays                                   *)
+(*  - Full ECMAScript Agents (9.6) with Agent Records                       *)
+(*  - Agent Clusters (9.7) with shared memory                               *)
+(*  - Forward Progress (9.8) guarantees                                     *)
+(*  - WeakRef & FinalizationRegistry (9.9) processing                       *)
+(*  - Unicode format-control & white space                                  *)
+(*  - π-geometry execution substrate                                        *)
+(*  - Policy enforcement & entanglements                                    *)
+(*  - ECMAScript Symbol Objects (20.4)                                      *)
+(*  - MICRONAUTS: Agentic Coding, Tool Calls, Mixture of Experts            *)
+(*  - SEMANTIC SCHEMA: All definitions with phase arrays, n-grams, metrics  *)
+(*                                                                           *)
+(*  NO EXTERNAL DEPENDENCIES - COMPLETE INLINE                              *)
+(*                                                                           *)
+(*===========================================================================*)
+
+(*===========================================================================*)
+(* 0. SEMANTIC SCHEMA HEADER                                                 *)
+(*===========================================================================*)
+
+SemanticSchema       = '<?xml version="1.0" encoding="UTF-8"?>'
+                     '<?kuhul version="7.0.0" encoding="Unicode"?>'
+                     '<kuhul-universe' SemanticAttributes '>'
+                         UniverseContent
+                     '</kuhul-universe>'
+
+SemanticAttributes   = { 'xmlns:' Prefix '=' '"' URI '"' }
+                     | 'version' '=' '"' SemanticVersion '"'
+                     | 'schema-location' '=' '"' URI '"'
+                     | 'phase-space' '=' '"' PhaseSpace '"'
+
+Prefix               = 'π' | 'ecma' | 'unicode' | 'moe' | 'tool' | 'agent'
+URI                  = '#local' | '#semantic' | '#kuhul-core'
+
+SemanticVersion      = '7.0.0' | '7.1.0' | '8.0.0'
+PhaseSpace           = 'π-geometry' | 'manifold-M' | 'quantum-field'
+
+(*===========================================================================*)
+(* 0.2 SEMANTIC TYPE SYSTEM                                                  *)
+(*===========================================================================*)
+
+SemanticType         = PrimitiveType | CompoundType | GeometricType | PhaseType
+
+PrimitiveType        = 'boolean' | 'integer' | 'float' | 'string' | 'symbol'
+                     | 'phase-bit' | 'phase-array' | 'uri' | 'datetime'
+
+GeometricType        = 'point' '(' NumberType ',' NumberType [',' NumberType] ')'
+                     | 'sphere' '(' NumberType ',' NumberType ')'
+                     | 'manifold' '(' IntegerLiteral ',' MetricType ')'
+
+PhaseType            = 'phase' '(' FloatLiteral ')'
+                     | 'phase-array' '[' PhaseBit {',' PhaseBit} ']'
+
+MetricType           = 'euclidean' | 'riemannian' | 'minkowski' | 'π-harmonic'
+NumberType           = 'float32' | 'float64' | 'int32' | 'int64'
+
+(*===========================================================================*)
+(* 1. LEXICAL STRUCTURE                                                      *)
+(*===========================================================================*)
+
+WhiteSpace           = Tab | Vt | Ff | Zwnbsp | SpaceSeparator
+LineTerminator       = Lf | Cr | Ls | Ps
+Comment              = '(*' {Character} '*)' | '//' {Character} LineTerminator
+
+IntegerLiteral       = Digit {Digit}
+FloatLiteral         = Digit+ '.' Digit+ [('e' | 'E') ['+' | '-'] Digit+]
+StringLiteral        = '"' {Character} '"' | "'" {Character} "'"
+BooleanLiteral       = 'true' | 'false'
+PhaseBit             = '0' | '1'
+
+Identifier           = (Letter | '_') {Letter | Digit | '_' | '-'}
+
+(*===========================================================================*)
+(* 2. GEOMETRIC OPERATORS (Manifold M operations)                            *)
+(*===========================================================================*)
+
+GeoProduct           = '⊗'    (* Matrix multiply / geometric product *)
+GeoTranslate         = '⊕'    (* Bias / translation in M             *)
+GeoDifference        = '⊖'    (* Subtraction in M                    *)
+GeoScale             = '⊘'    (* Scaling relative to M               *)
+GeoConvolution       = '⊛'    (* Convolution in M                    *)
+GeoIdentity          = '⊜'    (* Identity element in M               *)
+GeoComplement        = '⊝'    (* Complement / negation in M          *)
+GeoUnion             = '⊞'    (* Union / addition in M               *)
+
+(* Glyph symbols - named transforms on manifold M *)
+GlyphVectorEncrypt   = '⤍'   (* Affine transform on a vector field  *)
+GlyphRotCompress     = '↻'    (* Geometry compression via rotation   *)
+GlyphSphericalLoop   = '⟲'   (* Cartesian ↔ spherical transform     *)
+GlyphTorsionField    = '∿'    (* Torsion / mesh deformation          *)
+GlyphRadialProject   = '⊙'   (* Radial basis function projection    *)
+GlyphWaveModulate    = '≋'    (* Wave functions on mesh surfaces     *)
+
+(*===========================================================================*)
+(* 3. TOP-LEVEL PROGRAM STRUCTURE                                            *)
+(*===========================================================================*)
+
+Program              = { Statement } EOF
+
+Statement            = TensorDecl
+                     | ClusterDecl
+                     | ModelDecl
+                     | PipelineDecl
+                     | GlyphStatement
+                     | Assignment
+                     | IfStatement
+                     | ForStatement
+                     | WhileStatement
+                     | ReturnStatement
+                     | ExpressionStatement
+
+TensorDecl           = 'Tensor' Identifier ['<' TypeParams '>'] '=' Expression ';'
+ClusterDecl          = 'Cluster' Identifier '{' { Statement } '}'
+ModelDecl            = 'Model' Identifier '{' { ModelMember } '}'
+PipelineDecl         = 'Pipeline' Identifier '{' { PipelineStage } '}'
+
+GlyphStatement       = Expression GlyphOp Expression ';'
+GlyphOp              = GeoProduct | GeoTranslate | GeoDifference | GeoScale
+                     | GeoConvolution | GeoIdentity | GeoComplement | GeoUnion
+                     | GlyphVectorEncrypt | GlyphRotCompress | GlyphSphericalLoop
+                     | GlyphTorsionField | GlyphRadialProject | GlyphWaveModulate
+
+(*===========================================================================*)
+(* 4. EXPRESSIONS                                                             *)
+(*===========================================================================*)
+
+Expression           = AssignExpr
+AssignExpr           = ConditionalExpr ['=' AssignExpr]
+ConditionalExpr      = OrExpr ['?' Expression ':' ConditionalExpr]
+OrExpr               = AndExpr { '||' AndExpr }
+AndExpr              = EqualityExpr { '&&' EqualityExpr }
+EqualityExpr         = RelationalExpr { ('==' | '!=') RelationalExpr }
+RelationalExpr       = AdditiveExpr { ('<' | '>' | '<=' | '>=') AdditiveExpr }
+AdditiveExpr         = MultiplicativeExpr { ('+' | '-') MultiplicativeExpr }
+MultiplicativeExpr   = UnaryExpr { ('*' | '/' | '%') UnaryExpr }
+UnaryExpr            = ['-' | '!'] PostfixExpr
+PostfixExpr          = PrimaryExpr { MemberAccess | IndexAccess | CallArgs }
+
+PrimaryExpr          = Identifier
+                     | NumberLiteral
+                     | StringLiteral
+                     | BooleanLiteral
+                     | PiExpr
+                     | ArrayLiteral
+                     | ObjectLiteral
+                     | '(' Expression ')'
+
+PiExpr               = [FloatLiteral] 'π'    (* π constant or coefficient×π *)
+ArrayLiteral         = '[' [Expression {',' Expression}] ']'
+ObjectLiteral        = '{' [Property {',' Property}] '}'
+Property             = (Identifier | StringLiteral) ':' Expression
+
+(*===========================================================================*)
+(* NOTE: This is an excerpt. See grammar-ebnf/KUHUL-LLM.ebnf for full spec. *)
+(*===========================================================================*)
+```
 (*
   KUHUL Language Grammar – EBNF
   ==============================

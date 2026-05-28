@@ -33,6 +33,15 @@ export { default as XCFERuntime, XCFEProgram, parseMicronauts } from './xcfe/ind
 export { default as LoRAAdapter, loadAdapterFromBuffer, createAdapterStub, applyLoRA, unpackINT4 } from './adapters/adapter-loader.js';
 export { ADAPTER_REGISTRY, BASE_MODEL, ADAPTER_CONFIG, resolveAdapter, listAdapters } from './adapters/adapter-registry.js';
 
+// Glyph IPC protocol + INT4 ISA (v0.2.0-kuhul-directx-native)
+export { IPC_STATUS, IPC_HEADER, GLYPH_ENTRY, INT4_ISA, GLYPH_MODE, readIPCHeader, readGlyphEntry, readGlyphEntries, encodeINT4Program } from './ipc/glyph-ipc.js';
+
+// KBC1 program builder (v0.2.0-kuhul-directx-native)
+export { default as KBC1Program, KBC1Instruction, KBC1_OP } from './kbc1/kbc1-program.js';
+
+// KUHUL 3D compiler — K3D source → IR JSON (v0.2.0-kuhul-directx-native)
+export { default as compileK3D } from './k3d/compiler.js';
+
 // SCXQ2 binary format parser (v0.1.0-igpu-trainer)
 export { default as parseScxq2, parseScxq2OrThrow, extractInstructions } from './scx/scxq2-parser.js';
 

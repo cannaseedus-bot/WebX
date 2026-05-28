@@ -32,3 +32,10 @@ export { default as XCFERuntime, XCFEProgram, parseMicronauts } from './xcfe/ind
 // LoRA delta weight adapters (.gpu_trainer/trainer/)
 export { default as LoRAAdapter, loadAdapterFromBuffer, createAdapterStub, applyLoRA, unpackINT4 } from './adapters/adapter-loader.js';
 export { ADAPTER_REGISTRY, BASE_MODEL, ADAPTER_CONFIG, resolveAdapter, listAdapters } from './adapters/adapter-registry.js';
+
+// XJSL — Cross-platform Shader JSON Language (v0.1.1-igpu-trainer-xjsl)
+export { generateWGSL, generateHLSL, lowerXJSLDoc } from './xjsl/lowering.js';
+export { XJSLWGPURuntime }                           from './xjsl/wgpu-runtime.js';
+export { validateXJSLDoc, validateXJSLDocOrThrow }   from './xjsl/validate.js';
+export { AUTOGRAD_RULES }                            from './xjsl/autograd.js';
+export { GPT2_CONFIG, TrainerConfig, FUSED_OPS, XJSL_SCHEMA } from './xjsl/index.js';

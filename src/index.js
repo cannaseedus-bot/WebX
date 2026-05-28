@@ -17,5 +17,18 @@ export { KuhulRuntime, RuntimeError, run } from './runtime/runtime.js';
 // XVM CPU Cluster (v0.1.0-xvm-cpu-thread-cluster)
 export { default as CPUCluster32, FLAG as XVM_FLAG, OP as XVM_OP, CLUSTER_SIZE_CONST, PHASE_COUNT_CONST } from './xvm/cpu-cluster.js';
 
+// XVM 1000-fiber CUDA emulator (.gpu_trainer)
+export { default as FiberPool1000, OP_EXT as XVM_OP_EXT, WARP_SIZE, DEFAULT_CONFIG as FIBER1000_CONFIG } from './xvm/fiber-1000.js';
+
 // SMGM-16 model descriptor and runtime (v0.1.0-xvm-cpu-thread-cluster)
 export { default as SMGM16Runtime, SMGM16_CONFIG, LOSS_LAMBDAS, SHARD_MAP, PARAM_COUNTS, tokenFeatures, cardSlotShape } from './smgm16/index.js';
+
+// KLSL compiler — K'UHUL Language Shading Language (.gpu_trainer)
+export { default as klslCompile, KLSL_OP, GLYPHS as KLSL_GLYPHS } from './klsl/index.js';
+
+// XCFE JSON Program Format (.gpu_trainer)
+export { default as XCFERuntime, XCFEProgram, parseMicronauts } from './xcfe/index.js';
+
+// LoRA delta weight adapters (.gpu_trainer/trainer/)
+export { default as LoRAAdapter, loadAdapterFromBuffer, createAdapterStub, applyLoRA, unpackINT4 } from './adapters/adapter-loader.js';
+export { ADAPTER_REGISTRY, BASE_MODEL, ADAPTER_CONFIG, resolveAdapter, listAdapters } from './adapters/adapter-registry.js';

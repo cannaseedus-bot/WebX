@@ -33,6 +33,12 @@ export { default as XCFERuntime, XCFEProgram, parseMicronauts } from './xcfe/ind
 export { default as LoRAAdapter, loadAdapterFromBuffer, createAdapterStub, applyLoRA, unpackINT4 } from './adapters/adapter-loader.js';
 export { ADAPTER_REGISTRY, BASE_MODEL, ADAPTER_CONFIG, resolveAdapter, listAdapters } from './adapters/adapter-registry.js';
 
+// SCXQ2 binary format parser (v0.1.0-igpu-trainer)
+export { default as parseScxq2, parseScxq2OrThrow, extractInstructions } from './scx/scxq2-parser.js';
+
+// D3D11 trainer architecture descriptor (v0.1.0-igpu-trainer)
+export { XVM_D3D11_BUFFERS, TRAINER_BUFFERS, FORWARD_PIPELINE, BACKWARD_PIPELINE, D3D11_NAN_BUGS } from './d3d11/trainer-arch.js';
+
 // XJSL — Cross-platform Shader JSON Language (v0.1.1-igpu-trainer-xjsl)
 export { generateWGSL, generateHLSL, lowerXJSLDoc } from './xjsl/lowering.js';
 export { XJSLWGPURuntime }                           from './xjsl/wgpu-runtime.js';

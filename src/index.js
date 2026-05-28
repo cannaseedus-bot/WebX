@@ -13,3 +13,9 @@ export { analyze, SemanticError } from './compiler/semantic.js';
 
 // K'UHUL++ v2.0 Runtime
 export { KuhulRuntime, RuntimeError, run } from './runtime/runtime.js';
+
+// XVM CPU Cluster (v0.1.0-xvm-cpu-thread-cluster)
+export { default as CPUCluster32, FLAG as XVM_FLAG, OP as XVM_OP, CLUSTER_SIZE_CONST, PHASE_COUNT_CONST } from './xvm/cpu-cluster.js';
+
+// SMGM-16 model descriptor and runtime (v0.1.0-xvm-cpu-thread-cluster)
+export { default as SMGM16Runtime, SMGM16_CONFIG, LOSS_LAMBDAS, SHARD_MAP, PARAM_COUNTS, tokenFeatures, cardSlotShape } from './smgm16/index.js';

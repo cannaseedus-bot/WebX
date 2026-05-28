@@ -7,6 +7,16 @@ const SHARED_SIZE = 1024;
 const PHASE_COUNT = 6;
 const TRACE_CAPACITY = 65536;
 
+// CPU cluster training optimum: low batch / high epoch reaches best ML loss.
+// 1000 batch × 4 epoch or 500 batch × 8 epoch are the validated sweet spots.
+export const XVM_TRAINING_OPTIMUM = Object.freeze({
+  configs: [
+    { batch_size: 1000, epochs: 4 },
+    { batch_size: 500,  epochs: 8 },
+  ],
+  rationale: 'Phase-based sync + manifold ops provide better gradient signal at small batch size; high epoch count compensates for CPU throughput limits.',
+});
+
 export const FLAG = Object.freeze({ HALTED: 0, ACTIVE: 1, BARRIER_WAIT: 2 });
 
 export const OP = Object.freeze({

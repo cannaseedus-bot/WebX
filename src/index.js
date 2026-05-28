@@ -15,7 +15,7 @@ export { analyze, SemanticError } from './compiler/semantic.js';
 export { KuhulRuntime, RuntimeError, run } from './runtime/runtime.js';
 
 // XVM CPU Cluster (v0.1.0-xvm-cpu-thread-cluster)
-export { default as CPUCluster32, FLAG as XVM_FLAG, OP as XVM_OP, CLUSTER_SIZE_CONST, PHASE_COUNT_CONST } from './xvm/cpu-cluster.js';
+export { default as CPUCluster32, FLAG as XVM_FLAG, OP as XVM_OP, CLUSTER_SIZE_CONST, PHASE_COUNT_CONST, XVM_TRAINING_OPTIMUM } from './xvm/cpu-cluster.js';
 
 // XVM 1000-fiber CUDA emulator (.gpu_trainer)
 export { default as FiberPool1000, OP_EXT as XVM_OP_EXT, WARP_SIZE, DEFAULT_CONFIG as FIBER1000_CONFIG } from './xvm/fiber-1000.js';

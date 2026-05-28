@@ -54,3 +54,15 @@ export { XJSLWGPURuntime }                           from './xjsl/wgpu-runtime.j
 export { validateXJSLDoc, validateXJSLDocOrThrow }   from './xjsl/validate.js';
 export { AUTOGRAD_RULES }                            from './xjsl/autograd.js';
 export { GPT2_CONFIG, TrainerConfig, FUSED_OPS, XJSL_SCHEMA } from './xjsl/index.js';
+
+// .brain binary format — tiny.x graph neural network substrate (v1.0.0-PowerShell-LLM)
+export { readBrainHeader, writeBrainHeader, readBrainFeatures, readBrainTopology, readBrainRouting, buildBrainManifest, kExpertsFor, BRAIN_HEADER_BYTES, BRAIN_FEAT_DIM, BRAIN_FIELD } from './brain/brain-format.js';
+
+// SMCA — Structural Manifold Cluster Architecture axioms (v1.0.0-PowerShell-LLM)
+export { SMCA_LAYERS, SMCA_AUTHORITY_GRADIENT, SMCA_CLUSTER_ROLES, SMCA_COLLAPSE_CLASSES, IDB_PROPERTIES, KXC_FORBID_LIST, SMCA_VERSION } from './smca/index.js';
+
+// KXC IR format — kernel descriptor builder/validator (v1.0.0-PowerShell-LLM)
+export { createKernelIR, validateKernelIR, computeStackCid, KXC_CAPABILITY_FLAGS, KXC_STACK_ID, KXC_IR_VERSION } from './kxc/ir-format.js';
+
+// CM-1 control gate dictionary (v1.0.0-PowerShell-LLM)
+export { CM1_BYTES, CM1_BYTE_NAMES, CM1_ID, CM1_LANE, encodeCM1Frame, decodeCM1Frame, recordSeparate } from './cm1/dict.js';

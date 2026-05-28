@@ -69,3 +69,8 @@ export { CM1_BYTES, CM1_BYTE_NAMES, CM1_ID, CM1_LANE, encodeCM1Frame, decodeCM1F
 
 // Micronaut factory — authority-based instantiation contract (v0.1.0-micronaut-factory)
 export { FACTORY_POLICY, FACTORY_VERSION, MICRONAUT_STATUS, createRegistryEntry, MicronanutRegistry, createMutationRecord, DEFAULT_REGISTRY } from './micronaut/factory.js';
+
+// SCXT tensor format + SCXTOK tokenizer + U1 unary alphabet (SCX.v1.0.0)
+export { readScxtHeader, writeScxtHeader, hashScxtTensor, verifyScxtBuffer, calcDataSize, calcStrides, SCXT_MAGIC, SCXT_VERSION, SCXT_HEADER_SIZE, SCXT_HASH_SIZE, SCX_DTYPE, SCX_DTYPE_BYTES, SCXT_STRIDE_MODE, Q4_BLOCK_ELEMENTS, Q4_SCALE_BYTES } from './scx/tensor-format.js';
+export { SCXTokenizer, readScxtokHeader, SCXTOK_MAGIC, SCX_BYTE_OFFSET, SCX_BYTE_COUNT, SCX_SPECIAL_OFFSET, SCXTOK_VOCAB_TYPE, SCXTOK_SPECIAL } from './scx/tokenizer.js';
+export { U1_GLYPHS, U1_BY_CODEPOINT, U1_FOLD_LATTICE, U1_VERSION, U1_ALPHABET_SHA256, expandU1Capsule, u1HashInput, parseGlyphName } from './scx/u1-alphabet.js';

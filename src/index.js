@@ -66,3 +66,6 @@ export { createKernelIR, validateKernelIR, computeStackCid, KXC_CAPABILITY_FLAGS
 
 // CM-1 control gate dictionary (v1.0.0-PowerShell-LLM)
 export { CM1_BYTES, CM1_BYTE_NAMES, CM1_ID, CM1_LANE, encodeCM1Frame, decodeCM1Frame, recordSeparate } from './cm1/dict.js';
+
+// Micronaut factory — authority-based instantiation contract (v0.1.0-micronaut-factory)
+export { FACTORY_POLICY, FACTORY_VERSION, MICRONAUT_STATUS, createRegistryEntry, MicronanutRegistry, createMutationRecord, DEFAULT_REGISTRY } from './micronaut/factory.js';

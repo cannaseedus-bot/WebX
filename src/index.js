@@ -74,3 +74,9 @@ export { FACTORY_POLICY, FACTORY_VERSION, MICRONAUT_STATUS, createRegistryEntry,
 export { readScxtHeader, writeScxtHeader, hashScxtTensor, verifyScxtBuffer, calcDataSize, calcStrides, SCXT_MAGIC, SCXT_VERSION, SCXT_HEADER_SIZE, SCXT_HASH_SIZE, SCX_DTYPE, SCX_DTYPE_BYTES, SCXT_STRIDE_MODE, Q4_BLOCK_ELEMENTS, Q4_SCALE_BYTES } from './scx/tensor-format.js';
 export { SCXTokenizer, readScxtokHeader, SCXTOK_MAGIC, SCX_BYTE_OFFSET, SCX_BYTE_COUNT, SCX_SPECIAL_OFFSET, SCXTOK_VOCAB_TYPE, SCXTOK_SPECIAL } from './scx/tokenizer.js';
 export { U1_GLYPHS, U1_BY_CODEPOINT, U1_FOLD_LATTICE, U1_VERSION, U1_ALPHABET_SHA256, expandU1Capsule, u1HashInput, parseGlyphName } from './scx/u1-alphabet.js';
+
+// SCX IR, graph, manifest, KV-delta (SCXRuntime.v1.0.0)
+export { SCXOp, SCX_OP_NAMES, createOperand, createInstruction, createProgram, programToJSON } from './scx/ir.js';
+export { SCX_NODE_ROLES, SCX_EDGE_TYPES, SCX_QUANT, SCX_DEVICE, createScxNode, createScxEdge, createScxGraph, createGta1Tensor, createGta1Node, createGta1Edge } from './scx/graph.js';
+export { MANIFEST_KIND, SCX_MOE_16L_CONFIG, createManifestTensor, createManifestInfo, parseModelManifest, parseScoIndex, validateScoIndex } from './scx/manifest.js';
+export { kvDeltaEncode, kvDeltaDecode, packNibs, unpackNibs, KVCacheDelta } from './scx/kv-delta.js';

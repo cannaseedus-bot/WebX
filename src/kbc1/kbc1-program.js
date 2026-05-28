@@ -12,6 +12,8 @@ export const KBC1_OP = Object.freeze({
   ATTN_QKV:     0x0011,
   ATTN_SOFTMAX: 0x0012,
   ATTN_OUT:     0x0013,
+  LINEAR:       0x0014, // added from SCXRuntime.v1.0.0/include/kbc1.h
+  GELU:         0x0015, // added from SCXRuntime.v1.0.0/include/kbc1.h
   MOE_ROUTE:    0x0020,
   MOE_DISPATCH: 0x0021,
   MOE_COMBINE:  0x0022,

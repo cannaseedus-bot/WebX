@@ -12,3 +12,30 @@ yarn-error.log*
 
 # Test coverage
 /coverage
+
+# Native build artifacts
+*.cso
+*.pdb
+*.obj
+*.lib
+*.exp
+*.ilk
+*.idb
+
+# Model weights (large binaries — tracked by hash in docs)
+*.safetensors
+*.gguf
+*.pt
+*.bin
+*.dds
+*.scxq2
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Logs
+*.log

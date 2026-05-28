@@ -80,3 +80,6 @@ export { SCXOp, SCX_OP_NAMES, createOperand, createInstruction, createProgram, p
 export { SCX_NODE_ROLES, SCX_EDGE_TYPES, SCX_QUANT, SCX_DEVICE, createScxNode, createScxEdge, createScxGraph, createGta1Tensor, createGta1Node, createGta1Edge } from './scx/graph.js';
 export { MANIFEST_KIND, SCX_MOE_16L_CONFIG, createManifestTensor, createManifestInfo, parseModelManifest, parseScoIndex, validateScoIndex } from './scx/manifest.js';
 export { kvDeltaEncode, kvDeltaDecode, packNibs, unpackNibs, KVCacheDelta } from './scx/kv-delta.js';
+
+// K'UHUL compiler + KSON format (KUHUL.v1.0.0)
+export { compileKUHUL, KuhulLexer, KuhulParser, KuhulSemanticAnalyzer, KSONGenerator, KuhulSyntaxError, KuhulSemanticError, KUHUL_GLYPHS, KUHUL_DTYPES, KUHUL_OP_MAP, KSON_PHASES, KUHUL_SHADER_ROLES, KUHUL_RUNTIME_CONTRACT } from './kuhul/kuhulc.js';

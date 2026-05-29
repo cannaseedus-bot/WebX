@@ -87,6 +87,10 @@ export { compileKUHUL, KuhulLexer, KuhulParser, KuhulSemanticAnalyzer, KSONGener
 // Swarm runtime — PhaseArray routing + SwarmManager (KUHUL.EXE.v3.0.0)
 export { PhaseArray, createSkill, createAgent, createSwarm, computeSwarmCoherence, SwarmManager, PHASE_ARRAY_SIZE, SWARM_STRATEGIES, SWARM_API_ROUTES } from './micronaut/swarm.js';
 
+// Supernaut lifecycle + dispatch — monotonic 7-state, Mayan fold (v3.2.0-supernaut)
+export { LifecycleState, LIFECYCLE_ORDER, lifecycleIndex, EXPERT_MAP, ADDON_EXPERT, createExpertRoute, DispatchContext, runDispatch, archiveContext } from './supernaut/lifecycle.js';
+export { SkillRunResult, RoundContext, mayanFold, foldReport, parseSigilActions, SIGIL_ACTIONS, SIGIL_TRANSITIONS, STOCK_SKILLS } from './supernaut/dispatch.js';
+
 // SCX-MoE top-K router + SwiGLU expert forward (v3.1.0-scx-moe)
 export { routeTopK, routeToken, MOE_NUM_EXPERTS, MOE_NUM_LAYERS, MOE_HIDDEN_SIZE, MOE_INTERMEDIATE, MOE_NUM_HEADS, MOE_HEAD_DIM, MOE_MAX_SEQ, MOE_VOCAB_SIZE, MOE_TOP_K, ROUTER_PARAMS_SCHEMA } from './moe/router.js';
 export { expertForward, expertForwardBatch, expertReduce, AMPLIFY_EXPERT_ID, EXPERT_PARAMS_SCHEMA } from './moe/expert.js';

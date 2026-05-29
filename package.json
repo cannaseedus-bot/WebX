@@ -1,37 +1,55 @@
 {
   "name": "kuhul-es",
   "version": "3.5.0",
-  "description": "K'UHUL geometric intelligence runtime — KXML bidirectional graph, XVM fiber clusters, WebGPU adaptive executor, Mayan base-20 math, SCXQ2 DDS shards",
+  "description": "K'UHUL WebX-3D — ECMAScript syntax, K'UHUL semantics. π/τ binding runtime, KXML bidirectional graph, XVM fiber clusters, WebGPU adaptive executor, Mayan base-20 math, SCXQ2 DDS shards, toolcall models.",
   "type": "module",
-  "exports": {
-    ".": "./src/index.js",
-    "./kxml": "./src/kxml/index.js",
-    "./xvm": "./src/xvm/cpu-cluster.js",
-    "./xvm/fiber-1000": "./src/xvm/fiber-1000.js",
-    "./gpu": "./src/gpu/adaptive-hardware-runtime.js",
-    "./mayan": "./src/mayan/mayan-math.js",
-    "./linalg": "./src/linalg/linalg.js",
-    "./supernaut": "./src/supernaut/lifecycle.js"
-  },
   "main": "src/index.js",
   "module": "src/index.js",
-  "browser": "src/index.js",
+  "browser": "runtime/src/browser.cjs",
+  "exports": {
+    ".":                    "./src/index.js",
+    "./kxml":               "./src/kxml/index.js",
+    "./xvm":                "./src/xvm/cpu-cluster.js",
+    "./xvm/fiber-1000":     "./src/xvm/fiber-1000.js",
+    "./gpu":                "./src/gpu/adaptive-hardware-runtime.js",
+    "./mayan":              "./src/mayan/mayan-math.js",
+    "./linalg":             "./src/linalg/linalg.js",
+    "./supernaut":          "./src/supernaut/lifecycle.js",
+    "./runtime/node":       "./runtime/src/node.cjs",
+    "./runtime/browser":    "./runtime/src/browser.cjs",
+    "./compiler":           "./compiler/src/parser.ts"
+  },
+  "bin": {
+    "kuhul-es":     "bin/kuhul-es.cjs",
+    "kuhul-server": "bin/kuhul-server.cjs",
+    "basher":       "bin/basher.cjs"
+  },
   "files": [
     "src/",
+    "bin/",
+    "runtime/",
+    "compiler/",
     "kuhul/",
-    "README.md"
+    "models/model-registry.json",
+    "models/.gitkeep",
+    "docs/",
+    "README.md",
+    "license.md"
   ],
   "keywords": [
-    "kuhul", "kxml", "xvm", "webgpu", "geometric-ai",
-    "bidirectional-graph", "moe", "scxq2", "mayan", "phase-gated"
+    "kuhul", "kuhul-es", "kxml", "xvm", "webgpu", "geometric-ai",
+    "bidirectional-graph", "moe", "scxq2", "mayan", "phase-gated",
+    "typescript-bridge", "pi-bindings", "tau-bindings", "glyph-runtime"
   ],
   "sideEffects": false,
   "scripts": {
     "build": "tsc",
     "start": "node src/index.js",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest"
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "doctor": "node bin/kuhul-es.cjs doctor"
   },
   "dependencies": {
+    "commander": "^11.0.0",
     "typescript": "^4.5.0"
   },
   "devDependencies": {
@@ -43,11 +61,11 @@
     "ts-node": "^10.0.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=14.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/kuhul/kuhul-es"
+    "url": "https://github.com/cannaseedus-bot/WebX.git"
   },
   "license": "MIT"
 }

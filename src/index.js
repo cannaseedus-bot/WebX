@@ -66,6 +66,10 @@ export { TEMPORAL_FOLDS, TEMPORAL_FOLD_ROLES, SEMANTIC_SUBGRAPH_TEMPLATES, creat
 // MATRIX DAG Runtime — .mxb graph + UnifiedAPI + K'uhul/XCFE scheduling (v3.5.0-WebX)
 export { LANE_TYPES, JOB_STATE, nodeToUnit, createMicronautJob, loadMxb, buildRuntime, runGraph, annotateKuhulFolds, getNodesByType, getNodeById, graphSummary } from './matrix/dag-runtime.js';
 
+// MX2LM DirectWrite GPU Execution — model viewer + 7-brain topology (v3.5.0-WebX)
+export { π_vecNorm, π_softmax, π_entropy, π_ngramProb, π_pmi, π_angleFromVec, π_clamp, π_classToColor, isoCoords, buildOrbitalHaloData, buildStackGridData, buildTunnelStreamData, buildFractalTreeData, buildHudRingData, buildModelShells, buildMemoryConstellation, buildMicronautMesh } from './mx2lm/model-viewer.js';
+export { BRAIN_ORGANS, BRAIN_ORGAN_COUNT, SHELL_TO_ORGAN, ORGAN_TO_SHELL, COMPUTE_UNIT_TO_ORGAN, POLYGON_KERNEL_MAP, getBrainOrgan, getOrganByShell, getMissingOrgans, getImplementedOrgans, brainCoherence } from './mx2lm/brain-topology.js';
+
 // .brain binary format — tiny.x graph neural network substrate (v1.0.0-PowerShell-LLM)
 export { readBrainHeader, writeBrainHeader, readBrainFeatures, readBrainTopology, readBrainRouting, buildBrainManifest, kExpertsFor, BRAIN_HEADER_BYTES, BRAIN_FEAT_DIM, BRAIN_FIELD } from './brain/brain-format.js';
 

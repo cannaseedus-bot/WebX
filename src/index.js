@@ -165,6 +165,18 @@ export { AtomicMayanOpsSAB, AtomicMayanOpsCPU, createAtomicMayanOps, initMayanBu
 // AdaptiveHardwareRuntime v0.1 — GPU/WebGPU/WASM/CPU unified executor
 export { AdaptiveHardwareRuntime, createExecContext, selectBackend, getAdaptiveRuntime } from './gpu/adaptive-hardware-runtime.js';
 
+// KXML v7.2 — bidirectional geometric graph runtime
+// Nodes = computation units, Edges = geodesic transport (forward+backward channels),
+// Phase gates = soft landing guarantees, MathML = Lipschitz-bounded semantics
+export { parseKXML }                        from './kxml/kxml-parser.js';
+export { PhaseGatedDispatcher, PHASE_ORDER as KXML_PHASE_ORDER } from './kxml/kxml-dispatcher.js';
+export { KXMLGraph }                        from './kxml/kxml-graph.js';
+export {
+  OPS as KXML_OPS, dispatchOp as kxmlDispatchOp,
+  geodesicDist, parallelTransport, ricciFlowStep,
+  geometricAttention, foldCompress, crossEntropy,
+} from './kxml/kxml-ops.js';
+
 // Agents.NET shared-state, @op dispatch, SyncWorker (Agents.NET.v1.0.0)
 export { readSharedState, writeSharedState, createSharedState, SHARED_STATE_VERSION, SHARED_STATE_BYTES, SHARED_STATE_MMF_NAME, SHARED_STATE_OFFSETS } from './agents-net/shared-state.js';
 export { validateOp, dispatchOp, DOTNET_OPS, DOTNET_OP_SCHEMAS, DOTNET_WORKER_URL_DEFAULT } from './agents-net/op-dispatcher.js';

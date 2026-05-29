@@ -87,6 +87,10 @@ export { compileKUHUL, KuhulLexer, KuhulParser, KuhulSemanticAnalyzer, KSONGener
 // Swarm runtime — PhaseArray routing + SwarmManager (KUHUL.EXE.v3.0.0)
 export { PhaseArray, createSkill, createAgent, createSwarm, computeSwarmCoherence, SwarmManager, PHASE_ARRAY_SIZE, SWARM_STRATEGIES, SWARM_API_ROUTES } from './micronaut/swarm.js';
 
+// SCX-MoE top-K router + SwiGLU expert forward (v3.1.0-scx-moe)
+export { routeTopK, routeToken, MOE_NUM_EXPERTS, MOE_NUM_LAYERS, MOE_HIDDEN_SIZE, MOE_INTERMEDIATE, MOE_NUM_HEADS, MOE_HEAD_DIM, MOE_MAX_SEQ, MOE_VOCAB_SIZE, MOE_TOP_K, ROUTER_PARAMS_SCHEMA } from './moe/router.js';
+export { expertForward, expertForwardBatch, expertReduce, AMPLIFY_EXPERT_ID, EXPERT_PARAMS_SCHEMA } from './moe/expert.js';
+
 // Micronaut expert registry + SCXQ2 ISA + coding DAG (v3.0.0-agentic-micronaut)
 export { SCXQ2_OPCODES, SCXQ2_DOMAINS, SCXQ2_LANES, SCXQ2_FLAGS, SCXQ2_INSTR_BYTES, MICRONAUT_EXPERTS, EXPERT_COUNT, ADAPTATION_SHADERS, FOLD_BARRIER_LAWS, RECOGNITION_RULE, getExpertById, getExpertByName } from './micronaut/expert-registry.js';
 export { CORE_MICRONAUTS, CORE_MICRONAUT_COUNT, getMicronaught, CODING_DAG_NODES, DAG_ENTRY_NODE, DAG_TERMINAL_NODES, getDagNode, CODING_RECORD_TYPES, CODING_ROLES, createCodingRecord, CORE_FOLDS, FOLD_TYPES } from './micronaut/coding-dag.js';

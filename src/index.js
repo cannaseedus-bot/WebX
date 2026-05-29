@@ -132,6 +132,15 @@ export { expertForward, expertForwardBatch, expertReduce, AMPLIFY_EXPERT_ID, EXP
 export { SCXQ2_OPCODES, SCXQ2_DOMAINS, SCXQ2_LANES, SCXQ2_FLAGS, SCXQ2_INSTR_BYTES, MICRONAUT_EXPERTS, EXPERT_COUNT, ADAPTATION_SHADERS, FOLD_BARRIER_LAWS, RECOGNITION_RULE, getExpertById, getExpertByName } from './micronaut/expert-registry.js';
 export { CORE_MICRONAUTS, CORE_MICRONAUT_COUNT, getMicronaught, CODING_DAG_NODES, DAG_ENTRY_NODE, DAG_TERMINAL_NODES, getDagNode, CODING_RECORD_TYPES, CODING_ROLES, createCodingRecord, CORE_FOLDS, FOLD_TYPES } from './micronaut/coding-dag.js';
 
+// Mayan Math — base-20 glyph system, Long Count calendar, AtomicMayan ops
+export { MAYAN_GLYPHS, MAYAN_GLYPH_BY_VALUE, LONG_COUNT_POSITIONS, MAYAN_JD_CORRELATION, bigIntToDigits, digitsToBase, glyphToValue, valueToGlyph, mayanGlyphToBigInt, bigIntToMayanGlyph, mayanAdd, mayanSub, mayanMul, mayanToJD, jdToMayan, AtomicMayan, ATOMIC_MATH_GRAMMAR } from './mayan/mayan-math.js';
+
+// Linear Algebra — Float64Array vectors/matrices/tensors, attention, eigenvalue
+export { vectorAdd, vectorSub, vectorScale, dotProduct, vectorNorm, vectorNormalize, matMul, matTranspose, matVecMul, matIdentity, matScale, matInverse, powerIteration, softmaxInPlace, batchMatMul, tensorSoftmax, scaledDotAttention, tensorContract, matFromArray, matToArray } from './linalg/linalg.js';
+
+// Mayan-Linear Algebra Hybrid — calendar regression, linear transforms, OLS
+export { mayanToVector, vectorToMayanDigits, mayanDigitsToScalar, scalarToMayanDigits, mayanLinearTransform, mayanLinearSolve, mayanLinearRegression, predictMayanDays, buildCalendarRegression, IDENTITY_TRANSFORM, mayanAffineShift, calendarRoundAlignment } from './linalg/mayan-linalg.js';
+
 // Agents.NET shared-state, @op dispatch, SyncWorker (Agents.NET.v1.0.0)
 export { readSharedState, writeSharedState, createSharedState, SHARED_STATE_VERSION, SHARED_STATE_BYTES, SHARED_STATE_MMF_NAME, SHARED_STATE_OFFSETS } from './agents-net/shared-state.js';
 export { validateOp, dispatchOp, DOTNET_OPS, DOTNET_OP_SCHEMAS, DOTNET_WORKER_URL_DEFAULT } from './agents-net/op-dispatcher.js';

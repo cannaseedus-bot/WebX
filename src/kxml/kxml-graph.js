@@ -10,6 +10,7 @@
 
 import { parseKXML } from './kxml-parser.js';
 import { PhaseGatedDispatcher, PHASE_ORDER } from './kxml-dispatcher.js';
+import { ShardRegistry } from './kxml-shard-registry.js';
 
 // ─── Tiny hash (djb2 variant, browser-safe) ───────────────────────────────────
 
@@ -179,6 +180,30 @@ export class KXMLGraph {
     }
 
     return { valid: errors.length === 0, errors };
+  }
+
+  // ── Shard registry integration ───────────────────────────────────────────────
+
+  // Attach a ShardRegistry (loaded from fold_manifest + dds_manifest).
+  // Once attached, nodes with <shard_ref> elements resolve to real DDS paths.
+  setShardRegistry(registry) {
+    this._shardRegistry = registry;
+    return this;
+  }
+
+  // Convert KXML graph → SCXQ2 ISA instruction program.
+  // Requires a ShardRegistry (or creates a default empty one).
+  toISA(opts = {}) {
+    if (!this._compiled) this.compile();
+    const reg = this._shardRegistry ?? new ShardRegistry(opts);
+    return reg.graphToISA(this._g);
+  }
+
+  // Build edge manifest (forward+backward channels) in SCXQ2 format.
+  toEdgeManifest() {
+    if (!this._compiled) this.compile();
+    const reg = this._shardRegistry ?? new ShardRegistry();
+    return reg.edgeManifest(this._g.edges);
   }
 
   // ── Summary ───────────────────────────────────────────────────────────────────

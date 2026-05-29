@@ -86,3 +86,8 @@ export { compileKUHUL, KuhulLexer, KuhulParser, KuhulSemanticAnalyzer, KSONGener
 
 // Swarm runtime — PhaseArray routing + SwarmManager (KUHUL.EXE.v3.0.0)
 export { PhaseArray, createSkill, createAgent, createSwarm, computeSwarmCoherence, SwarmManager, PHASE_ARRAY_SIZE, SWARM_STRATEGIES, SWARM_API_ROUTES } from './micronaut/swarm.js';
+
+// Agents.NET shared-state, @op dispatch, SyncWorker (Agents.NET.v1.0.0)
+export { readSharedState, writeSharedState, createSharedState, SHARED_STATE_VERSION, SHARED_STATE_BYTES, SHARED_STATE_MMF_NAME, SHARED_STATE_OFFSETS } from './agents-net/shared-state.js';
+export { validateOp, dispatchOp, DOTNET_OPS, DOTNET_OP_SCHEMAS, DOTNET_WORKER_URL_DEFAULT } from './agents-net/op-dispatcher.js';
+export { SyncWorker, SECURITY_PLUGIN_OPS } from './agents-net/sync-worker.js';

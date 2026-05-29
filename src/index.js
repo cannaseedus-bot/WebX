@@ -87,6 +87,10 @@ export { compileKUHUL, KuhulLexer, KuhulParser, KuhulSemanticAnalyzer, KSONGener
 // Swarm runtime — PhaseArray routing + SwarmManager (KUHUL.EXE.v3.0.0)
 export { PhaseArray, createSkill, createAgent, createSwarm, computeSwarmCoherence, SwarmManager, PHASE_ARRAY_SIZE, SWARM_STRATEGIES, SWARM_API_ROUTES } from './micronaut/swarm.js';
 
+// SCX Control Delta + LMStudio binding types (v3.3.0-scx-control-flow)
+export { createDelta, validateDelta, stableJson, djb2Hex, SURFACE_FOLDS, SURFACE_EFFECTS, COMPOUND_LOOP, CONTROL_TRANSITIONS } from './control/delta.js';
+export { lmStudioDeltaParams, createToolBinding, createAgentBinding, createSkillBinding, createCommandBinding, createChatActBinding, LMSTUDIO_SDK_VERSION, LMSTUDIO_SURFACE_BY_KIND } from './control/lmstudio.js';
+
 // Supernaut lifecycle + dispatch — monotonic 7-state, Mayan fold (v3.2.0-supernaut)
 export { LifecycleState, LIFECYCLE_ORDER, lifecycleIndex, EXPERT_MAP, ADDON_EXPERT, createExpertRoute, DispatchContext, runDispatch, archiveContext } from './supernaut/lifecycle.js';
 export { SkillRunResult, RoundContext, mayanFold, foldReport, parseSigilActions, SIGIL_ACTIONS, SIGIL_TRANSITIONS, STOCK_SKILLS } from './supernaut/dispatch.js';

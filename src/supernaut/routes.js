@@ -1,6 +1,37 @@
-// Supernaut skill route manifest — canonical route table (v3.5.0-WebX)
-// Ported from .gpu_trainer/skills/supernaut/supernaut_manifest.json
+// Supernaut skill route manifest + skill matrix — canonical route table (v3.5.0-WebX)
+// Ported from .gpu_trainer/skills/supernaut/supernaut_manifest.json + skill.matrix.toml
 // Maps HTTP path → { action, skill_intent } for all Supernaut dispatch surfaces.
+
+// 35 merged skills that compose the Supernaut runtime pack
+export const SUPERNAUT_MERGED_SKILLS = Object.freeze([
+  'workflow-orchestrator', 'sql-skill', 'supernaut', 'wordpad', 'micronaut',
+  'codex-agent', 'asx-verifier', 'agentic-micronaut', 'as-xcfe-stack-intel',
+  'micronaut-model', 'windows-sdk', 'scx2-runtime', 'scxqdds', 'scxq2-vector',
+  'vs-native-tools', 'sk-coordinator', 'mx2lex', 'netfx-sdk', 'pipx-compiler',
+  'powershell-ise', 'vs2019-tools', 'vs2022-tools', 'vs-insiders', 'team-lead',
+  'dataset-training', 'cloudflare-deploy', 'project-factory', 'commands', 'doc',
+  'sqlite3', 'msbuild-nuget', 'figma', 'figma-implement-design', 'vsdevcmd', 'winkit-81',
+]);
+
+export const SUPERNAUT_SKILL_MATRIX = Object.freeze({
+  name:             'supernaut',
+  version:          '1.0.0',
+  runtime:          'xcfe',
+  shard_checkpoint: true,
+  shard_registry:   'artifacts/training/shard-manifest.json',
+  shard_index:      'artifacts/training/shard-index.json',
+  shard_format:     'scxqdds',
+  merged_skills:    SUPERNAUT_MERGED_SKILLS,
+  actions: Object.freeze({
+    compose:         'SupernautActions.compose',
+    log_action:      'SupernautActions.log_action',
+    run_pipx:        'SupernautActions.run_pipx',
+    arbitrate:       'SupernautActions.arbitrate',
+    list_skills:     'SupernautActions.list_skills',
+    merge_manifests: 'SupernautActions.merge_manifests',
+    pack_shard:      'SupernautActions.pack_shard',
+  }),
+});
 
 export const SUPERNAUT_MANIFEST = Object.freeze({
   assetRoots: {

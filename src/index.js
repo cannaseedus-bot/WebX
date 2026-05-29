@@ -87,6 +87,9 @@ export { compileKUHUL, KuhulLexer, KuhulParser, KuhulSemanticAnalyzer, KSONGener
 // Swarm runtime — PhaseArray routing + SwarmManager (KUHUL.EXE.v3.0.0)
 export { PhaseArray, createSkill, createAgent, createSwarm, computeSwarmCoherence, SwarmManager, PHASE_ARRAY_SIZE, SWARM_STRATEGIES, SWARM_API_ROUTES } from './micronaut/swarm.js';
 
+// Hive Micronaut Atlas — 85-agent canonical registry (v3.5.0-WebX)
+export { HIVE_MICRONAUTS, UNIFIED_SERVICES, HIVE_SKILL_PACKS, HIVE_AGENT_COUNT, HIVE_FOLDS, getHiveMicronaut, getHiveService, getHiveMicronautsByFold, getHiveMicronautsByExpert, buildHiveAtlas } from './micronaut/hive-registry.js';
+
 // SCX Control Delta + LMStudio binding types (v3.3.0-scx-control-flow)
 export { createDelta, validateDelta, stableJson, djb2Hex, SURFACE_FOLDS, SURFACE_EFFECTS, COMPOUND_LOOP, CONTROL_TRANSITIONS } from './control/delta.js';
 export { lmStudioDeltaParams, createToolBinding, createAgentBinding, createSkillBinding, createCommandBinding, createChatActBinding, LMSTUDIO_SDK_VERSION, LMSTUDIO_SURFACE_BY_KIND } from './control/lmstudio.js';

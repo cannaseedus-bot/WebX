@@ -39,3 +39,15 @@ venv/
 
 # Logs
 *.log
+
+# Native binaries — source headers only, not executables or WebView2 data
+native/bin/
+native/wv2_*/
+native/shaders/*.cso
+*.exe
+*.dll
+*.pma
+*.pdb
+
+# Trainer runtime (stays at .gpu_trainer, not in repo)
+.gpu_trainer/

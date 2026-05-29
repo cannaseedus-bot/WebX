@@ -87,6 +87,15 @@ export { createKernelIR, validateKernelIR, computeStackCid, KXC_CAPABILITY_FLAGS
 // CM-1 control gate dictionary (v1.0.0-PowerShell-LLM)
 export { CM1_BYTES, CM1_BYTE_NAMES, CM1_ID, CM1_LANE, encodeCM1Frame, decodeCM1Frame, recordSeparate } from './cm1/dict.js';
 
+// Micronaut Code Review Engine (micronaut-coder — multi-language, security + perf rules)
+export { CodeReviewEngine, detectLanguage, LANGUAGE_PATTERNS, SECURITY_RULES, PERFORMANCE_RULES } from './micronaut/coder-engine.js';
+
+// Micronaut Factory Core (micronaut-factory — .micronaut dir scanner, authority-based registry)
+export { MicronauntFactory, createMicronaut, defaultPersonality, getFactory } from './micronaut/factory-core.js';
+
+// Micronaut Core spec v3.0.0 (cognitive state, memory system, required methods)
+export { MicronauntCore, validateMicronaunt, MICRONAUT_CORE_VERSION, COGNITIVE_DEFAULTS, REQUIRED_METHODS } from './micronaut/micronaut-core.js';
+
 // Micronaut factory — authority-based instantiation contract (v0.1.0-micronaut-factory)
 export { FACTORY_POLICY, FACTORY_VERSION, MICRONAUT_STATUS, createRegistryEntry, MicronanutRegistry, createMutationRecord, DEFAULT_REGISTRY } from './micronaut/factory.js';
 

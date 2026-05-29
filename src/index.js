@@ -55,6 +55,17 @@ export { validateXJSLDoc, validateXJSLDocOrThrow }   from './xjsl/validate.js';
 export { AUTOGRAD_RULES }                            from './xjsl/autograd.js';
 export { GPT2_CONFIG, TrainerConfig, FUSED_OPS, XJSL_SCHEMA } from './xjsl/index.js';
 
+// XJSL Fused Op schemas + Math Declarations + JSONL compiler (v3.5.0-WebX)
+export { XJSL_OP_REGISTRY, FUSED_MLP_SCHEMA, FUSED_ATTENTION_SCHEMA, FUSED_NORM_SCHEMA, FUSED_OP_SCHEMAS, buildFusedNode } from './xjsl/fused-op-schemas.js';
+export { MATH_DECL_SCHEMA, MATH_DECL_CONTRACT, KUHUL_PHASES as MATH_DECL_PHASES, MATH_DECL_DOMAINS, MATH_DECL_EXAMPLE, MATH_DECL_PIPELINE, validateMathDecl } from './xjsl/math-declarations.js';
+export { compileJsonlToXjsl, compileMany, stripCompilerMeta, fillBindings } from './xjsl/jsonl-compiler.js';
+
+// K'uhul Fold Engine + DOM (v3.5.0-WebX)
+export { TEMPORAL_FOLDS, TEMPORAL_FOLD_ROLES, SEMANTIC_SUBGRAPH_TEMPLATES, createFoldNode, createFoldEdge, buildTemporalSpine, expandSemanticFold, compileFoldDAG, foldDagToXvm, KUHUL_GLYPHS as FOLD_ENGINE_GLYPHS, createKNode, buildKuhulDom, serializeKuhulDom } from './kuhul/fold-engine.js';
+
+// MATRIX DAG Runtime — .mxb graph + UnifiedAPI + K'uhul/XCFE scheduling (v3.5.0-WebX)
+export { LANE_TYPES, JOB_STATE, nodeToUnit, createMicronautJob, loadMxb, buildRuntime, runGraph, annotateKuhulFolds, getNodesByType, getNodeById, graphSummary } from './matrix/dag-runtime.js';
+
 // .brain binary format — tiny.x graph neural network substrate (v1.0.0-PowerShell-LLM)
 export { readBrainHeader, writeBrainHeader, readBrainFeatures, readBrainTopology, readBrainRouting, buildBrainManifest, kExpertsFor, BRAIN_HEADER_BYTES, BRAIN_FEAT_DIM, BRAIN_FIELD } from './brain/brain-format.js';
 

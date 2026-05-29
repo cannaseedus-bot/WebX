@@ -83,3 +83,6 @@ export { kvDeltaEncode, kvDeltaDecode, packNibs, unpackNibs, KVCacheDelta } from
 
 // K'UHUL compiler + KSON format (KUHUL.v1.0.0)
 export { compileKUHUL, KuhulLexer, KuhulParser, KuhulSemanticAnalyzer, KSONGenerator, KuhulSyntaxError, KuhulSemanticError, KUHUL_GLYPHS, KUHUL_DTYPES, KUHUL_OP_MAP, KSON_PHASES, KUHUL_SHADER_ROLES, KUHUL_RUNTIME_CONTRACT } from './kuhul/kuhulc.js';
+
+// Swarm runtime — PhaseArray routing + SwarmManager (KUHUL.EXE.v3.0.0)
+export { PhaseArray, createSkill, createAgent, createSwarm, computeSwarmCoherence, SwarmManager, PHASE_ARRAY_SIZE, SWARM_STRATEGIES, SWARM_API_ROUTES } from './micronaut/swarm.js';

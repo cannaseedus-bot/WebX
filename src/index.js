@@ -141,6 +141,30 @@ export { vectorAdd, vectorSub, vectorScale, dotProduct, vectorNorm, vectorNormal
 // Mayan-Linear Algebra Hybrid — calendar regression, linear transforms, OLS
 export { mayanToVector, vectorToMayanDigits, mayanDigitsToScalar, scalarToMayanDigits, mayanLinearTransform, mayanLinearSolve, mayanLinearRegression, predictMayanDays, buildCalendarRegression, IDENTITY_TRANSFORM, mayanAffineShift, calendarRoundAlignment } from './linalg/mayan-linalg.js';
 
+// Mayan Tensor — CP/Tucker decomposition (ALS, HOSVD+HOOI), MayanTensor class
+export { MayanTensor, cpDecompose, reconstructCP, tuckerDecompose, tuckerReconstruct, tensorUnfold, khatriRao, tensorSize, strides } from './mayan/mayan-tensor.js';
+
+// Mayan Crypto — GL(20,n) ring ops, GL20N key/encrypt/sign/ZKP, mayanHash
+export { mod, gcd, modInverse, matMulMod, matDetMod, matInverseMod, isInvertibleMod, GL20N, mayanHash, createMayanGL } from './mayan/mayan-crypto.js';
+
+// Intel HD4600 Gen7.5 optimization constants + Morton Z-curve tiling
+export { HD4600, MORTON_CONFIG, MORTON_TABLE, mortonEncode, mortonDecode, buildMortonTable, hd4600DispatchSize, slmFloat32Capacity, HD4600_CBUFFER } from './gpu/hd4600.js';
+
+// VRAM Compression — delta (Mayan digit streams, ~2.1x) + DCT spectral (~2.8x)
+export { deltaCompress, deltaDecompress, dctCompress, dctDecompress, ZIGZAG, estimateDeltaRatio, estimateDctRatio } from './gpu/vram-compression.js';
+
+// Power Scheduler — P0-P3/RC6 states, thermal rules, adaptive dispatch config
+export { POWER_STATES, POWER_STATE_ORDER, MAYAN_PRECISION_BY_STATE, THERMAL_THRESHOLDS, selectPowerState, batchSizeForState, thermalAction, shouldOffloadToCPU, dispatchConfig } from './gpu/power-scheduler.js';
+
+// WebGPU Fallback Manager — 4-tier fallback, LRU VRAM eviction, OOM handling
+export { BACKEND, MIN_WEBGPU_BUFFER_BYTES, SAB_TOTAL_BYTES, detectWebGPU, detectWasmSimd, detectSAB, WebGPUFallbackManager } from './gpu/webgpu-runtime.js';
+
+// Mayan Atomic Ops v0.1 — unified base-20 atomic semantics (SAB + CPU backends)
+export { AtomicMayanOpsSAB, AtomicMayanOpsCPU, createAtomicMayanOps, initMayanBuffer, readMayanBuffer } from './gpu/mayan-atomic-ops.js';
+
+// AdaptiveHardwareRuntime v0.1 — GPU/WebGPU/WASM/CPU unified executor
+export { AdaptiveHardwareRuntime, createExecContext, selectBackend, getAdaptiveRuntime } from './gpu/adaptive-hardware-runtime.js';
+
 // Agents.NET shared-state, @op dispatch, SyncWorker (Agents.NET.v1.0.0)
 export { readSharedState, writeSharedState, createSharedState, SHARED_STATE_VERSION, SHARED_STATE_BYTES, SHARED_STATE_MMF_NAME, SHARED_STATE_OFFSETS } from './agents-net/shared-state.js';
 export { validateOp, dispatchOp, DOTNET_OPS, DOTNET_OP_SCHEMAS, DOTNET_WORKER_URL_DEFAULT } from './agents-net/op-dispatcher.js';

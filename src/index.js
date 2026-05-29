@@ -66,6 +66,11 @@ export { TEMPORAL_FOLDS, TEMPORAL_FOLD_ROLES, SEMANTIC_SUBGRAPH_TEMPLATES, creat
 // MATRIX DAG Runtime — .mxb graph + UnifiedAPI + K'uhul/XCFE scheduling (v3.5.0-WebX)
 export { LANE_TYPES, JOB_STATE, nodeToUnit, createMicronautJob, loadMxb, buildRuntime, runGraph, annotateKuhulFolds, getNodesByType, getNodeById, graphSummary } from './matrix/dag-runtime.js';
 
+// ASX RAM — schemas, flux gate policy, replay verifier, CSS projection, FLASH RAM (v3.5.0-WebX)
+export { ASX_RAM_SCHEMA, PI_MUTATION_SCHEMA, CSS_PROJECTION_SCHEMA, FLUX_GATE_POLICY, TICK_PHASES, CSS_BINDING_TABLE, createEmptyRam } from './asx/schemas.js';
+export { setSha256, sha256Hex, stableStringify, deepClone, getByDotPath, setByDotPath, delByDotPath, assertGate, applyOp, computeInputHash, computeMutHash, computeStateHash, computeTickHash, replayVerify, compileProjection } from './asx/replay-verifier.js';
+export { MEMORY_HIERARCHY, FLASH_MODES, FLASH_ALLOWED_KEYS, FLASH_FORBIDDEN_KEYS, createFlashSnapshot, verifyFlashSnapshot, rebuildRamFromFlash, createDeltaFlash, verifyFlashChain } from './asx/flash-ram.js';
+
 // MX2LM DirectWrite GPU Execution — model viewer + 7-brain topology (v3.5.0-WebX)
 export { π_vecNorm, π_softmax, π_entropy, π_ngramProb, π_pmi, π_angleFromVec, π_clamp, π_classToColor, isoCoords, buildOrbitalHaloData, buildStackGridData, buildTunnelStreamData, buildFractalTreeData, buildHudRingData, buildModelShells, buildMemoryConstellation, buildMicronautMesh } from './mx2lm/model-viewer.js';
 export { BRAIN_ORGANS, BRAIN_ORGAN_COUNT, SHELL_TO_ORGAN, ORGAN_TO_SHELL, COMPUTE_UNIT_TO_ORGAN, POLYGON_KERNEL_MAP, getBrainOrgan, getOrganByShell, getMissingOrgans, getImplementedOrgans, brainCoherence } from './mx2lm/brain-topology.js';

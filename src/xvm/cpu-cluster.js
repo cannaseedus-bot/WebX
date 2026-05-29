@@ -41,6 +41,8 @@ export const OP = Object.freeze({
   FOLD_ENTER:          0x43,
   FOLD_EXIT:           0x44,
   PRESSURE_PROPAGATE:  0x45,
+  // Phase transition: validates ±1 or same phase only; halts fiber on illegal jump
+  PHASE_TRANSITION:    0x46,
 });
 
 class XVMFiber {
@@ -239,6 +241,17 @@ export class CPUCluster32 {
         if (f.phase > 0) f.phase--;
         break;
       }
+      case OP.PHASE_TRANSITION: {
+        // Validated transition: only ±1 or same phase allowed; illegal jump halts fiber
+        const next = this.code[f.pc++] % PHASE_COUNT;
+        const cur  = f.phase % PHASE_COUNT;
+        if (next === cur || next === (cur + 1) % PHASE_COUNT) {
+          f.phase = next;
+        } else {
+          f.flags = FLAG.HALTED;
+        }
+        break;
+      }
       case OP.PRESSURE_PROPAGATE: {
         // Push pressure delta to ring neighbors; self loses 2× what each neighbor gains
         const strength = this.code[f.pc++] & 0xFF;
@@ -258,22 +271,25 @@ export class CPUCluster32 {
     this._writeTrace(fiberId, op, f);
   }
 
-  // Release barrier-waiting fibers in each cluster once all 32 are waiting at the same phase.
+  // Release barrier-waiting fibers once ALL active fibers in the cluster are at BARRIER_WAIT
+  // and all share the same phase. Uses the first waiting fiber's phase as the reference
+  // (not the first fiber — it may already be halted).
   releaseClusterBarriers() {
     for (let c = 0; c < this.clusterCount; c++) {
       const base = c * CLUSTER_SIZE;
-      const refPhase = this.fibers[base].phase;
-      let allBlocked = true;
+      let refPhase = -1, allBlocked = true;
       for (let i = 0; i < CLUSTER_SIZE; i++) {
         const f = this.fibers[base + i];
         if (f.flags === FLAG.ACTIVE) { allBlocked = false; break; }
-        if (f.flags === FLAG.BARRIER_WAIT && f.phase !== refPhase) { allBlocked = false; break; }
+        if (f.flags === FLAG.BARRIER_WAIT) {
+          if (refPhase < 0) refPhase = f.phase;
+          else if (f.phase !== refPhase) { allBlocked = false; break; }
+        }
       }
-      if (allBlocked) {
+      if (allBlocked && refPhase >= 0) {
         for (let i = 0; i < CLUSTER_SIZE; i++) {
-          if (this.fibers[base + i].flags === FLAG.BARRIER_WAIT) {
+          if (this.fibers[base + i].flags === FLAG.BARRIER_WAIT)
             this.fibers[base + i].flags = FLAG.ACTIVE;
-          }
         }
       }
     }

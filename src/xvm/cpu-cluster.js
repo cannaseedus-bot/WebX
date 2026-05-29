@@ -289,6 +289,10 @@ export class CPUCluster32 {
     }
   }
 
+  get fiberCount() {
+    return this.fibers.length;
+  }
+
   get activeFiberCount() {
     return this.fibers.filter(f => f.flags !== FLAG.HALTED).length;
   }

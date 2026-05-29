@@ -326,6 +326,10 @@ export class FiberPool1000 extends CPUCluster32 {
     this.metrics.totalInstructions = this.fibers.length * this.config.ticksPerCore;
   }
 
+  get totalFibers() {
+    return this.fibers.length;
+  }
+
   get ips() {
     return this.metrics.elapsedMs > 0
       ? this.metrics.totalInstructions / (this.metrics.elapsedMs / 1000)

@@ -1,0 +1,27 @@
+{
+  "name": "Agents.NET",
+  "version": "1",
+  "kind": "native_dotnet_agents_release",
+  "created_local": "2026-05-26",
+  "purpose": "Versioned native .NET agent, connector, orchestration, process-runtime, and hive model documentation surface for SCX control-flow integration.",
+  "source_root": "../../native/dotnet",
+  "public_contracts": {
+    "agents_net_registry": "registry/agents-net.registry.json",
+    "native_dotnet_integration": "../v3.3.0-scx-control-flow/specs/native-dotnet-integration.json",
+    "architecture_docs_index": "../v3.3.0-scx-control-flow/specs/architecture-docs-index.json",
+    "validator": "tools/validate_release.py"
+  },
+  "layers": {
+    "agents": "src/Agents",
+    "connectors": "src/Connectors",
+    "experimental": "src/Experimental",
+    "docs": "docs",
+    "powershell_llm_models": "PowerShell-LLM/Models"
+  },
+  "validation": {
+    "registry_paths": "checked",
+    "source_directories": "checked",
+    "project_files": "checked",
+    "docs": "checked"
+  }
+}

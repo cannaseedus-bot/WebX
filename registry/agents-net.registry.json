@@ -1,0 +1,49 @@
+{
+  "version": "1",
+  "source_root": "../../native/dotnet",
+  "directories": {
+    "agents": "../../native/dotnet/src/Agents",
+    "connectors": "../../native/dotnet/src/Connectors",
+    "experimental": "../../native/dotnet/src/Experimental",
+    "docs": "../../native/dotnet/docs",
+    "powershell_llm_agents": "../../native/dotnet/PowerShell-LLM/Models/agents",
+    "powershell_llm_hive": "../../native/dotnet/PowerShell-LLM/Models/hive"
+  },
+  "agent_projects": {
+    "abstractions": "../../native/dotnet/src/Agents/Abstractions/Agents.Abstractions.csproj",
+    "core": "../../native/dotnet/src/Agents/Core/Agents.Core.csproj",
+    "runtime_abstractions": "../../native/dotnet/src/Agents/Runtime/Abstractions/Runtime.Abstractions.csproj",
+    "runtime_core": "../../native/dotnet/src/Agents/Runtime/Core/Runtime.Core.csproj",
+    "runtime_inprocess": "../../native/dotnet/src/Agents/Runtime/InProcess/Runtime.InProcess.csproj",
+    "yaml": "../../native/dotnet/src/Agents/Yaml/Agents.Yaml.csproj",
+    "copilot": "../../native/dotnet/src/Agents/Copilot/Agents.CopilotStudio.csproj",
+    "magentic": "../../native/dotnet/src/Agents/Magentic/Agents.Magentic.csproj",
+    "openai": "../../native/dotnet/src/Agents/OpenAI/Agents.OpenAI.csproj",
+    "orchestration": "../../native/dotnet/src/Agents/Orchestration/Agents.Orchestration.csproj"
+  },
+  "connector_projects": {
+    "huggingface": "../../native/dotnet/src/Connectors/Connectors.HuggingFace/Connectors.HuggingFace.csproj",
+    "ollama": "../../native/dotnet/src/Connectors/Connectors.Ollama/Connectors.Ollama.csproj",
+    "openai": "../../native/dotnet/src/Connectors/Connectors.OpenAI/Connectors.OpenAI.csproj",
+    "google": "../../native/dotnet/src/Connectors/Connectors.Google/Connectors.Google.csproj"
+  },
+  "experimental_projects": {
+    "orchestration_flow": "../../native/dotnet/src/Experimental/Orchestration.Flow/Experimental.Orchestration.Flow.csproj",
+    "process_abstractions": "../../native/dotnet/src/Experimental/Process.Abstractions/Process.Abstractions.csproj",
+    "process_core": "../../native/dotnet/src/Experimental/Process.Core/Process.Core.csproj",
+    "process_local_runtime": "../../native/dotnet/src/Experimental/Process.LocalRuntime/Process.LocalRuntime.csproj",
+    "process_runtime_dapr": "../../native/dotnet/src/Experimental/Process.Runtime.Dapr/Process.Runtime.Dapr.csproj"
+  },
+  "docs": {
+    "openai_connector_migration": "../../native/dotnet/docs/OPENAI-CONNECTOR-MIGRATION.md",
+    "telemetry": "../../native/dotnet/docs/TELEMETRY.md",
+    "experiments": "../../native/dotnet/docs/EXPERIMENTS.md",
+    "models": "../../native/dotnet/docs/MODELS.md",
+    "hive_models": "../../native/dotnet/PowerShell-LLM/Models/hive/MODELS.md",
+    "hive_architecture": "../../native/dotnet/PowerShell-LLM/Models/hive/ARCHITECTURE.md",
+    "hive_folds": "../../native/dotnet/PowerShell-LLM/Models/hive/FOLDS.md",
+    "hive_memory": "../../native/dotnet/PowerShell-LLM/Models/hive/memory.md",
+    "hive_micronauts": "../../native/dotnet/PowerShell-LLM/Models/hive/MICRONAUTS.md"
+  },
+  "scx_control_flow_release": "../v3.3.0-scx-control-flow"
+}

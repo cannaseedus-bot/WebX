@@ -54,5 +54,16 @@ native/d3d12_compute/build/
 **/wv2_data/
 **/EBWebView/
 
+# .NET build artifacts
+**/obj/
+**/bin/
+*.cache
+*.nuget.cache
+*.AssemblyReference.cache
+*.CoreCompileInputs.cache
+*.FileListAbsolute.txt
+*.Up2Date
+*.genruntimeconfig.cache
+
 # Trainer runtime (stays at .gpu_trainer, not in repo)
 .gpu_trainer/

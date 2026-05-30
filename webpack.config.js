@@ -29,10 +29,15 @@ module.exports = {
     },
     plugins: [
         new CleanWebpackPlugin(),
+        // src/index.html is the self-contained WebX-3D app (inline scripts).
+        // inject:false — don't auto-inject the library bundle into the app HTML.
         new HtmlWebpackPlugin({
-            title: 'Webpack App',
+            title: 'KUHUL WebX-3D',
             template: 'src/index.html',
+            inject: false,
+            filename: 'index.html',
         }),
+        // Also emit the library bundle as webx3d.bundle.js for external consumers.
     ],
     devServer: {
         static: './dist',

@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KUHUL WebX-3D | K'uhul π Runtime</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a12;--bg1:#111120;--bg2:#171728;--bg3:#1e1e32;
+  --border:#2d2d44;--text:#e9eef7;--muted:#8f9bad;
+  --gold:#ffd93d;--purple:#6c5ce7;--cyan:#4ecdc4;
+  --green:#a8e063;--red:#ff6b6b;--pink:#fd79a8;--blue:#74b9ff;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Courier New',monospace;overflow:hidden}
+
+/* ── Layout ── */
+#app{display:grid;grid-template-rows:44px 1fr 120px;height:100vh}
+
+/* Header */
+#hdr{display:flex;align-items:center;gap:12px;padding:0 16px;
+     background:var(--bg2);border-bottom:1px solid var(--border);
+     font-size:13px;user-select:none}
+#hdr h1{color:var(--gold);font-size:14px;letter-spacing:2px}
+#hdr .sep{color:var(--border);margin:0 4px}
+#phase-ring{display:flex;gap:4px;margin-left:auto}
+.phase-pip{width:14px;height:14px;border-radius:50%;border:1px solid var(--border);
+           background:var(--bg3);transition:background .2s}
+.phase-pip.active{background:var(--gold);box-shadow:0 0 6px var(--gold)}
+#clock{color:var(--muted);font-size:11px;margin-left:8px}
+#run-btn,#pause-btn,#reset-btn{
+  padding:4px 10px;border:1px solid var(--border);background:var(--bg3);
+  color:var(--text);cursor:pointer;font-family:monospace;font-size:11px}
+#run-btn:hover{border-color:var(--gold);color:var(--gold)}
+#pause-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+#reset-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* Main 3-column */
+#main{display:grid;grid-template-columns:220px 1fr 210px;min-height:0;overflow:hidden}
+
+/* Left panel */
+#left{background:var(--bg1);border-right:1px solid var(--border);
+      display:flex;flex-direction:column;overflow:hidden}
+.panel-title{padding:8px 10px;font-size:10px;color:var(--gold);letter-spacing:1px;
+             border-bottom:1px solid var(--border);text-transform:uppercase}
+#k3d-editor{flex:1;display:flex;flex-direction:column;min-height:0}
+#k3d-src{flex:1;background:var(--bg);border:none;color:var(--cyan);
+         font-family:'Courier New',monospace;font-size:11px;
+         padding:8px;resize:none;outline:none;min-height:0}
+#k3d-compile-btn{padding:6px;background:var(--bg3);border:none;border-top:1px solid var(--border);
+                  color:var(--gold);cursor:pointer;font-family:monospace;font-size:11px}
+#k3d-compile-btn:hover{background:var(--bg2)}
+#k3d-output{height:90px;background:var(--bg);border-top:1px solid var(--border);
+             overflow:auto;padding:6px;font-size:10px;color:var(--muted)}
+#field-controls{border-top:1px solid var(--border)}
+#field-controls label{display:flex;align-items:center;gap:6px;
+  padding:5px 10px;font-size:10px;color:var(--muted);cursor:pointer}
+#field-controls input[type=range]{flex:1;accent-color:var(--gold)}
+#field-controls input[type=checkbox]{accent-color:var(--gold)}
+
+/* Center 3D scene */
+#scene-wrap{position:relative;display:flex;align-items:stretch}
+#scene3d{width:100%;height:100%;display:block;cursor:grab}
+#scene3d:active{cursor:grabbing}
+#overlay-stats{position:absolute;top:8px;left:8px;font-size:10px;
+               color:var(--muted);line-height:1.7;pointer-events:none}
+#phase-label{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+             font-size:11px;color:var(--gold);letter-spacing:2px;pointer-events:none}
+
+/* Right panel — 7 brain modules */
+#right{background:var(--bg1);border-left:1px solid var(--border);
+       display:flex;flex-direction:column;overflow-y:auto}
+.brain-card{border-bottom:1px solid var(--border);padding:4px 6px}
+.brain-card h4{font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.brain-card canvas{width:100%;height:60px;display:block;background:var(--bg)}
+.brain-card .bstats{display:flex;justify-content:space-between;font-size:9px;
+                    color:var(--muted);margin-top:2px}
+
+/* Log */
+#log{background:var(--bg1);border-top:1px solid var(--border);
+     overflow-y:auto;padding:6px 10px;font-size:10px;line-height:1.5}
+.le{color:var(--muted)} .le.c{color:var(--cyan)} .le.g{color:var(--gold)}
+.le.r{color:var(--red)} .le.p{color:var(--pink)}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- Header -->
+<header id="hdr">
+  <h1>⟁ KUHUL WebX-3D</h1>
+  <span class="sep">|</span>
+  <span style="color:var(--muted);font-size:11px">K'uhul π Runtime · v3.5.0</span>
+  <button id="run-btn">▶ RUN</button>
+  <button id="pause-btn">⏸ PAUSE</button>
+  <button id="reset-btn">⟁ RESET</button>
+  <span class="sep" style="margin-left:8px">PHASE</span>
+  <div id="phase-ring">
+    <div class="phase-pip active" title="0"></div>
+    <div class="phase-pip" title="π/4"></div>
+    <div class="phase-pip" title="π/2"></div>
+    <div class="phase-pip" title="3π/4"></div>
+    <div class="phase-pip" title="π"></div>
+    <div class="phase-pip" title="5π/4"></div>
+    <div class="phase-pip" title="3π/2"></div>
+    <div class="phase-pip" title="7π/4"></div>
+  </div>
+  <span id="clock">00:00:00</span>
+</header>
+
+<!-- Main -->
+<div id="main">
+
+  <!-- Left: K3D + field controls -->
+  <div id="left">
+    <div class="panel-title">⟁ K3D Compiler</div>
+    <div id="k3d-editor">
+<textarea id="k3d-src">// KUHUL 3D — hello world
+Tensor Pos = [0.0, 0.0, 0.0];
+Cluster Brain = {
+  Tensor Weights;
+  Shader Compute;
+};
+[Pop scope_main]
+[Wo Pos 3]
+[Ch'en Pos 0.5 0.5 0.5]
+[K'ayab' phase_0]
+[Sek ⊗ Pos Weights]
+[Kumk'u]
+[Muwan neural_fold]
+[Xul scope_main]
+
+dx12 {
+  Dispatch 32 32 1
+  Barrier UAV
+  CopyBuffer Pos Out
+}
+</textarea>
+      <button id="k3d-compile-btn">▶ COMPILE K3D</button>
+      <div id="k3d-output"><span style="color:var(--muted)">// IR output appears here</span></div>
+    </div>
+    <div id="field-controls">
+      <div class="panel-title">⊛ Field System</div>
+      <label><input type="checkbox" id="wind-on" checked> Wind Field</label>
+      <label>Strength <input type="range" id="wind-str" min="0" max="3" step="0.1" value="0.8"></label>
+      <label><input type="checkbox" id="well-on" checked> Attraction Wells</label>
+      <label>Strength <input type="range" id="well-str" min="0" max="5" step="0.1" value="2.0"></label>
+      <label><input type="checkbox" id="inertia-on"> Scroll Inertia</label>
+      <label>Particles <input type="range" id="p-count" min="20" max="400" step="10" value="150"></label>
+    </div>
+  </div>
+
+  <!-- Center: 3D scene -->
+  <div id="scene-wrap">
+    <canvas id="scene3d"></canvas>
+    <div id="overlay-stats">
+      <div id="stat-fps">FPS: —</div>
+      <div id="stat-pts">Particles: —</div>
+      <div id="stat-phase">Phase: 0 (0)</div>
+      <div id="stat-cycle">Cycle: 0</div>
+    </div>
+    <div id="phase-label">K'AYAB' PHASE 0</div>
+  </div>
+
+  <!-- Right: brain modules -->
+  <div id="right">
+    <div class="panel-title">⊙ 7-Brain Topology</div>
+    <!-- Brain cards generated by JS -->
+  </div>
+
+</div><!-- /main -->
+
+<!-- Log -->
+<div id="log"></div>
+
+</div><!-- /app -->
+
+<script>
+'use strict';
+
+// ================================================================
+// 3D MATH
+// ================================================================
+
+const PI  = Math.PI;
+const TAU = PI * 2;
+
+function project3D(wx, wy, wz, cam, cx, cy) {
+    // Rotate Y
+    const cy_ = Math.cos(cam.ry), sy_ = Math.sin(cam.ry);
+    let rx = wx * cy_ + wz * sy_;
+    let rz = -wx * sy_ + wz * cy_;
+    // Rotate X
+    const cx_ = Math.cos(cam.rx), sx_ = Math.sin(cam.rx);
+    let ry = wy * cx_ - rz * sx_;
+    rz     = wy * sx_ + rz * cx_;
+    // Perspective
+    const d = cam.dist + rz;
+    if (d < 1) return null;
+    const f = cam.fov / d;
+    return { sx: cx + rx * f, sy: cy - ry * f, depth: rz, scale: f };
+}
+
+// ================================================================
+// FIELD SYSTEM (inline — mirrors src/field-system.js)
+// ================================================================
+
+class AttractionWell {
+    constructor({ position=[0,0,0], strength=2, radius=80, falloffPower=2 }={}) {
+        this.position=position; this.strength=strength;
+        this.radius=radius; this.falloffPower=falloffPower;
+    }
+    applyTo(b, dt) {
+        const dx=this.position[0]-b.x, dy=this.position[1]-b.y, dz=this.position[2]-b.z;
+        const dist=Math.sqrt(dx*dx+dy*dy+dz*dz);
+        if(dist===0||dist>this.radius) return;
+        const t=1-dist/this.radius;
+        const f=(this.strength*Math.pow(t,this.falloffPower))/dist;
+        b.vx+=dx*f*dt; b.vy+=dy*f*dt; b.vz+=dz*f*dt;
+    }
+}
+
+class WindField {
+    constructor({ direction=[1,0,0], strength=0.5 }={}) {
+        this.direction=direction; this.strength=strength;
+    }
+    applyTo(b, dt) {
+        b.vx+=this.direction[0]*this.strength*dt;
+        b.vy+=this.direction[1]*this.strength*dt;
+        b.vz+=this.direction[2]*this.strength*dt;
+    }
+}
+
+class ScrollInertiaField {
+    constructor({ direction=[1,0,0], speed=8, decayRate=1.5 }={}) {
+        this.direction=direction; this.speed=speed; this.decayRate=decayRate;
+    }
+    update(dt) { this.speed*=Math.exp(-this.decayRate*dt); if(this.speed<0.05) this.speed=0; }
+    applyTo(b, dt) {
+        if(this.speed===0) return;
+        b.vx+=this.direction[0]*this.speed*dt;
+        b.vy+=this.direction[1]*this.speed*dt;
+        b.vz+=this.direction[2]*this.speed*dt;
+    }
+}
+
+// ================================================================
+// K3D COMPILER (inline port of src/k3d/compiler.js)
+// ================================================================
+
+function compileK3D(src) {
+    const CMD_RE  = /^\[(.+?)\]\s*$/;
+    const DX12_S  = /^\s*dx12\s*\{\s*$/;
+    const DX12_E  = /^\s*\}\s*$/;
+    const DECL_RE = /^\s*(Tensor|Cluster|Model|Buffer|Shader)\s+([A-Za-z_]\w*)\s*=.*;\s*$/;
+    const ops=[]; const lines=src.split('\n'); let i=0;
+    while(i<lines.length){
+        const raw=lines[i]; const line=raw.split('//',1)[0].trim(); i++;
+        if(!line) continue;
+        if(DX12_S.test(line)){
+            const blk=[]; let depth=1;
+            while(i<lines.length){
+                const r2=lines[i]; const l2=r2.split('//',1)[0].trim(); i++;
+                if(!l2) continue;
+                depth+=(l2.match(/\{/g)||[]).length-(l2.match(/\}/g)||[]).length;
+                if(depth<=0) break;
+                blk.push(l2);
+            }
+            ops.push({op:'dx12_block',statements:blk}); continue;
+        }
+        const cm=line.match(CMD_RE);
+        if(cm){ const p=cm[1].trim().split(/\s+/); ops.push({op:'command',name:p[0],args:p.slice(1),raw:line}); continue; }
+        const dm=line.match(DECL_RE);
+        if(dm){ ops.push({op:'declare',kind:dm[1],name:dm[2],raw:line}); continue; }
+        ops.push({op:'unknown',raw:line});
+    }
+    return {ir_version:'0.1.0',source:'<editor>',dialect:'kuhul3d-v3-bootstrap',ops};
+}
+
+// ================================================================
+// BRAIN TOPOLOGY
+// ================================================================
+
+const BRAINS = [
+    { id:0, name:'Vocabulary Cortex',       tag:'orbital_halo',     color:'#ffd93d', pos:[0,   70,  0],   radius:10 },
+    { id:1, name:'Weight Matrix',           tag:'stack_grid',       color:'#6c5ce7', pos:[-70, 25,  30],  radius:8  },
+    { id:2, name:'Inference Stream',        tag:'tunnel_rail',      color:'#4ecdc4', pos:[70,  25,  30],  radius:8  },
+    { id:3, name:'Language Tree',           tag:'fractal_tree',     color:'#a8e063', pos:[-60, -25, -40], radius:7  },
+    { id:4, name:'Executive Cortex',        tag:'hud_ring',         color:'#ff6b6b', pos:[0,   0,   0],   radius:14 },
+    { id:5, name:'Episodic Memory',         tag:'memory_constel',   color:'#fd79a8', pos:[60,  -25, -40], radius:7  },
+    { id:6, name:'Micronaut Nervous System',tag:'micronaut_net',    color:'#74b9ff', pos:[0,   -70,  0],  radius:9  },
+];
+
+const BRAIN_EDGES = [
+    [4,0],[4,1],[4,2],[4,3],[4,5],[4,6],
+    [0,1],[0,2],[1,3],[2,5],[3,6],[5,6],
+];
+
+const PHASE_NAMES = ['0','π/4','π/2','3π/4','π','5π/4','3π/2','7π/4'];
+
+// ================================================================
+// PARTICLE SYSTEM
+// ================================================================
+
+function makeParticle(brains) {
+    const b = brains[Math.floor(Math.random()*brains.length)];
+    const spread = 60;
+    return {
+        x: b.pos[0] + (Math.random()-0.5)*spread,
+        y: b.pos[1] + (Math.random()-0.5)*spread,
+        z: b.pos[2] + (Math.random()-0.5)*spread,
+        vx:0, vy:0, vz:0,
+        energy: 0.3+Math.random()*0.7,
+        life: 1.0,
+        decay: 0.0008+Math.random()*0.001,
+        brain: b.id,
+    };
+}
+
+// ================================================================
+// BRAIN MINI-RENDERERS
+// ================================================================
+
+class OrbitalBrainRenderer {
+    constructor(canvas, brain) { this.canvas=canvas; this.ctx=canvas.getContext('2d'); this.brain=brain; this.t=0; }
+    render(phase) {
+        const {canvas:cv,ctx,brain,t} = this;
+        const w=cv.width, h=cv.height, cx=w/2, cy=h/2;
+        ctx.clearRect(0,0,w,h);
+        const rings=3, heads=8;
+        for(let r=0;r<rings;r++){
+            const rad=Math.min(w,h)*0.15*(r+1);
+            ctx.beginPath(); ctx.arc(cx,cy,rad,0,TAU);
+            ctx.strokeStyle=`rgba(255,217,61,${0.15+r*0.1})`; ctx.lineWidth=1; ctx.stroke();
+            for(let h_=0;h_<heads;h_++){
+                const a=(TAU*h_/heads)+t*0.5;
+                const x=cx+rad*Math.cos(a), y=cy+rad*Math.sin(a);
+                const sz=2+2*(phase/7);
+                ctx.beginPath(); ctx.arc(x,y,sz,0,TAU);
+                ctx.fillStyle=brain.color; ctx.fill();
+            }
+        }
+        this.t+=0.02;
+    }
+}
+
+class StackBrainRenderer {
+    constructor(canvas, brain) { this.canvas=canvas; this.ctx=canvas.getContext('2d'); this.brain=brain; }
+    render(phase) {
+        const {canvas:cv,ctx,brain} = this;
+        const w=cv.width, h=cv.height;
+        ctx.clearRect(0,0,w,h);
+        const layers=8, cellW=w/layers;
+        for(let l=0;l<layers;l++){
+            const act=0.3+0.7*Math.abs(Math.sin(l*0.7+phase*0.3));
+            const bh=act*(h-10)+5;
+            ctx.fillStyle=brain.color+Math.floor(act*255).toString(16).padStart(2,'0');
+            ctx.fillRect(l*cellW+1,h-bh,cellW-2,bh);
+        }
+    }
+}
+
+class TunnelBrainRenderer {
+    constructor(canvas, brain) { this.canvas=canvas; this.ctx=canvas.getContext('2d'); this.brain=brain; this.pkts=[]; this.t=0; }
+    render(phase) {
+        const {canvas:cv,ctx,brain} = this;
+        const w=cv.width, h=cv.height, cx=w/2;
+        ctx.clearRect(0,0,w,h);
+        if(Math.random()<0.3) this.pkts.push({x:cx+(Math.random()-0.5)*20, y:h, e:Math.random()});
+        for(const p of this.pkts){ p.y-=2+p.e*2; }
+        this.pkts=this.pkts.filter(p=>p.y>0);
+        ctx.strokeStyle=brain.color+'44'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,h); ctx.stroke();
+        for(const p of this.pkts){
+            ctx.beginPath(); ctx.arc(p.x,p.y,2+p.e*3,0,TAU);
+            ctx.fillStyle=brain.color; ctx.fill();
+        }
+        this.t++;
+    }
+}
+
+class FractalBrainRenderer {
+    constructor(canvas, brain) {
+        this.canvas=canvas; this.ctx=canvas.getContext('2d'); this.brain=brain;
+        this.nodes=[]; this._build(0,canvas.width/2,8,0);
+    }
+    _build(id,x,y,depth) {
+        this.nodes.push({id,x,y,depth,children:[]});
+        if(depth<4 && Math.random()>0.4){
+            const k=2+Math.floor(Math.random()*2);
+            for(let i=0;i<k;i++){
+                const a=((i-(k-1)/2)*PI/2.5);
+                const len=20/(depth+1);
+                const cid=this.nodes.length;
+                this.nodes[this.nodes.length-1 - (this.nodes.length-1-id)].children.push(cid);
+                this.nodes[id].children.push(cid);
+                this._build(cid, x+len*Math.cos(a), y+len*Math.sin(a), depth+1);
+            }
+        }
+    }
+    render(phase) {
+        const {canvas:cv,ctx,brain,nodes} = this;
+        ctx.clearRect(0,0,cv.width,cv.height);
+        const maxD=Math.max(...nodes.map(n=>n.depth))||1;
+        for(const nd of nodes){
+            for(const cid of nd.children){
+                const ch=nodes[cid];
+                if(!ch) continue;
+                ctx.beginPath(); ctx.moveTo(nd.x,nd.y); ctx.lineTo(ch.x,ch.y);
+                ctx.strokeStyle=brain.color+Math.floor((1-nd.depth/maxD)*180).toString(16).padStart(2,'0');
+                ctx.lineWidth=1; ctx.stroke();
+            }
+            ctx.beginPath(); ctx.arc(nd.x,nd.y,2+2*(1-nd.depth/maxD),0,TAU);
+            ctx.fillStyle=brain.color; ctx.fill();
+        }
+    }
+}
+
+class HUDBrainRenderer {
+    constructor(canvas, brain) { this.canvas=canvas; this.ctx=canvas.getContext('2d'); this.brain=brain; this.t=0; }
+    render(phase) {
+        const {canvas:cv,ctx,brain,t} = this;
+        const w=cv.width, h=cv.height, cx=w/2, cy=h/2;
+        ctx.clearRect(0,0,w,h);
+        const rings=[22,15,8];
+        const labels=['GPU','CPU','MEM'];
+        for(let r=0;r<rings.length;r++){
+            const load=0.4+0.5*Math.abs(Math.sin(t*0.03+r*1.1));
+            ctx.beginPath(); ctx.arc(cx,cy,rings[r],0,TAU);
+            ctx.strokeStyle='#2d2d44'; ctx.lineWidth=5; ctx.stroke();
+            ctx.beginPath(); ctx.arc(cx,cy,rings[r],-PI/2,-PI/2+TAU*load);
+            ctx.strokeStyle=brain.color; ctx.lineWidth=5; ctx.stroke();
+            ctx.fillStyle=brain.color+'88'; ctx.font='7px monospace';
+            ctx.fillText(labels[r],cx-6,cy-rings[r]-3);
+        }
+        ctx.beginPath(); ctx.arc(cx,cy,4,0,TAU);
+        ctx.fillStyle=brain.color; ctx.fill();
+        this.t++;
+    }
+}
+
+class EpisodicBrainRenderer {
+    constructor(canvas, brain) {
+        this.canvas=canvas; this.ctx=canvas.getContext('2d'); this.brain=brain;
+        this.stars=Array.from({length:30},()=>({
+            x:Math.random()*canvas.width,
+            y:Math.random()*canvas.height,
+            r:0.5+Math.random()*2.5,
+            phase:Math.random()*TAU,
+            speed:0.01+Math.random()*0.04,
+        }));
+        this.t=0;
+    }
+    render(phase) {
+        const {canvas:cv,ctx,brain,stars,t} = this;
+        ctx.clearRect(0,0,cv.width,cv.height);
+        for(const s of stars){
+            const brightness=0.4+0.6*Math.abs(Math.sin(t*s.speed+s.phase));
+            ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,TAU);
+            ctx.fillStyle=brain.color+Math.floor(brightness*255).toString(16).padStart(2,'0');
+            ctx.fill();
+        }
+        // Draw connecting arcs between nearby stars
+        for(let i=0;i<stars.length;i++){
+            for(let j=i+1;j<stars.length;j++){
+                const dx=stars[i].x-stars[j].x, dy=stars[i].y-stars[j].y;
+                const d=Math.sqrt(dx*dx+dy*dy);
+                if(d<40){
+                    const alpha=Math.floor((1-d/40)*80);
+                    ctx.beginPath(); ctx.moveTo(stars[i].x,stars[i].y); ctx.lineTo(stars[j].x,stars[j].y);
+                    ctx.strokeStyle=brain.color+alpha.toString(16).padStart(2,'0');
+                    ctx.lineWidth=0.5; ctx.stroke();
+                }
+            }
+        }
+        this.t++;
+    }
+}
+
+class MicronautBrainRenderer {
+    constructor(canvas, brain) {
+        this.canvas=canvas; this.ctx=canvas.getContext('2d'); this.brain=brain;
+        const w=canvas.width, h=canvas.height;
+        this.nodes=Array.from({length:12},()=>({
+            x:w*0.1+Math.random()*w*0.8,
+            y:h*0.1+Math.random()*h*0.8,
+            vx:(Math.random()-0.5)*0.3,
+            vy:(Math.random()-0.5)*0.3,
+            r:2+Math.random()*3,
+        }));
+        this.t=0;
+    }
+    render(phase) {
+        const {canvas:cv,ctx,brain,nodes,t} = this;
+        const w=cv.width, h=cv.height;
+        ctx.clearRect(0,0,w,h);
+        for(const nd of nodes){
+            nd.x+=nd.vx; nd.y+=nd.vy;
+            if(nd.x<4||nd.x>w-4) nd.vx*=-1;
+            if(nd.y<4||nd.y>h-4) nd.vy*=-1;
+        }
+        for(let i=0;i<nodes.length;i++){
+            for(let j=i+1;j<nodes.length;j++){
+                const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y;
+                const d=Math.sqrt(dx*dx+dy*dy);
+                if(d<50){
+                    const pulse=0.3+0.5*Math.abs(Math.sin(t*0.05+i));
+                    ctx.beginPath(); ctx.moveTo(nodes[i].x,nodes[i].y); ctx.lineTo(nodes[j].x,nodes[j].y);
+                    ctx.strokeStyle=brain.color+Math.floor(pulse*100).toString(16).padStart(2,'0');
+                    ctx.lineWidth=1; ctx.stroke();
+                }
+            }
+        }
+        for(const nd of nodes){
+            ctx.beginPath(); ctx.arc(nd.x,nd.y,nd.r,0,TAU);
+            ctx.fillStyle=brain.color; ctx.fill();
+        }
+        this.t++;
+    }
+}
+
+const BRAIN_RENDERER_CLASSES = [
+    OrbitalBrainRenderer, StackBrainRenderer, TunnelBrainRenderer,
+    FractalBrainRenderer, HUDBrainRenderer, EpisodicBrainRenderer, MicronautBrainRenderer,
+];
+
+// ================================================================
+// MAIN APP
+// ================================================================
+
+class WebX3DApp {
+    constructor() {
+        this.canvas  = document.getElementById('scene3d');
+        this.ctx     = this.canvas.getContext('2d');
+        this.running = false;
+        this.cycle   = 0;
+        this.phaseIdx= 0;
+        this.phaseTick=0;
+        this.startTime=null;
+        this.animId  = null;
+        this.lastTs  = 0;
+        this.fps     = 0;
+        this._fpsBuf = [];
+
+        this.cam = { rx:-0.35, ry:0.5, dist:340, fov:280 };
+        this._drag = null;
+
+        // Field system
+        this.wind    = new WindField({ direction:[0.4,0.1,0.3], strength:0.8 });
+        this.wells   = BRAINS.map(b=>new AttractionWell({ position:b.pos.slice(), strength:2.0, radius:90 }));
+        this.inertia = new ScrollInertiaField({ direction:[1,0,0.5], speed:8 });
+
+        // Particles
+        this.particles = [];
+        this._targetCount = 150;
+        this._fillParticles();
+
+        // Build brain mini-cards
+        this._buildBrainCards();
+
+        // Pips
+        this.pips = [...document.querySelectorAll('.phase-pip')];
+
+        // Wire controls
+        this._wireControls();
+
+        // Resize
+        this._resize();
+        window.addEventListener('resize', ()=>this._resize());
+    }
+
+    _fillParticles() {
+        while(this.particles.length < this._targetCount) {
+            this.particles.push(makeParticle(BRAINS));
+        }
+    }
+
+    _buildBrainCards() {
+        const right = document.getElementById('right');
+        this.brainRenderers = [];
+        for(let i=0;i<BRAINS.length;i++){
+            const b = BRAINS[i];
+            const card = document.createElement('div');
+            card.className = 'brain-card';
+            card.innerHTML = `<h4 style="color:${b.color}">[${i+1}] ${b.name}</h4>
+<canvas id="bc${i}" width="190" height="60"></canvas>
+<div class="bstats"><span id="bstat${i}a">tag: ${b.tag}</span><span id="bstat${i}b">—</span></div>`;
+            right.appendChild(card);
+            const cv = card.querySelector('canvas');
+            this.brainRenderers.push(new BRAIN_RENDERER_CLASSES[i](cv, b));
+        }
+    }
+
+    _wireControls() {
+        document.getElementById('run-btn').onclick   = ()=>this.start();
+        document.getElementById('pause-btn').onclick = ()=>this.pause();
+        document.getElementById('reset-btn').onclick = ()=>this.reset();
+
+        // K3D compile
+        document.getElementById('k3d-compile-btn').onclick = ()=>{
+            const src = document.getElementById('k3d-src').value;
+            try {
+                const ir = compileK3D(src);
+                const out = ir.ops.map(op=>{
+                    if(op.op==='command')    return `CMD  [${op.name}] args:${op.args.join(' ')||'—'}`;
+                    if(op.op==='declare')    return `DECL ${op.kind} ${op.name}`;
+                    if(op.op==='dx12_block') return `DX12 { ${op.statements.length} stmts }`;
+                    return `???  ${op.raw}`;
+                }).join('\n');
+                document.getElementById('k3d-output').textContent =
+                    `// IR v${ir.ir_version} | ${ir.dialect}\n// ${ir.ops.length} ops\n${out}`;
+                this._log(`K3D compiled: ${ir.ops.length} ops`, 'g');
+            } catch(e) {
+                document.getElementById('k3d-output').textContent = `ERROR: ${e.message}`;
+                this._log(`K3D compile error: ${e.message}`, 'r');
+            }
+        };
+
+        // Field controls
+        document.getElementById('wind-on').onchange  = e=>{ this.wind._disabled=!e.target.checked; };
+        document.getElementById('well-on').onchange  = e=>{ this._wellsDisabled=!e.target.checked; };
+        document.getElementById('inertia-on').onchange = e=>{ if(e.target.checked) this.inertia.speed=8; else this.inertia.speed=0; };
+        document.getElementById('wind-str').oninput  = e=>{ this.wind.strength=+e.target.value; };
+        document.getElementById('well-str').oninput  = e=>{ this.wells.forEach(w=>w.strength=+e.target.value); };
+        document.getElementById('p-count').oninput   = e=>{
+            this._targetCount=+e.target.value;
+            if(this.particles.length>this._targetCount) this.particles.length=this._targetCount;
+            else this._fillParticles();
+        };
+
+        // Orbit drag
+        this.canvas.addEventListener('mousedown', e=>{ this._drag={x:e.clientX,y:e.clientY,rx:this.cam.rx,ry:this.cam.ry}; });
+        window.addEventListener('mouseup', ()=>{ this._drag=null; });
+        window.addEventListener('mousemove', e=>{
+            if(!this._drag) return;
+            this.cam.ry = this._drag.ry + (e.clientX-this._drag.x)*0.007;
+            this.cam.rx = this._drag.rx - (e.clientY-this._drag.y)*0.007;
+            this.cam.rx = Math.max(-PI/2+0.05, Math.min(PI/2-0.05, this.cam.rx));
+        });
+        this.canvas.addEventListener('wheel', e=>{
+            this.cam.dist = Math.max(80, Math.min(600, this.cam.dist + e.deltaY*0.5));
+        });
+        // Touch orbit
+        let _lt=null;
+        this.canvas.addEventListener('touchstart',e=>{ const t=e.touches[0]; _lt={x:t.clientX,y:t.clientY,rx:this.cam.rx,ry:this.cam.ry}; },{passive:true});
+        this.canvas.addEventListener('touchmove',e=>{
+            if(!_lt) return; const t=e.touches[0];
+            this.cam.ry=_lt.ry+(t.clientX-_lt.x)*0.007;
+            this.cam.rx=Math.max(-PI/2+0.05,Math.min(PI/2-0.05,_lt.rx-(t.clientY-_lt.y)*0.007));
+        },{passive:true});
+    }
+
+    _resize() {
+        const wrap = document.getElementById('scene-wrap');
+        const r    = wrap.getBoundingClientRect();
+        this.canvas.width  = Math.floor(r.width);
+        this.canvas.height = Math.floor(r.height);
+    }
+
+    start() {
+        if(this.running) return;
+        this.running=true;
+        if(!this.startTime) this.startTime=performance.now();
+        this._log('▶ WebX-3D execution started','g');
+        this._loop(performance.now());
+    }
+
+    pause() {
+        this.running=false;
+        if(this.animId){ cancelAnimationFrame(this.animId); this.animId=null; }
+        this._log('⏸ Paused','c');
+    }
+
+    reset() {
+        this.pause();
+        this.cycle=0; this.phaseIdx=0; this.phaseTick=0;
+        this.startTime=null;
+        this.particles=[];
+        this._fillParticles();
+        this.inertia.speed=0;
+        this.cam={rx:-0.35,ry:0.5,dist:340,fov:280};
+        this._updatePips();
+        this._render(this.canvas.width/2, this.canvas.height/2);
+        this._log('⟁ Reset','r');
+    }
+
+    _loop(ts) {
+        if(!this.running) return;
+        const dt = Math.min((ts - this.lastTs)/1000, 0.05);
+        this.lastTs = ts;
+
+        // FPS
+        this._fpsBuf.push(dt);
+        if(this._fpsBuf.length>30) this._fpsBuf.shift();
+        this.fps = Math.round(1/(this._fpsBuf.reduce((a,b)=>a+b,0)/this._fpsBuf.length));
+
+        this._update(dt, ts);
+        this._render(this.canvas.width/2, this.canvas.height/2);
+        this._updateUI(ts);
+
+        this.animId = requestAnimationFrame(t=>this._loop(t));
+    }
+
+    _update(dt, ts) {
+        this.cycle++;
+
+        // Auto-rotate
+        this.cam.ry += 0.003;
+
+        // Phase advance every 2s
+        this.phaseTick += dt;
+        if(this.phaseTick >= 2.0){
+            this.phaseTick = 0;
+            this.phaseIdx  = (this.phaseIdx+1)%8;
+            this._updatePips();
+            if(this.phaseIdx===0) this._log(`Cycle ${this.cycle}: all 8 phases completed · Kuhul loop`,'g');
+        }
+
+        // Particle physics
+        const actBrain = BRAINS[this.phaseIdx % BRAINS.length];
+        for(const p of this.particles){
+            // Wind
+            if(!this.wind._disabled){
+                p.vx+=this.wind.direction[0]*this.wind.strength*dt;
+                p.vy+=this.wind.direction[1]*this.wind.strength*dt;
+                p.vz+=this.wind.direction[2]*this.wind.strength*dt;
+            }
+            // Active brain attraction
+            if(!this._wellsDisabled){
+                const w = this.wells[actBrain.id];
+                const dx=w.position[0]-p.x, dy=w.position[1]-p.y, dz=w.position[2]-p.z;
+                const dist=Math.sqrt(dx*dx+dy*dy+dz*dz);
+                if(dist>0 && dist<w.radius){
+                    const t_=1-dist/w.radius;
+                    const f=(w.strength*t_*t_)/dist;
+                    p.vx+=dx*f*dt; p.vy+=dy*f*dt; p.vz+=dz*f*dt;
+                }
+            }
+            // Inertia
+            if(this.inertia.speed>0){
+                p.vx+=this.inertia.direction[0]*this.inertia.speed*dt;
+                p.vy+=this.inertia.direction[1]*this.inertia.speed*dt;
+                p.vz+=this.inertia.direction[2]*this.inertia.speed*dt;
+            }
+            // Clamp speed
+            const spd=Math.sqrt(p.vx*p.vx+p.vy*p.vy+p.vz*p.vz);
+            if(spd>30){ const s=30/spd; p.vx*=s; p.vy*=s; p.vz*=s; }
+
+            p.x+=p.vx*dt; p.y+=p.vy*dt; p.z+=p.vz*dt;
+            p.vx*=0.96; p.vy*=0.96; p.vz*=0.96;
+            p.life-=p.decay;
+        }
+
+        // Respawn dead particles
+        this.particles = this.particles.filter(p=>p.life>0);
+        this._fillParticles();
+        this.inertia.speed*=Math.exp(-1.5*dt);
+        if(this.inertia.speed<0.05) this.inertia.speed=0;
+    }
+
+    _render(cx, cy) {
+        const {ctx, canvas:cv, cam, phaseIdx} = this;
+        ctx.clearRect(0,0,cv.width,cv.height);
+
+        // Collect drawables with depth
+        const drawables=[];
+
+        // --- Brain nodes ---
+        for(const b of BRAINS){
+            const proj=project3D(b.pos[0],b.pos[1],b.pos[2],cam,cx,cy);
+            if(!proj) continue;
+            const active = (b.id===phaseIdx%BRAINS.length);
+            drawables.push({type:'brain',b,proj,active});
+        }
+
+        // --- Edges ---
+        for(const [ai,bi] of BRAIN_EDGES){
+            const pa=project3D(...BRAINS[ai].pos,cam,cx,cy);
+            const pb=project3D(...BRAINS[bi].pos,cam,cx,cy);
+            if(!pa||!pb) continue;
+            const depth=(pa.depth+pb.depth)/2;
+            drawables.push({type:'edge',pa,pb,ca:BRAINS[ai].color,cb:BRAINS[bi].color,depth});
+        }
+
+        // --- Particles ---
+        for(const p of this.particles){
+            const proj=project3D(p.x,p.y,p.z,cam,cx,cy);
+            if(!proj) continue;
+            drawables.push({type:'particle',p,proj});
+        }
+
+        // Depth sort (painter's algorithm — back to front)
+        drawables.sort((a,b_)=>{
+            const da=a.proj?a.proj.depth:(a.pa?(a.pa.depth+a.pb.depth)/2:0);
+            const db=b_.proj?b_.proj.depth:(b_.pa?(b_.pa.depth+b_.pb.depth)/2:0);
+            return da-db;
+        });
+
+        // Draw
+        for(const d of drawables){
+            if(d.type==='edge'){
+                const pulse=0.2+0.3*Math.abs(Math.sin(this.cycle*0.04+BRAIN_EDGES.indexOf([d.ca,d.cb])));
+                const grad=ctx.createLinearGradient(d.pa.sx,d.pa.sy,d.pb.sx,d.pb.sy);
+                grad.addColorStop(0,d.ca+'60');
+                grad.addColorStop(1,d.cb+'60');
+                ctx.beginPath(); ctx.moveTo(d.pa.sx,d.pa.sy); ctx.lineTo(d.pb.sx,d.pb.sy);
+                ctx.strokeStyle=grad; ctx.lineWidth=1.5; ctx.stroke();
+
+                // Data pulse dot along edge
+                const t_=(Math.sin(this.cycle*0.05)+1)/2;
+                const ex=d.pa.sx+(d.pb.sx-d.pa.sx)*t_;
+                const ey=d.pa.sy+(d.pb.sy-d.pa.sy)*t_;
+                ctx.beginPath(); ctx.arc(ex,ey,2,0,TAU);
+                ctx.fillStyle='#ffffff80'; ctx.fill();
+
+            } else if(d.type==='brain'){
+                const {b,proj,active}=d;
+                const r=b.radius*proj.scale;
+                // Glow
+                if(active){
+                    const glow=ctx.createRadialGradient(proj.sx,proj.sy,0,proj.sx,proj.sy,r*3);
+                    glow.addColorStop(0,b.color+'66');
+                    glow.addColorStop(1,b.color+'00');
+                    ctx.beginPath(); ctx.arc(proj.sx,proj.sy,r*3,0,TAU);
+                    ctx.fillStyle=glow; ctx.fill();
+                }
+                // Body
+                const grad=ctx.createRadialGradient(proj.sx-r*0.3,proj.sy-r*0.3,0,proj.sx,proj.sy,r);
+                grad.addColorStop(0,'#ffffff');
+                grad.addColorStop(0.3,b.color);
+                grad.addColorStop(1,b.color+'88');
+                ctx.beginPath(); ctx.arc(proj.sx,proj.sy,r,0,TAU);
+                ctx.fillStyle=grad; ctx.fill();
+                if(active){ ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke(); }
+
+                // Label
+                ctx.fillStyle=active?'#fff':b.color;
+                ctx.font=`${active?'bold ':''} ${Math.max(9,Math.round(10*proj.scale))}px monospace`;
+                ctx.fillText(b.name, proj.sx+r+4, proj.sy+3);
+                ctx.fillStyle='#ffffff60';
+                ctx.font='8px monospace';
+                ctx.fillText(`[${b.id+1}]`,proj.sx-r-18,proj.sy+3);
+
+            } else if(d.type==='particle'){
+                const {p,proj}=d;
+                const r=Math.max(1, 2*proj.scale*p.energy);
+                const alpha=Math.floor(p.life*180).toString(16).padStart(2,'0');
+                const bc=BRAINS[p.brain].color;
+                ctx.beginPath(); ctx.arc(proj.sx,proj.sy,r,0,TAU);
+                ctx.fillStyle=bc+alpha; ctx.fill();
+            }
+        }
+
+        // Axis cross (faint, at origin)
+        this._drawAxis(cx, cy);
+    }
+
+    _drawAxis(cx, cy) {
+        const {ctx,cam}=this;
+        const axes=[[40,0,0,'#ff4444'],[0,40,0,'#44ff44'],[0,0,40,'#4444ff']];
+        const o=project3D(0,0,0,cam,cx,cy);
+        if(!o) return;
+        for(const [ax,ay,az,col] of axes){
+            const p=project3D(ax,ay,az,cam,cx,cy);
+            if(!p) continue;
+            ctx.beginPath(); ctx.moveTo(o.sx,o.sy); ctx.lineTo(p.sx,p.sy);
+            ctx.strokeStyle=col+'66'; ctx.lineWidth=1; ctx.stroke();
+        }
+    }
+
+    _updatePips() {
+        this.pips.forEach((p,i)=>{
+            p.classList.toggle('active', i===this.phaseIdx);
+        });
+        document.getElementById('phase-label').textContent =
+            `K'AYAB' PHASE ${this.phaseIdx}  (${PHASE_NAMES[this.phaseIdx]})`;
+    }
+
+    _updateUI(ts) {
+        // Stats overlay
+        document.getElementById('stat-fps').textContent  = `FPS: ${this.fps}`;
+        document.getElementById('stat-pts').textContent  = `Particles: ${this.particles.length}`;
+        document.getElementById('stat-phase').textContent= `Phase: ${this.phaseIdx} (${PHASE_NAMES[this.phaseIdx]})`;
+        document.getElementById('stat-cycle').textContent= `Cycle: ${this.cycle}`;
+
+        // Clock
+        if(this.startTime){
+            const s=Math.floor((ts-this.startTime)/1000);
+            const hh=String(Math.floor(s/3600)).padStart(2,'0');
+            const mm=String(Math.floor(s/60)%60).padStart(2,'0');
+            const ss=String(s%60).padStart(2,'0');
+            document.getElementById('clock').textContent=`${hh}:${mm}:${ss}`;
+        }
+
+        // Brain mini-renders
+        for(let i=0;i<this.brainRenderers.length;i++){
+            this.brainRenderers[i].render(this.phaseIdx);
+            const active=(i===this.phaseIdx%BRAINS.length);
+            document.getElementById(`bstat${i}b`).textContent =
+                active?`● ACTIVE (phase ${this.phaseIdx})`:'○ idle';
+        }
+    }
+
+    _log(msg, cls='') {
+        const log=document.getElementById('log');
+        const el=document.createElement('div');
+        el.className='le'+(cls?' '+cls:'');
+        const ts=new Date().toLocaleTimeString();
+        el.textContent=`[${ts}] ${msg}`;
+        log.appendChild(el);
+        log.scrollTop=log.scrollHeight;
+        while(log.children.length>80) log.removeChild(log.children[0]);
+    }
+}
+
+// ================================================================
+// INIT
+// ================================================================
+
+const app = new WebX3DApp();
+app._log('⟁ KUHUL WebX-3D initialized · v3.5.0','g');
+app._log('  D12WebX + K3D Compiler + 7-Brain Topology + Field System','c');
+app._log('  Drag to orbit · Scroll to zoom · Click RUN to start','');
+// Render a static first frame
+app._resize();
+app._render(app.canvas.width/2, app.canvas.height/2);
+app._updatePips();
+
+</script>
+</body>
+</html>

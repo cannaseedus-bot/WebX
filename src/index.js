@@ -208,3 +208,8 @@ export {
   compressionMicronaut, inferenceMicronaut,
   applyOperator as applyMicronautOp,
 } from './pggtf/micronaut-ops.js';
+
+// MX2LM Object — SafeTensors -> Tensor Registry -> Fold Objects -> MX2LM Cognitive Object
+// Object = (Glyphs, Folds, Graph, Memory, State, TensorRefs) where TensorRefs -> SafeTensors
+export { TensorManifest, TensorRegistry, TensorGraph,
+         FoldObject, FoldStore, MX2LMObject } from './mx2lm/tensor-manifest.js';

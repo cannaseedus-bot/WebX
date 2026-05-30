@@ -194,3 +194,17 @@ export {
 export { readSharedState, writeSharedState, createSharedState, SHARED_STATE_VERSION, SHARED_STATE_BYTES, SHARED_STATE_MMF_NAME, SHARED_STATE_OFFSETS } from './agents-net/shared-state.js';
 export { validateOp, dispatchOp, DOTNET_OPS, DOTNET_OP_SCHEMAS, DOTNET_WORKER_URL_DEFAULT } from './agents-net/op-dispatcher.js';
 export { SyncWorker, SECURITY_PLUGIN_OPS } from './agents-net/sync-worker.js';
+
+// PGGTF — Phase-Gated Geodesic Tensor Field v0.1
+// System: Omega = (P, G, F, M, Pi)  evolution: Omega_{t+1} = M(P, G, F, Pi)
+// Inference law: predict P(F_{t+1}|F_t,G,P) — next field state, not next token
+export { PGGTF }                                           from './pggtf/pggtf.js';
+export { PhaseTensor, PHASE_INDEX, PHASE_NAMES, N_PHASES } from './pggtf/phase-tensor.js';
+export { GeodesicTensor }                                  from './pggtf/geodesic-tensor.js';
+export { FoldTensor, SCXQ2_LANES as PGGTF_LANES }          from './pggtf/fold-tensor.js';
+export { PiPhaseTensor }                                   from './pggtf/pi-tensor.js';
+export {
+  memoryMicronaut, routingMicronaut,
+  compressionMicronaut, inferenceMicronaut,
+  applyOperator as applyMicronautOp,
+} from './pggtf/micronaut-ops.js';

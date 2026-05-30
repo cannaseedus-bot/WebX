@@ -107,9 +107,9 @@ export function buildCalendarRegression(pastDates, futureDays) {
 // Represent Long Count as vector and apply a 5×5 transform.
 // Useful for calendar round alignments, era shifts, and period synchronisation.
 
-export const IDENTITY_TRANSFORM = Object.freeze(
-  new Float64Array([1,0,0,0,0, 0,1,0,0,0, 0,0,1,0,0, 0,0,0,1,0, 0,0,0,0,1])
-);
+// TypedArrays cannot be frozen — expose as a getter that returns a fresh copy
+export const IDENTITY_TRANSFORM =
+  new Float64Array([1,0,0,0,0, 0,1,0,0,0, 0,0,1,0,0, 0,0,0,1,0, 0,0,0,0,1]);
 
 // Add a fixed offset [kin,uinal,tun,katun,baktun] via affine shift
 export function mayanAffineShift(digits, offsetDigits) {

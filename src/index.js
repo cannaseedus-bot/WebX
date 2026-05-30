@@ -26,8 +26,85 @@ export { default as SMGM16Runtime, SMGM16_CONFIG, LOSS_LAMBDAS, SHARD_MAP, PARAM
 // KLSL compiler — K'UHUL Language Shading Language (.gpu_trainer)
 export { default as klslCompile, KLSL_OP, GLYPHS as KLSL_GLYPHS } from './klsl/index.js';
 
-// XCFE JSON Program Format (.gpu_trainer)
-export { default as XCFERuntime, XCFEProgram, parseMicronauts } from './xcfe/index.js';
+// XCFE @ Namespace Runtime — complete executable tensor grammar (v3.5.0-WebX)
+//
+// 8-layer @ computational stack:
+//   L8 @semantics  — meaning encoding      L4 @protocol — transport
+//   L7 @ngram      — pattern recognition   L3 @opcodes  — instructions
+//   L6 @notation   — representation        L2 @context  — environment
+//   L5 @jsonl      — streaming data        L1 @folds/@micro_folds — atomic
+//
+// Execution hierarchy: @agent → @skill → @micronaut → @command → @tool
+// Temporal fabric:     @flux → @tick → @thread → @batch → @round → @step → @mark → @map → @graph
+// Math foundation:     @mathml → @formula → @linalg → @matmul → @loop → @biginteger → @fibonacci → @pi → @zero → @vigesimal
+//
+// Tensor theorem: XCFE = rank-R sparse tensor over @-space (39 basis vectors)
+//   Block nesting ↔ ⊗   Parallel siblings ↔ ⊕   Dataflow ↔ Σᵢ (contraction)
+
+// Node.js IPC + runtime primitives (@node.ipc @node.fs @node.http @node.worker etc.)
+export { XCFENodeRuntime, xcfe, AT_OPCODE_MAP } from './xcfe/node-runtime.js';
+
+// Execution hierarchy (@agent @skill @micronaut @command @tool @orchestrator)
+export { XCFEAgentRuntime, Agent, Skill, Micronaut, Tool,
+         AGENT_REGISTRY, SKILL_REGISTRY, MICRONAUT_REGISTRY,
+         COMMAND_REGISTRY, TOOL_REGISTRY, AGENT_OPCODE_MAP } from './xcfe/agent-runtime.js';
+
+// Fold algebra (@semantics @opcodes @context @folds @horizontal_folds @micro_folds)
+export { SemanticLayer, OpcodeLayer, ContextLayer, Fold, HorizontalFold,
+         MicroFold, FoldPipeline, registerFoldNamespaces,
+         SEMANTIC_MODELS, MICRO_OPCODES } from './xcfe/fold-algebra.js';
+
+// Communications stack (@protocol @jsonl @notation @ngram) + 8-layer @ map
+export { ProtocolLayer, JsonlStream, NotationLayer, NgramAnalyzer,
+         registerCommsNamespaces, AT_STACK } from './xcfe/comms-layer.js';
+
+// Math foundation (@mathml @fibonacci @pi @matmul @linalg @loop @biginteger @formula @zero @vigesimal)
+export { ZERO, Vigesimal, PI_CONSTANTS, PiCompute, Fibonacci, BigInteger,
+         Loop, MatMul, LinAlg, Formula, MathML,
+         registerMathNamespaces, MATH_OPCODE_MAP } from './xcfe/math-layer.js';
+
+// Temporal fabric (@flux @tick @thread @batch @round @step @mark @map @graph)
+export { Tick, Flux, ThreadPool, Batch, Round, Step, Mark, Mapper, Graph,
+         registerTemporalNamespaces, TEMPORAL_OPCODE_MAP } from './xcfe/temporal-layer.js';
+
+// XCFE Tensor Algebra — grammatical tensor theorem + Tucker decomposition
+export { XCFETensor, blockToTensor, TuckerDecomposition, semanticSimilarity,
+         estimateRank, AT_AXES, AT_BASIS_DIMENSION,
+         SEMANTIC_CLUSTERS, XCFE_TENSOR_THEOREM, RANK_11_EXAMPLE } from './xcfe/tensor-algebra.js';
+
+// XCFE Imperative Layer — @verbs @endpoints @pagination @generate @validate
+//                          @parse @render @import @class @function @action @program
+export { VERBS, VerbChain, EndpointRegistry, Paginator, Generator, Validator,
+         Parser, Renderer, ImportManager, ClassDefinition, FunctionDef,
+         ActionRunner, Program, registerImperativeNamespaces,
+         IMPERATIVE_OPCODE_MAP } from './xcfe/imperative-layer.js';
+
+// XCFE Gravity — K'UHUL physics engine (gravity/antigravity field + Poisson solver)
+// ⟁Grav⟁ = constrained (phase-gated, Lipschitz-bounded, gradient-clipped)
+// ⟁AntiGrav⟁ = float (debug nodes, telemetry, bypass phase machine)
+// KuhulPhysicsSolver: auto-adjusts gravity_scale per node based on loss/grad observations
+// Field equation: ∇²Φ = ρ_gravity + ρ_antigravity  (stable when ratio ≥ 10)
+export { GravityField, PhysicsDispatcher, GravityAdvisor, KuhulPhysicsSolver,
+         G, antigravity, heavyGravity, negativeGravity, parseGravityAttr,
+         registerGravityNamespaces, GRAVITY_OPCODE_MAP } from './xcfe/gravity.js';
+
+// XCFE KXML Bridge — graph topology → KU'HUL DAG + Micronaut compilation
+// KXML <node> = KXMLMicronaut    KXML <edge> = FoldEntanglement
+// Forward pass = Sek→Ch'en       Backward pass = Ch'en→Sek
+// Soft landing = ||∇f|| ≤ L·||x|| (Lipschitz theorem verified)
+export { KXMLBridge, KXMLMicronaut, FoldEntanglement, LipschitzAnalyzer,
+         KXML_PHASES, PHASE_INDEX, KXML_OPCODE_TABLE, ALLOWED_TRANSITIONS,
+         KXML_KUHUL_MAP, BRIDGE_THEOREMS, isValidTransition, canExecute,
+         registerBridgeNamespaces } from './xcfe/kxml-bridge.js';
+
+// XCFE Knowledge Layer — computational epistemology
+// Aristotelian: @who @what @where @when
+// Causal:       @cause @effect @event @mutate @reward @evolve
+// I/O:          @cdata @in @out @save @post @read @write @search
+export { WhoContext, WhatEntity, WhereContext, WhenContext, CausalModel,
+         EffectMeasure, EventBus, MutationEngine, RewardFunction, EvolutionEngine,
+         CData, IOBoundary, PersistenceLayer, Publisher, SearchEngine,
+         registerKnowledgeNamespaces, KNOWLEDGE_OPCODE_MAP } from './xcfe/knowledge-layer.js';
 
 // LoRA delta weight adapters (.gpu_trainer/trainer/)
 export { default as LoRAAdapter, loadAdapterFromBuffer, createAdapterStub, applyLoRA, unpackINT4 } from './adapters/adapter-loader.js';
@@ -187,7 +264,7 @@ export {
 } from './kxml/kxml-ops.js';
 export {
   ShardRegistry, PHASE_RESIDENCY, KXML_FOLD_TO_SCXQ2,
-  SCXQ2_OPCODES, SCXQ2_DOMAIN, SCXQ2_FOLD_ID,
+  SCXQ2_OPCODES as KXML_SCXQ2_OPCODES, SCXQ2_DOMAIN, SCXQ2_FOLD_ID,
 } from './kxml/kxml-shard-registry.js';
 
 // Agents.NET shared-state, @op dispatch, SyncWorker (Agents.NET.v1.0.0)
@@ -199,7 +276,7 @@ export { SyncWorker, SECURITY_PLUGIN_OPS } from './agents-net/sync-worker.js';
 // System: Omega = (P, G, F, M, Pi)  evolution: Omega_{t+1} = M(P, G, F, Pi)
 // Inference law: predict P(F_{t+1}|F_t,G,P) — next field state, not next token
 export { PGGTF }                                           from './pggtf/pggtf.js';
-export { PhaseTensor, PHASE_INDEX, PHASE_NAMES, N_PHASES } from './pggtf/phase-tensor.js';
+export { PhaseTensor, PHASE_INDEX as PGGTF_PHASE_INDEX, PHASE_NAMES, N_PHASES } from './pggtf/phase-tensor.js';
 export { GeodesicTensor }                                  from './pggtf/geodesic-tensor.js';
 export { FoldTensor, SCXQ2_LANES as PGGTF_LANES }          from './pggtf/fold-tensor.js';
 export { PiPhaseTensor }                                   from './pggtf/pi-tensor.js';

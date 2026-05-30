@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- stable_graph.kxml — KXML graph declaring training stability nodes.
+     Implements: logit clamp → softmax → cross-entropy → gradient clip
+     Pop→Wo→Sek→Ch'en→Xul phase-gated execution. -->
+<kxml:graph xmlns:kxml="asx://kxml/v1"
+            xmlns:stable="asx://stable/v1"
+            type="bidirectional"
+            tiny.x="true">
+
+  <graph_metadata>
+    <name>stable_training_graph</name>
+    <version>1.0</version>
+    <stability>
+      <gradient_clip norm="1.0" />
+      <logit_clamp   max_abs="20.0" />
+      <loss_clamp    max="10.0" />
+    </stability>
+    <impl>
+      <cpu>native/win2d/StableOps.h (DirectXMath SIMD, 4-lane)</cpu>
+      <gpu>native/win2d/shaders/StabilizeCS.hlsl (cs_6_0, 256 threads)</gpu>
+    </impl>
+  </graph_metadata>
+
+  <!-- ═══ NODES ═══════════════════════════════════════════════════════════════ -->
+
+  <!-- Sek: logit clamping + softmax (GPU or CPU-SIMD) -->
+  <node id="logit_stabilizer" phase="Sek" domain="compute" device="gpu">
+    <ops>
+      <stable:clamp   max_abs="20.0" src="logits_raw"    dst="logits_clamped" />
+      <stable:softmax              src="logits_clamped" dst="probs" />
+    </ops>
+    <mathml>
+      <apply><eq/>
+        <ci>probs</ci>
+        <apply>
+          <ci>softmax</ci>
+          <apply><ci>clamp</ci><ci>logits_raw</ci><cn>-20</cn><cn>20</cn></apply>
+        </apply>
+      </apply>
+    </mathml>
+  </node>
+
+  <!-- Ch'en: cross-entropy loss + loss clamp (CPU) -->
+  <node id="loss_compute" phase="Ch'en" domain="compute" device="cpu">
+    <ops>
+      <stable:cross_entropy src1="probs" src2="target" dst="loss_raw" />
+      <stable:clamp_loss    max="10.0"  src="loss_raw" dst="loss" />
+    </ops>
+  </node>
+
+  <!-- Xul: gradient clipping (GPU, backward only) -->
+  <node id="gradient_clipper" phase="Xul" domain="compute" device="gpu">
+    <ops>
+      <stable:clip_gradient norm="1.0" src="grad_raw" dst="grad_clipped" />
+    </ops>
+  </node>
+
+  <!-- ═══ EDGES ════════════════════════════════════════════════════════════════ -->
+
+  <edge from="logit_stabilizer" to="loss_compute">
+    <forward data="probs" />
+    <phase_gate forward_requires_to="Ch'en" />
+  </edge>
+
+  <edge from="loss_compute" to="gradient_clipper" direction="backward_only">
+    <backward data="grad_raw" />
+    <phase_gate backward_requires_from="Ch'en" backward_requires_to="Xul" />
+  </edge>
+
+  <!-- ═══ PHASE SEQUENCE ═══════════════════════════════════════════════════════ -->
+
+  <phase_sequence>
+    <step phase="Pop"   note="device discovery" />
+    <step phase="Wo"    note="buffer binding" />
+    <step phase="Sek"   note="logit_stabilizer runs: clamp + softmax" />
+    <step phase="Ch'en" note="loss_compute runs: cross_entropy + clamp" />
+    <step phase="Xul"   note="gradient_clipper runs: L2 norm clip" />
+  </phase_sequence>
+
+</kxml:graph>

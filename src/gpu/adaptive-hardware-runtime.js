@@ -238,4 +238,4 @@ export async function getAdaptiveRuntime(opts) {
   return _defaultRuntime;
 }
 
-export { BACKEND, selectBackend };
+export { BACKEND };

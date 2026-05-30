@@ -44,10 +44,15 @@ venv/
 native/bin/
 native/wv2_*/
 native/shaders/*.cso
+native/d3d12_compute/build/
 *.exe
 *.dll
 *.pma
 *.pdb
+
+# WebView2 profile data
+**/wv2_data/
+**/EBWebView/
 
 # Trainer runtime (stays at .gpu_trainer, not in repo)
 .gpu_trainer/

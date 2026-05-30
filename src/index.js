@@ -79,6 +79,16 @@ export { VERBS, VerbChain, EndpointRegistry, Paginator, Generator, Validator,
          ActionRunner, Program, registerImperativeNamespaces,
          IMPERATIVE_OPCODE_MAP } from './xcfe/imperative-layer.js';
 
+// SK Schema Builder — auto-generate JSON Schema from Python/JS type annotations
+// Port of Microsoft Semantic Kernel's KernelJsonSchemaBuilder.
+// Every micronaut, agent, and DXSK tool can self-describe via buildFromClass()
+// instead of hand-writing TOOLS dict entries.
+// t.int() t.str() t.list() t.optional() t.enum() t.obj() — type DSL
+// @kernelFunction / registerKernelFunction — method decorator
+// buildMicronautManifest(registry) — CSV registry → full tool manifest
+export { KernelJsonSchemaBuilder, kernelFunction, registerKernelFunction,
+         micronautToTool, buildMicronautManifest, t } from './xcfe/sk-schema-builder.js';
+
 // XCFE Gravity — K'UHUL physics engine (gravity/antigravity field + Poisson solver)
 // ⟁Grav⟁ = constrained (phase-gated, Lipschitz-bounded, gradient-clipped)
 // ⟁AntiGrav⟁ = float (debug nodes, telemetry, bypass phase machine)

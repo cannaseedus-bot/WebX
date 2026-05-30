@@ -30,3 +30,4 @@ export { KXMLBridge, KXMLMicronaut, FoldEntanglement, LipschitzAnalyzer,
          registerBridgeNamespaces } from './kxml-bridge.js';
 export { GravityField, PhysicsDispatcher, GravityAdvisor, KuhulPhysicsSolver, G, antigravity, heavyGravity, negativeGravity, parseGravityAttr, registerGravityNamespaces, GRAVITY_OPCODE_MAP } from './gravity.js';
 
+export { KernelJsonSchemaBuilder, kernelFunction, registerKernelFunction, micronautToTool, buildMicronautManifest, t } from './sk-schema-builder.js';

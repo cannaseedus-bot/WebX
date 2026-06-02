@@ -256,6 +256,17 @@ export { VERBS, VerbChain, EndpointRegistry, Paginator, Generator, Validator,
 export { KernelJsonSchemaBuilder, kernelFunction, registerKernelFunction,
          micronautToTool, buildMicronautManifest, t } from './xcfe/sk-schema-builder.js';
 
+// SVG3D Parallel Compute Engine — optical nodes as iGPU compute clusters
+// AXIOM: SVG-3D elements ARE compute nodes (circle=cluster, path=flow, group=tensor)
+// SVG3DComputeGraph.fromOpticalMesh(vertices) — loads ComputeOpticalMesh() output directly
+// SVG3DComputeGraph.fromSVG3D(xml)            — parses SVG3D compute spec XML
+// SVG3DCompiler: Pop→Wo→Sek→Ch'en→Xul, emits updated SVG3D tensors as compute result
+// PiPhaseScheduler: CPU π-coordination (0=init, π/4=bind, π/2=execute, π=close)
+// iGPU dispatch maps to sh_propagate.hlsl [numthreads(256,1,1)] — HD 4600 cs_5_0
+// Vector green screen = S² coordinate plane: every point (θ,φ) is mathematically addressable
+export { SVG3DComputeGraph, SVG3DComputeNode, SVG3DCompiler,
+         PiPhaseScheduler, PI_PHASES, AXIOMS } from './xcfe/svg3d-compute.js';
+
 // Optical Mesh — SH-Wave-Lattice icosphere as renderable 3D polygon model
 // OpticalNode: pos(3D) + sh[9×2](wave state) + neighbors[6] + neighborCount
 // generateIcosphere(nodes, subdivisions)  icosahedral geodesic lattice

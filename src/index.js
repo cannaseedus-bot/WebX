@@ -57,6 +57,12 @@ export { KuhulAtomicBrain, resolveGlyph, opcodesForFold,
          cross3, geodesicDist,                           // 0x3F CROSS, 0x64 PARALLEL_GEO
          GLYPH_SPEC, PI_DIGITS } from './xcfe/atomic-brain.js';
 
+// µPY — Python->KXML transpilation bridge (write Python-like tensors, compile to µBRAIN)
+// MuPYTranspiler: Python op AST -> KXML nodes with Lipschitz bounds + backward edges
+// MuPYRuntime:    execute KXML graphs, train with backward pass, export to µJSONL
+// TWO_LAYER_MLP:  canonical 2-layer MLP spec (gemm->add->relu->gemm->add->softmax)
+export { MuPYTranspiler, MuPYRuntime, MU_BUILTINS, TWO_LAYER_MLP } from './mupy/mu-py.js';
+
 // µBRAIN — Atomic Cognitive Architecture (Think->Research->Reason->Plan->Execute)
 // Four differentiable modules, each backed by a µJSONL grammar.
 // backward(error) propagates through plan->reason->research->think.

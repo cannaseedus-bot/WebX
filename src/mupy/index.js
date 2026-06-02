@@ -187,6 +187,39 @@ export function buildMupyDescriptor(tomlText, kxmlText = '', sourceName = 'spec.
   };
 }
 
+// ─── TrigBrain Lattice blueprint reference ───────────────────────────────────
+//
+// src/mupy/blueprints/kuhul-trigbrain-lattice.kuhul is the canonical blueprint
+// for the geometric neural architecture implemented across this codebase.
+//
+// Blueprint → Implementation mapping:
+//   trig_neuron_types (sin/cos/tan/cot/sec/csc phases)
+//     → OpticalNode.sh[9 bands] in src/xcfe/optical-mesh.js
+//   mayan_fold_vertical (base^depth × trig_weight accumulation)
+//     → Fold2DMapper + PRESSURE_TABLE in src/xcfe/pressure-mapper.js
+//   trig_cell.state.phase_memory (circular buffer)
+//     → ReplayableArc + SphericalReplayBuffer in src/xcfe/replayable-arcs.js
+//   propagate_wave (6-directional neighbour coupling)
+//     → sh_propagate.hlsl + OpticalProcessor.propagate()
+//   phase_coherence_loss = 1 - mean(cos(Δphase))
+//     → geodesic_arc_attention via arccos(p·q) = distance on S^(d-1)
+//   geometry.manifold = hyperbolic, curvature = -0.5, metric = poincare
+//     → hierarchy_chart in SemanticAtlas (src/xcfe/semantic-atlas.js)
+//   adamw_geometric + cosine_annealing
+//     → finetune_toolcall_pt.py --cosine_total
+//   vertical_fold_nn layers 32→16→8→4→1
+//     → COMPUTE_FOLD pressure table [2.0,1.0,0.5,0.25,0.125]
+//   initialization: {type: spherical_harmonic, l:2, m:1}
+//     → generateIcosphere + SH seeding in optical-mesh.js
+//   pattern_types: spherical_harmonic detection
+//     → collapse.cpp spherical correlation
+//   visualization: SVG canvas + interactive
+//     → examples/shader-kxml/directxmath-kxml-unified.html
+//
+// The blueprint was written before the implementations and defines them.
+// It IS the µBRAIN specification.
+export const TRIGBRAIN_BLUEPRINT_PATH = 'src/mupy/blueprints/kuhul-trigbrain-lattice.kuhul';
+
 // ─── µMODEL registry ─────────────────────────────────────────────────────────
 
 const _registry = new Map();

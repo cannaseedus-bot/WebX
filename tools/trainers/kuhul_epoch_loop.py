@@ -30,10 +30,11 @@ except ImportError:
 
 # ─── Thresholds ────────────────────────────────────────────────────────────────
 
-EMERGENCY     = 10.0   # loss > this → increase gravity
+EMERGENCY     = 8.0    # loss > this → increase gravity + retry loop
 CATASTROPHIC  = 30.0   # loss > this → rollback checkpoint
 ORBIT_LOW     = 1.0    # loss < this → antigravity float
 ESCAPE_VEL    = 20.0   # logit_max > this → logit escape velocity event
+RETRY_LOOPS   = 4      # how many extra passes on the same batch when EMERGENCY fires
 
 # ─── KUHULEpochLoop ──────────────────────────────────────────────────────────
 
@@ -84,6 +85,42 @@ class KUHULEpochLoop:
 
             # ── Forward + backward ──
             loss_val, logit_max = self._train_step(model, optimizer, batch)
+
+            # ── EMERGENCY: retry the same batch up to RETRY_LOOPS times ──
+            if loss_val > EMERGENCY:
+                spike_this_epoch.append(step)
+                self.spike_count += 1
+                best_loss = loss_val
+                best_logit = logit_max
+
+                for retry in range(1, RETRY_LOOPS + 1):
+                    # Tighten gravity before each retry
+                    self.gravity_strength = min(3.0, self.gravity_strength * 1.15)
+                    self.logit_bound = max(5.0, self.logit_bound * 0.88)
+                    self.grad_clip   = max(0.1, self.grad_clip   * 0.88)
+                    for pg in optimizer.param_groups:
+                        pg['lr'] = max(1e-7, pg['lr'] * 0.8)
+
+                    retry_loss, retry_logit = self._train_step(model, optimizer, batch)
+                    print(f"[K'UHUL] Retry {retry}/{RETRY_LOOPS} step={step}: "
+                          f"loss {loss_val:.2f}->{retry_loss:.2f} "
+                          f"logit_bound={self.logit_bound:.2f} grad_clip={self.grad_clip:.3f}")
+
+                    if retry_loss < best_loss:
+                        best_loss  = retry_loss
+                        best_logit = retry_logit
+
+                    # If we've pulled it below EMERGENCY, stop retrying
+                    if best_loss <= EMERGENCY:
+                        print(f"[K'UHUL]   Stabilised at retry {retry}: loss={best_loss:.4f}")
+                        break
+
+                loss_val  = best_loss
+                logit_max = best_logit
+
+                # Checkpoint after retry sequence
+                self._save_checkpoint(model, optimizer, f'postspike_{self.total_steps}')
+
             epoch_loss += loss_val
 
             # ── EMA smoothing (what the physics solver sees) ──
@@ -96,16 +133,14 @@ class KUHULEpochLoop:
             # ── Feed physics solver ──
             if self.solver:
                 self.solver.observe(loss_val, self.grad_clip, logit_max)
-                # Solver may have tightened/relaxed constraints via reserve
                 self.logit_bound = self.solver.s.logit_gravity
                 self.grad_clip   = self.solver.s.grad_gravity
 
-            # ── Manual zone checks ──
+            # ── Zone checks (post-retry) ──
             if loss_val > CATASTROPHIC:
                 self._catastrophic(model, optimizer, step, epoch, loss_val)
             elif loss_val > EMERGENCY:
                 self._emergency(model, optimizer, step, loss_val, logit_max)
-                spike_this_epoch.append(step)
             elif loss_val < ORBIT_LOW:
                 self._antigravity(optimizer)
             else:
@@ -268,13 +303,14 @@ def retrofit_existing_trainer(loss_at_step: float, logit_max: float,
     if loss_at_step > CATASTROPHIC:
         action = 'CATASTROPHIC'
     elif loss_at_step > EMERGENCY:
-        action = 'EMERGENCY'
+        # Caller is responsible for running the retry loop (RETRY_LOOPS=4)
+        action = f'EMERGENCY(retry_x{RETRY_LOOPS})'
         loop.spike_count += 1
-        loop.logit_bound = max(5.0, loop.logit_bound * 0.85)
-        loop.grad_clip   = max(0.1, loop.grad_clip   * 0.85)
-        loop.gravity_strength = min(3.0, loop.gravity_strength * 1.2)
+        loop.logit_bound = max(5.0, loop.logit_bound * 0.88)
+        loop.grad_clip   = max(0.1, loop.grad_clip   * 0.88)
+        loop.gravity_strength = min(3.0, loop.gravity_strength * 1.15)
         if optimizer:
-            for pg in optimizer.param_groups: pg['lr'] = max(1e-7, pg['lr'] * 0.7)
+            for pg in optimizer.param_groups: pg['lr'] = max(1e-7, pg['lr'] * 0.8)
     elif loss_at_step < ORBIT_LOW:
         action = 'antigravity'
         loop.gravity_strength = max(0.5, loop.gravity_strength * 0.97)
@@ -291,8 +327,9 @@ if __name__ == '__main__':
 
     loop = KUHULEpochLoop(base_lr=2e-5, checkpoint_dir='/tmp/kuhul_demo')
 
-    simulated_losses = [6.36, 15.71, 4.26, 5.46, 6.10, 3.98, 7.80, 36.4, 4.5]
-    simulated_logits = [12.7, 148.9, 17.7, 22.0, 15.0, 14.0, 18.0, 200.0, 16.0]
+    # Threshold is now 8.0 — step 0 (loss=6.36) is stable, step 1 (8.5) triggers
+    simulated_losses = [6.36, 8.50, 15.71, 4.26, 5.46, 6.10, 3.98, 7.80, 36.4, 4.5]
+    simulated_logits = [12.7, 25.0, 148.9, 17.7, 22.0, 15.0, 14.0, 18.0, 200.0, 16.0]
 
     for step, (loss, logit) in enumerate(zip(simulated_losses, simulated_logits)):
         result = retrofit_existing_trainer(loss, logit, step, loop)

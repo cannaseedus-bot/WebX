@@ -256,6 +256,17 @@ export { VERBS, VerbChain, EndpointRegistry, Paginator, Generator, Validator,
 export { KernelJsonSchemaBuilder, kernelFunction, registerKernelFunction,
          micronautToTool, buildMicronautManifest, t } from './xcfe/sk-schema-builder.js';
 
+// Optical Mesh — SH-Wave-Lattice icosphere as renderable 3D polygon model
+// OpticalNode: pos(3D) + sh[9×2](wave state) + neighbors[6] + neighborCount
+// generateIcosphere(nodes, subdivisions)  icosahedral geodesic lattice
+// ComputeOpticalMesh(nodes, diameter)     vertices+indices same format as ComputeGeoSphere
+// OpticalProcessor: buildGeodesic / propagate / inject / coherence / mesh / runProgram
+// TEST_WAVE_PROGRAM: inject(band1) → propagate(5) → halt
+// native/optical_processor/: geodesic.cpp/h optical_processor.cpp/h + wave_vm projection
+// native/shaders/optical/:   opcode_kernels.hlsl sh_propagate.hlsl wave_vm_fused.hlsl
+export { OpticalNode, OpticalProcessor, generateIcosphere, ComputeOpticalMesh,
+         evalSH, TEST_WAVE_PROGRAM } from './xcfe/optical-mesh.js';
+
 // Entropic Weights — fog of war on the semantic map
 // EntropyField: learnable per-point uncertainty, decays with correct predictions
 // EntropicGeodesicWeight: extends GeodesicWeight with entropy tensor

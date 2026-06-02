@@ -256,6 +256,45 @@ export { VERBS, VerbChain, EndpointRegistry, Paginator, Generator, Validator,
 export { KernelJsonSchemaBuilder, kernelFunction, registerKernelFunction,
          micronautToTool, buildMicronautManifest, t } from './xcfe/sk-schema-builder.js';
 
+// Entropic Weights — fog of war on the semantic map
+// EntropyField: learnable per-point uncertainty, decays with correct predictions
+// EntropicGeodesicWeight: extends GeodesicWeight with entropy tensor
+//   temperature = exp(mean_entropy)  — high entropy = softer, exploratory
+//   clearFog()/addFog() — prediction updates the fog
+// EntropicGeodesicAttention: score = geodesic_dist + entropy_penalty - curiosity_bonus
+//   high entropy target = attend less; curiosity bonus rewards exploring foggy areas
+// EntropicOptimizer: lr = base_lr × (1+entropy) — adaptive learning rate from uncertainty
+export { EntropyField, EntropicGeodesicWeight, EntropicGeodesicAttention,
+         EntropicOptimizer } from './xcfe/entropic-weights.js';
+
+// Replayable ARCs — practice for AI (trajectories that improve each replay)
+// ReplayableArc: recorded geodesic path, improves with each replay
+//   replay(opts) → {trajectory, quality}  — shortens, entropy clears, fog lifts
+// SphericalReplayBuffer: experience replay on the manifold
+//   select(strategy) — priority / uncertainty / novelty / improvement
+//   replayBatch(n)   — parallel replay of n ARCs
+//   clearFogFromSuccesses() — successful replays clear entropy along path
+// ArcLearning: learnFromReplays(epochs) — full training loop
+// ArcLibrary: named ARC store with fogReport() — what does the model not know?
+export { ReplayableArc, SphericalReplayBuffer, ArcLearning,
+         ArcLibrary } from './xcfe/replayable-arcs.js';
+
+// Semantic Atlas — multi-chart learnable KXML map (hierarchy/similarity/temporal)
+export { SemanticAtlas, Chart, ChartTransition,
+         SEMANTIC_ATLAS_KXML } from './xcfe/semantic-atlas.js';
+
+// Geodesic Weights + Spherical Manifold — semantic map navigation
+// SphericalManifold: geodesicDistance / expMap / logMap / parallelTransport / metricAt
+// GeodesicWeight: lives AT a base_point, parallel-transported when applied elsewhere
+//   applyAt(point, input) = transport → matmul → expMap back to sphere
+//   update(lr) = Riemannian SGD on values + optional base_point movement
+// GeodesicAttention: attention scores = exp(-geodesic_dist / radius)
+//   attend(queryPos, keyPositions) → softmax over great-circle distances
+//   forward(tokenPositions) → output positions on sphere with parallel transport
+// mapSummary(manifold, n) → human-readable semantic coordinate system description
+export { SphericalManifold, GeodesicWeight, GeodesicAttention,
+         mapSummary } from './xcfe/geo-weights.js';
+
 // Fold Pressure Mapper + Pressure Reserves
 // PressureReserve: stored gravity buffer — absorbs shocks before live bounds tighten
 // FoldNode: fold type + rank + reserve per node

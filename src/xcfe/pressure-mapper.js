@@ -29,23 +29,57 @@
 import { G } from './gravity.js';
 
 // ─── Fold types ────────────────────────────────────────────────────────────────
+//
+// Base execution folds (geometry / physics):
+//   COMPUTE  STORAGE  META  ROUTING  UI
+//
+// Agentic tool folds (GPT-2 Mini + Micronauts → Agentic System):
+//   TOOL    0.8  @Tool-annotated methods — phase-gated, validated
+//   SKILL   0.6  learned procedures — read/write, evolves
+//   CMD     0.6  command schemas — parse/validate/exec
+//   OPCODE  0.9  VM ops / stack machine — tightest bounds
+//   AGENT   0.3  autonomous decisions — orchestrator only
+//   FILE    0.5  sandboxed file IO — read/write/watch
+//   TASK    0.3  plans + TODO lists — read/update
+//   THINK   0.2  CoT/ToT reasoning traces — write only, antigravity
 
 export const FOLD = Object.freeze({
+  // Base execution folds
   COMPUTE:  'COMPUTE_FOLD',
   STORAGE:  'STORAGE_FOLD',
   META:     'META_FOLD',
   ROUTING:  'ROUTING_FOLD',
   UI:       'UI_FOLD',
+  // Agentic tool folds
+  TOOL:     'TOOL_FOLD',
+  SKILL:    'SKILL_FOLD',
+  CMD:      'CMD_FOLD',
+  OPCODE:   'OPCODE_FOLD',
+  AGENT:    'AGENT_FOLD',
+  FILE:     'FILE_FOLD',
+  TASK:     'TASK_FOLD',
+  THINK:    'THINK_FOLD',
 });
 
 // ─── Pressure table: pressure[fold][rank 0..4] ────────────────────────────────
 
 export const PRESSURE_TABLE = Object.freeze({
+  // Base execution folds
   [FOLD.COMPUTE]: [8.0,  4.0,   2.0,    1.0,     0.5    ],
   [FOLD.STORAGE]: [4.0,  2.0,   1.0,    0.5,     0.25   ],
   [FOLD.META]:    [1.0,  0.5,   0.25,   0.125,   0.0625 ],
   [FOLD.ROUTING]: [2.0,  1.0,   1.0,    2.0,     4.0    ],
   [FOLD.UI]:      [0.25, 0.125, 0.0625, 0.03125, 0.015625],
+  // Agentic tool folds — pressure by tensor rank 0..4
+  //                      0D    1D    2D    3D    4D
+  [FOLD.TOOL]:    [0.8,  0.8,   0.8,   0.8,   0.8   ],  // uniform — tool schemas are rank-agnostic
+  [FOLD.SKILL]:   [0.6,  0.6,   0.6,   0.6,   0.6   ],  // learned procedures, medium constraint
+  [FOLD.CMD]:     [0.6,  0.6,   0.6,   0.6,   0.6   ],  // command parse/exec, same as skill
+  [FOLD.OPCODE]:  [0.9,  0.9,   0.9,   0.9,   0.9   ],  // tightest — VM ops, stack machine
+  [FOLD.AGENT]:   [0.3,  0.3,   0.3,   0.3,   0.3   ],  // autonomous, low-pressure decisions
+  [FOLD.FILE]:    [0.5,  0.5,   0.5,   0.5,   0.5   ],  // sandboxed IO — balanced
+  [FOLD.TASK]:    [0.3,  0.3,   0.3,   0.3,   0.3   ],  // planning/TODO — low pressure
+  [FOLD.THINK]:   [0.2,  0.2,   0.2,   0.2,   0.2   ],  // CoT/ToT — minimal, near antigravity
 });
 
 export function getPressure(fold, rank = 2) {
@@ -251,6 +285,143 @@ export class Fold2DMapper {
 // ─── Math µMODEL pressure configuration ─────────────────────────────────────
 //
 // Wires the math_tool fold topology into the 2D mapper with reserves.
+
+// ─── Agentic tool fold mapper ─────────────────────────────────────────────────
+//
+// GPT-2 Mini + Micronauts + Tool Folds + K'UHUL Physics = Agentic System
+//
+// Micronaut → Fold mapping:
+//   LLM-µ     → TOOL_FOLD    (augments GPT-2 with tool definitions)
+//   PLAN-µ    → TASK_FOLD    (hierarchical task decomposition)
+//   TOOL-µ    → TOOL_FOLD    (@Tool execution)
+//   SKILL-µ   → SKILL_FOLD   (learned procedures, self-improves)
+//   CMD-µ     → CMD_FOLD     (parse/validate commands)
+//   OP-µ      → OPCODE_FOLD  (low-level VM ops)
+//   FILE-µ    → FILE_FOLD    (sandboxed IO)
+//   TASK-µ    → TASK_FOLD    (TODO management)
+//   THINK-µ   → THINK_FOLD   (CoT/ToT reasoning — antigravity)
+//   VALID-µ   → CMD_FOLD     (pre/post-condition validation)
+//
+// Gravity of THINK_FOLD = 0.2 → near antigravity (G.THRESHOLD = 1e-3)
+// This means THINK nodes observe without constraining training — like [dbg] lines.
+
+export function buildAgenticMapper() {
+  const m = new Fold2DMapper();
+
+  // Execution folds (⟁Grav⟁ — constrained)
+  m.addNode('tool_execute',   FOLD.TOOL,   2, { reserveInitial: 1.2 });
+  m.addNode('skill_apply',    FOLD.SKILL,  2, { reserveInitial: 0.9 });
+  m.addNode('cmd_parse',      FOLD.CMD,    1, { reserveInitial: 0.9 });
+  m.addNode('opcode_vm',      FOLD.OPCODE, 1, { reserveInitial: 1.5 });
+  m.addNode('file_io',        FOLD.FILE,   1, { reserveInitial: 0.75 });
+
+  // Planning folds (low-pressure)
+  m.addNode('task_plan',      FOLD.TASK,   2, { reserveInitial: 0.45 });
+  m.addNode('agent_decide',   FOLD.AGENT,  2, { reserveInitial: 0.45 });
+
+  // Antigravity folds (⟁AntiGrav⟁ — float, near 0.2 pressure)
+  m.addNode('think_cot',      FOLD.THINK,  2, { antigravity: false });  // 0.2 — near float
+  m.addNode('think_reflect',  FOLD.THINK,  1, { antigravity: false });
+
+  // Flow edges
+  m.addEdge('task_plan',    'tool_execute');
+  m.addEdge('task_plan',    'cmd_parse');
+  m.addEdge('tool_execute', 'skill_apply');
+  m.addEdge('cmd_parse',    'opcode_vm');
+  m.addEdge('opcode_vm',    'file_io');
+  m.addEdge('think_cot',    'task_plan');   // THINK → TASK: balloon 0.2/0.3 = 0.67× (slight compression)
+  m.addEdge('agent_decide', 'tool_execute'); // AGENT → TOOL: balloon 0.3/0.8 = 0.375×
+
+  return m;
+}
+
+// ─── KXML math node builder ───────────────────────────────────────────────────
+//
+// Generates a KXML <node> for a DirectXMath SIMD math operation.
+// Connects KXML phase gating to DirectXMath dispatch + XMHALF4 compression.
+
+export function buildKXMLMathNode(opts = {}) {
+  const {
+    id       = 'fib_batch_simd',
+    op       = 'fibonacci',
+    batchSize = 256,
+    simdWidth = 4,
+    pack      = 'half4',
+    phase     = 'Sek',
+    device    = 'gpu',
+  } = opts;
+
+  const threads = batchSize / simdWidth;  // e.g. 256/4 = 64
+
+  return `<node id="${id}" phase="${phase}" domain="compute"
+       fold="COMPUTE_FOLD" device="${device}"
+       gravity="1.0">
+
+  <description>
+    DirectXMath SIMD ${op} — ${simdWidth}-wide XMVECTOR, ${pack} compression.
+    Gravity = 1.0 (Normal): logit_bound=20, grad_clip=1.0.
+    Each thread computes ${simdWidth} values (one XMVECTOR instruction).
+  </description>
+
+  <inputs>
+    <input name="n_indices" type="uint[]" min="0" max="65535"/>
+    <input name="batch_size" type="uint" default="${batchSize}"/>
+  </inputs>
+
+  <outputs>
+    <output name="${op}_values" type="${pack === 'half4' ? 'half4[]' : 'float4[]'}"/>
+    <output name="execution_time_ms" type="float"/>
+  </outputs>
+
+  <!-- MathML specification — verified by Lipschitz soft-landing at Xul -->
+  <mathml>
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <apply><eq/>
+        <apply><ci>F</ci><ci>n</ci></apply>
+        <apply><floor/>
+          <apply><plus/>
+            <apply><divide/>
+              <apply><power/><mi>&#x3C6;</mi><ci>n</ci></apply>
+              <apply><sqrt/><cn>5</cn></apply>
+            </apply>
+            <cn>0.5</cn>
+          </apply>
+        </apply>
+      </apply>
+    </math>
+    <annotation encoding="asx/lipschitz">L=phi=${((1+Math.sqrt(5))/2).toFixed(6)}</annotation>
+    <annotation encoding="asx/simd_width">${simdWidth}</annotation>
+    <annotation encoding="asx/compression">${pack}</annotation>
+  </mathml>
+
+  <dx:implementation>
+    <dx:kernel>${op}_simd.hlsl</dx:kernel>
+    <dx:dispatch>${threads},1,1</dx:dispatch>
+    <dx:group_size>${threads},1,1</dx:group_size>
+    <dx:memory_layout>interleaved</dx:memory_layout>
+    <dx:compression>${pack === 'half4' ? 'f32tof16 (50% saving)' : 'none'}</dx:compression>
+  </dx:implementation>
+
+  <soft_landing lipschitz="${((1+Math.sqrt(5))/2).toFixed(6)}"/>
+
+  <!-- Phase sequence: Pop init → Wo bind → Sek dispatch → Ch'en pack → Xul close -->
+  <phase_sequence>
+    <step phase="Pop"><action>dx:create_buffer size="${batchSize * 2 * 4}" type="structured"/></step>
+    <step phase="Wo"><action>dx:bind_uav slot="0" + dx:bind_cbv slot="0"</action></step>
+    <step phase="Sek" duration="compute_bound">
+      <action>dx:dispatch ${threads},1,1</action>
+      <action>dx:sync type="uav_barrier"</action>
+    </step>
+    <step phase="Ch'en">
+      <action>dx:readback + dx:unpack_${pack}</action>
+    </step>
+    <step phase="Xul">
+      <action>dx:release_buffer + dx:record_metrics</action>
+    </step>
+  </phase_sequence>
+
+</node>`;
+}
 
 export function buildMathMupyMapper() {
   const m = new Fold2DMapper();

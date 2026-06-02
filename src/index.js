@@ -57,6 +57,13 @@ export { KuhulAtomicBrain, resolveGlyph, opcodesForFold,
          cross3, geodesicDist,                           // 0x3F CROSS, 0x64 PARALLEL_GEO
          GLYPH_SPEC, PI_DIGITS } from './xcfe/atomic-brain.js';
 
+// JSONL Tool Registry — K'UHUL agentic tool execution layer
+// ToolRegistry: load from kuhul.tools.jsonl, index by type/fold/permission
+// ToolExecutor: call(id,args) with rate-limit, gravity, sandbox enforcement
+// loadToolRegistry(url): async load from file or URL
+// 18 canonical tools: FILE/TOOL/COMPUTE/CMD/AGENT/OPCODE/THINK/META folds
+export { ToolRegistry, ToolExecutor, loadToolRegistry } from './xkx/tool-registry.js';
+
 // XKX layer: XCFE + KXML + XJSL unified runtime
 // XKXRuntime:  KXML graph executor + phase gate enforcement + forward/backward pass
 // XCFERuntime: flow control over XKX (for/if/switch/parallel/try-catch)

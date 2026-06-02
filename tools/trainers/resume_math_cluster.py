@@ -122,14 +122,15 @@ def run_trainer(fiber: XVMFiber, shared: XVMShared, steps: int, lr: float,
 
     cmd = [
         sys.executable, str(TRAINER),
-        "--model",      str(shared.best_ckpt),
-        "--data",       str(fiber.shard),
-        "--out_dir",    str(fiber_out),
-        "--steps",      str(steps),
-        "--batch",      "4",
-        "--lr",         str(lr),
-        "--log_every",  "10",
-        "--ckpt_every", str(steps),   # save exactly once at end of shard
+        "--model",        str(shared.best_ckpt),
+        "--data",         str(fiber.shard),
+        "--out_dir",      str(fiber_out),
+        "--steps",        str(steps),
+        "--batch",        "4",
+        "--lr",           str(lr),
+        "--log_every",    "10",
+        "--ckpt_every",   str(steps),      # one checkpoint per shard
+        "--cosine_total", str(TOTAL_REMAIN),  # LR decays over full run, not per-shard
     ]
 
     print(f"  [F{fiber.fid:02d}] steps={steps} lr={lr:.1e} "
@@ -140,6 +141,8 @@ def run_trainer(fiber: XVMFiber, shared: XVMShared, steps: int, lr: float,
     env = {**os.environ, **env_extra}
 
     last_loss = None
+    last_lr   = None
+    step_losses: list = []
     t0 = time.time()
     proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -149,26 +152,46 @@ def run_trainer(fiber: XVMFiber, shared: XVMShared, steps: int, lr: float,
     for line in proc.stdout:
         line = line.rstrip('\n')
         print(f"    | {line}", flush=True)
-        # parse loss from trainer output
+        # Parse  "step   10/50  loss=2.0146  lr=9.14e-06"
         for tok in line.split():
             tok = tok.rstrip(',:')
-            try:
-                v = float(tok)
-                if 0.0 < v < 50.0: last_loss = v
-            except ValueError:
-                pass
+            if tok.startswith('loss='):
+                try:
+                    v = float(tok[5:])
+                    if 0.0 < v < 50.0:
+                        last_loss = v
+                        step_losses.append(v)
+                except ValueError:
+                    pass
+            elif tok.startswith('lr='):
+                try: last_lr = float(tok[3:])
+                except ValueError: pass
+            else:
+                try:
+                    v = float(tok)
+                    if 0.0 < v < 50.0 and last_loss is None:
+                        last_loss = v
+                except ValueError:
+                    pass
     proc.wait()
     elapsed = time.time() - t0
 
     # Find the checkpoint saved by this shard run (latest .safetensors in fiber dir)
     candidates = sorted(fiber_out.glob("*.safetensors"), key=lambda p: p.stat().st_mtime)
-    loss_str = f"{last_loss:.4f}" if last_loss else "?"
+    loss_str  = f"{last_loss:.4f}" if last_loss else "?"
+    lr_str    = f"{last_lr:.2e}" if last_lr else "?"
+    mean_loss = sum(step_losses)/len(step_losses) if step_losses else None
+    mean_str  = f"{mean_loss:.4f}" if mean_loss else "?"
+
     if candidates:
         fiber.ckpt       = candidates[-1]
         shared.best_ckpt = candidates[-1]
-        print(f"  [F{fiber.fid:02d}] done {elapsed:.0f}s  loss={loss_str}  ckpt={candidates[-1].name}")
+        print(f"  [F{fiber.fid:02d}] done {elapsed:.0f}s  "
+              f"loss_final={loss_str}  loss_mean={mean_str}  lr_final={lr_str}  "
+              f"ckpt={candidates[-1].name}")
     else:
-        print(f"  [F{fiber.fid:02d}] done {elapsed:.0f}s  loss={loss_str}  WARNING: no checkpoint found")
+        print(f"  [F{fiber.fid:02d}] done {elapsed:.0f}s  loss_final={loss_str}  "
+              f"WARNING: no checkpoint saved to {fiber_out}")
 
     return last_loss
 
@@ -232,7 +255,7 @@ def main():
         if loss is not None:
             fiber.update_entropy(loss)
             shared.global_ema = 0.95 * shared.global_ema + 0.05 * loss
-            fiber.pc += steps_per_fiber
+        fiber.pc += steps_per_fiber
 
         # ── XVM barrier / retry: CLUSTER gravity ─────────────────────────────
         # When entropy is high, gravity fires on ALL fibers in a mini-cluster pass:
@@ -298,8 +321,23 @@ def main():
                     print(f"[cluster]   milestone target reached at loop {m}")
                     break
 
-        print(f"\n[cluster] global_step~{shared.total_steps}  "
-              f"global_EMA={shared.global_ema:.4f}  spikes={shared.spike_count}")
+        # ── Cluster health table ──────────────────────────────────────────────
+        done_fibers = [f for f in fibers if f.pc > 0 or f == fiber]
+        print(f"\n[cluster] step~{shared.total_steps}  EMA={shared.global_ema:.4f}  "
+              f"spikes={shared.spike_count}  "
+              f"logit_bound={logit_bound:.1f}  grad_clip={grad_clip:.3f}")
+        if len(done_fibers) > 1:
+            low_ent   = min(done_fibers, key=lambda f: f.entropy)
+            high_ent  = max(done_fibers, key=lambda f: f.entropy)
+            avg_pres  = sum(f.pressure for f in done_fibers) / len(done_fibers)
+            total_rep = sum(f.replays for f in done_fibers)
+            print(f"  fibers_run={len(done_fibers)}/{len(fibers)}  "
+                  f"best_ent=F{low_ent.fid:02d}({low_ent.entropy:.3f})  "
+                  f"worst_ent=F{high_ent.fid:02d}({high_ent.entropy:.3f})  "
+                  f"avg_pressure={avg_pres:.2f}  total_replays={total_rep}")
+        remaining = len(fibers) - fibers.index(fiber) - 1
+        print(f"  fibers_remaining={remaining}  "
+              f"est_time={remaining * elapsed / 60:.0f}min")
 
     # ── Final summary ─────────────────────────────────────────────────────────
     print("\n" + "="*60)

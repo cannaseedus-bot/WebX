@@ -306,16 +306,14 @@ def geodesic_arc_attention(
         mask = torch.triu(torch.ones(T, T, device=q.device), diagonal=1).bool()
         logits = logits.masked_fill(mask, float('-inf'))
 
+    # Parallel transport approximation: modulate logits by proximity factor
+    # closer tokens (cos_sim→1) get a small bonus on top of the geodesic logit.
+    # transport_scale ∈ [0,1]; apply in log-space to logits before softmax.
+    transport_scale = (1.0 + cos_sim) * 0.5            # [B, H, T, T]  ∈ [0, 1]
+    logits = logits + torch.log(transport_scale.clamp(min=1e-7))
+
     attn_w = F.softmax(logits, dim=-1)
-
-    # Weighted sum with parallel transport approximation:
-    # Transport v from k's sphere pos to q's sphere pos before weighting.
-    # Exact parallel transport is expensive; approximation: scale v by
-    # (1 - cos_sim/2) to attenuate farther values — cheap but geometry-aware.
-    transport_scale = (1.0 + cos_sim) * 0.5           # ∈ [0, 1], peaks at cos_sim=1
-    v_transported = v * transport_scale.unsqueeze(-1)  # [B, H, T_k, D]
-
-    out = torch.matmul(attn_w, v_transported)          # [B, H, T_q, D]
+    out    = torch.matmul(attn_w, v)                   # [B, H, T_q, D]
     return out
 
 # ─── Drop-in replacement for GPT2Block._attn ─────────────────────────────────

@@ -342,12 +342,14 @@ tools = "coder_tool,shell_run,file_read,file_write,git_status,kuhul_agent"
 // Register all built-ins — TOML + KXML together so CDATA capsules are live
 import { MUPY_ATOMIC_BRAIN_SPEC, MUPY_ATOMIC_BRAIN_KXML } from '../xcfe/atomic-brain.js';
 import { BASE_MUMODELS } from './base-models.js';
+import { MUPY_BRAIN_SPEC, MUPY_BRAIN_KXML } from './mu-brain.js';
 
-// Specialist trained models
+// Specialist trained models + µBRAIN cognitive architecture
 for (const [spec, kxml] of [
   [MUPY_MATH_SPEC,         MUPY_MATH_KXML],
   [MUPY_CODER_SPEC,        MUPY_CODER_KXML],
   [MUPY_ATOMIC_BRAIN_SPEC, MUPY_ATOMIC_BRAIN_KXML],
+  [MUPY_BRAIN_SPEC,        MUPY_BRAIN_KXML],
 ]) {
   registerMupy(buildMupyDescriptor(spec, kxml));
 }

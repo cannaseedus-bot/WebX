@@ -57,6 +57,12 @@ export { KuhulAtomicBrain, resolveGlyph, opcodesForFold,
          cross3, geodesicDist,                           // 0x3F CROSS, 0x64 PARALLEL_GEO
          GLYPH_SPEC, PI_DIGITS } from './xcfe/atomic-brain.js';
 
+// µBRAIN — Atomic Cognitive Architecture (Think->Research->Reason->Plan->Execute)
+// Four differentiable modules, each backed by a µJSONL grammar.
+// backward(error) propagates through plan->reason->research->think.
+export { MuBrain, MuThink, MuResearch, MuReason, MuPlan,
+         MUPY_BRAIN_KXML, MUPY_BRAIN_SPEC } from './mupy/mu-brain.js';
+
 // µJSONL — Atomic JSONL Grammar Units: differentiable linguistic patterns
 // Each line = one provable µModel (Lipschitz bound + trainable weight + phase gate)
 // Bridge: symbolic grammar rules <-> connectionist weights + gradient descent

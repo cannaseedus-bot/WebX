@@ -23,6 +23,17 @@ export { default as FiberPool1000, OP_EXT as XVM_OP_EXT, WARP_SIZE, DEFAULT_CONF
 // SMGM-16 model descriptor and runtime (v0.1.0-xvm-cpu-thread-cluster)
 export { default as SMGM16Runtime, SMGM16_CONFIG, LOSS_LAMBDAS, SHARD_MAP, PARAM_COUNTS, tokenFeatures, cardSlotShape } from './smgm16/index.js';
 
+// Atomic Brain Hypergraph v10.0 — 96-glyph opcode sugar for µMODELs
+// Glyph groups: control_flow(0x20-0x31) tensor_core(0x32-0x41)
+//               tensor_net(0x42-0x51)   phase_quantum(0x52-0x61)
+//               geodesic_wave(0x62-0x71) layout(CJK IDC ⿰⿱⿲⿴⿵⿶⿷⿻◯)
+// Pi token base: pi digits -> geodesic phase rotation -> matrix series S
+// Deep Thinking Index: D = N*G*T*sum(kappa_i), 2048 for 8-brain chain
+export { KuhulAtomicBrain, resolveGlyph, opcodesForFold,
+         piGeodesicSequence, piMatrixSeries, deepThinkingIndex,
+         MUPY_ATOMIC_BRAIN_KXML, MUPY_ATOMIC_BRAIN_SPEC,
+         GLYPH_SPEC, PI_DIGITS } from './xcfe/atomic-brain.js';
+
 // muPY — Python evolutionary layer for µMODEL Drivers/Kernels
 // µMODEL: Schema/TOML/YAML/XML/MD as behavioral spec — no hand-written weights needed
 // µPY: Python trainer + evolver that turns specs into running specialist models

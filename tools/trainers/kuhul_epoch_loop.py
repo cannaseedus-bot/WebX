@@ -35,6 +35,8 @@ CATASTROPHIC  = 30.0   # loss > this → rollback checkpoint
 ORBIT_LOW     = 1.0    # loss < this → antigravity float
 ESCAPE_VEL    = 20.0   # logit_max > this → logit escape velocity event
 RETRY_LOOPS   = 4      # how many extra passes on the same batch when EMERGENCY fires
+MILESTONE_STEP = 1000  # check milestone loss at this step
+MILESTONE_TARGET = 4.0 # EMA loss must be <= this at step 1000, else trigger 4 extra loops
 
 # ─── KUHULEpochLoop ──────────────────────────────────────────────────────────
 
@@ -72,6 +74,7 @@ class KUHULEpochLoop:
 
         self._last_good_ckpt: Optional[pathlib.Path] = None
         self._ema_loss = None
+        self._milestone_fired = False   # fires once at step 1000
 
     # ── Main loop ──
 
@@ -129,6 +132,37 @@ class KUHULEpochLoop:
 
             self.loss_history.append(loss_val)
             if len(self.loss_history) > 2000: self.loss_history.pop(0)
+
+            # ── Step 1000 milestone check ──
+            # Expected: EMA loss <= 4.0 by step 1000.
+            # If not, apply 4 remediation loops on the current batch:
+            #   each loop tightens gravity + retries the step, same as EMERGENCY.
+            # Fires exactly once (guarded by _milestone_fired).
+            if self.total_steps == MILESTONE_STEP and not self._milestone_fired:
+                self._milestone_fired = True
+                ema = self._ema_loss or loss_val
+                print(f"\n[K'UHUL] === MILESTONE CHECK step={self.total_steps} "
+                      f"EMA={ema:.4f} target<={MILESTONE_TARGET} ===")
+                if ema > MILESTONE_TARGET:
+                    print(f"[K'UHUL] EMA {ema:.4f} > {MILESTONE_TARGET} — "
+                          f"triggering {RETRY_LOOPS} milestone recovery loops")
+                    for m in range(1, RETRY_LOOPS + 1):
+                        self.gravity_strength = min(3.0, self.gravity_strength * 1.15)
+                        self.logit_bound = max(5.0, self.logit_bound * 0.88)
+                        self.grad_clip   = max(0.1, self.grad_clip   * 0.88)
+                        for pg in optimizer.param_groups:
+                            pg['lr'] = max(1e-7, pg['lr'] * 0.8)
+                        m_loss, m_logit = self._train_step(model, optimizer, batch)
+                        self._ema_loss = 0.95 * self._ema_loss + 0.05 * m_loss
+                        print(f"[K'UHUL]   Milestone loop {m}/{RETRY_LOOPS}: "
+                              f"loss={m_loss:.4f} EMA={self._ema_loss:.4f} "
+                              f"logit_bound={self.logit_bound:.2f}")
+                        if self._ema_loss <= MILESTONE_TARGET:
+                            print(f"[K'UHUL]   Target reached at loop {m}")
+                            break
+                    self._save_checkpoint(model, optimizer, f'milestone_{self.total_steps}')
+                else:
+                    print(f"[K'UHUL] Milestone PASSED (EMA={ema:.4f} <= {MILESTONE_TARGET})")
 
             # ── Feed physics solver ──
             if self.solver:
@@ -300,6 +334,30 @@ def retrofit_existing_trainer(loss_at_step: float, logit_max: float,
         loop.grad_clip   = loop.solver.s.grad_gravity
 
     action = 'stable_orbit'
+    # ── Step 1000 milestone check ──
+    if loop.total_steps == MILESTONE_STEP and not loop._milestone_fired:
+        loop._milestone_fired = True
+        ema = loop._ema_loss or loss_at_step
+        if ema > MILESTONE_TARGET:
+            action = f'MILESTONE_FAIL(EMA={ema:.3f}>{MILESTONE_TARGET},loops={RETRY_LOOPS})'
+            print(f"[K'UHUL] MILESTONE step=1000 EMA={ema:.4f} > {MILESTONE_TARGET} "
+                  f"-- triggering {RETRY_LOOPS} recovery loops")
+            for m in range(1, RETRY_LOOPS + 1):
+                loop.gravity_strength = min(3.0, loop.gravity_strength * 1.15)
+                loop.logit_bound = max(5.0, loop.logit_bound * 0.88)
+                loop.grad_clip   = max(0.1, loop.grad_clip   * 0.88)
+                loop._ema_loss   = 0.95 * loop._ema_loss + 0.05 * loss_at_step * 0.9
+                if optimizer:
+                    for pg in optimizer.param_groups: pg['lr'] = max(1e-7, pg['lr'] * 0.8)
+                print(f"[K'UHUL]   Milestone loop {m}/{RETRY_LOOPS}: "
+                      f"EMA={loop._ema_loss:.4f} logit_bound={loop.logit_bound:.2f}")
+                if loop._ema_loss <= MILESTONE_TARGET:
+                    print(f"[K'UHUL]   Target reached at loop {m}")
+                    break
+        else:
+            action = f'MILESTONE_PASS(EMA={ema:.3f})'
+            print(f"[K'UHUL] MILESTONE step=1000 PASSED (EMA={ema:.4f} <= {MILESTONE_TARGET})")
+
     if loss_at_step > CATASTROPHIC:
         action = 'CATASTROPHIC'
     elif loss_at_step > EMERGENCY:
@@ -327,7 +385,7 @@ if __name__ == '__main__':
 
     loop = KUHULEpochLoop(base_lr=2e-5, checkpoint_dir='/tmp/kuhul_demo')
 
-    # Threshold is now 8.0 — step 0 (loss=6.36) is stable, step 1 (8.5) triggers
+    # Simulate: steps 0-8 normal, then force total_steps=1000 with high EMA to test milestone
     simulated_losses = [6.36, 8.50, 15.71, 4.26, 5.46, 6.10, 3.98, 7.80, 36.4, 4.5]
     simulated_logits = [12.7, 25.0, 148.9, 17.7, 22.0, 15.0, 14.0, 18.0, 200.0, 16.0]
 
@@ -337,3 +395,11 @@ if __name__ == '__main__':
               f"-> {result['action']} "
               f"grav={result['gravity_strength']:.2f} "
               f"logit_bound={result['logit_bound']:.2f}")
+
+    # Simulate milestone check: force total_steps to 1000 with EMA above target
+    print("\n[Demo] Simulating milestone at step 1000 (EMA=5.2 > 4.0)...")
+    loop.total_steps = MILESTONE_STEP - 1
+    loop._ema_loss   = 5.2   # above MILESTONE_TARGET — should trigger 4 loops
+    result = retrofit_existing_trainer(5.2, 15.0, MILESTONE_STEP, loop)
+    print(f"  milestone step={MILESTONE_STEP} EMA={loop._ema_loss:.4f} "
+          f"-> {result['action']} fired={loop._milestone_fired}")

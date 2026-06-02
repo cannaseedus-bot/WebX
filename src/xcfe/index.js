@@ -31,3 +31,5 @@ export { KXMLBridge, KXMLMicronaut, FoldEntanglement, LipschitzAnalyzer,
 export { GravityField, PhysicsDispatcher, GravityAdvisor, KuhulPhysicsSolver, G, antigravity, heavyGravity, negativeGravity, parseGravityAttr, registerGravityNamespaces, GRAVITY_OPCODE_MAP } from './gravity.js';
 
 export { KernelJsonSchemaBuilder, kernelFunction, registerKernelFunction, micronautToTool, buildMicronautManifest, t } from './sk-schema-builder.js';
+export { SemanticReader, buildActivation, collectFolds, collectGrams, collectGeodesics, collectKuhulPrograms, KXML_NODE_TYPES, KXML_PHASES, KXML_GRAVITY } from './semantic-reader.js';
+export { SemanticResolutionEngine, SemanticReader as ResolutionReader, XQueryResolver, MathMLResolver, createField, computeEntropy, selectStrategy, ENTROPY } from './semantic-resolution-engine.js';

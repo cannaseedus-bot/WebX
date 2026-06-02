@@ -268,6 +268,8 @@ def geodesic_arc_attention(
     radius: float = RADIUS,
     temperature: float = 1.0,
     causal: bool = True,
+    chunk_size: int = 64,      # process T in chunks to bound peak memory
+                               # [B,H,T,T] f32 = 11.9MB; [B,H,chunk,T] = 3.1MB
 ) -> torch.Tensor:
     """
     Geodesic attention: replace Q·K^T with -arccos(q_norm·k_norm^T).
@@ -289,35 +291,40 @@ def geodesic_arc_attention(
     """
     B, H, T, D = q.shape
 
-    # Project to unit sphere (all ops on same manifold)
+    # Project to unit sphere
     q_s = project_to_sphere(q)   # [B, H, T, D]
     k_s = project_to_sphere(k)   # [B, H, T, D]
 
-    # Geodesic distance matrix: arccos(q·k^T)
-    cos_sim = torch.matmul(q_s, k_s.transpose(-2, -1))   # [B, H, T, T]
-    cos_sim = cos_sim.clamp(-1.0 + 1e-7, 1.0 - 1e-7)
-    geo_dist = torch.acos(cos_sim)                        # [B, H, T, T]  ∈ [0, π]
+    # Chunked computation: process q in blocks of chunk_size rows.
+    # Full [B,H,T,T] f32 = 11.9MB; chunked [B,H,chunk,T] = 3.1MB at chunk=64.
+    # Stays gradient-compatible — each chunk is a separate autograd node.
+    out = torch.zeros_like(q)   # [B, H, T, D]
 
-    # Convert to logit: negative distance = closer tokens get higher weight
-    logits = -geo_dist / (radius * temperature)            # [B, H, T, T]
+    for q_start in range(0, T, chunk_size):
+        q_end   = min(T, q_start + chunk_size)
+        q_c     = q_s[:, :, q_start:q_end, :]             # [B, H, chunk, D]
 
-    # Add ARC bias (accumulated quality from replayable arcs)
-    if arc_bias is not None:
-        logits = logits + arc_bias.unsqueeze(0).unsqueeze(0)  # broadcast over B, H
+        cos_c   = torch.matmul(q_c, k_s.transpose(-2, -1))# [B, H, chunk, T]
+        cos_c   = cos_c.clamp(-1.0 + 1e-7, 1.0 - 1e-7)
 
-    # Causal mask
-    if causal:
-        mask = torch.triu(torch.ones(T, T, device=q.device), diagonal=1).bool()
-        logits = logits.masked_fill(mask, float('-inf'))
+        logits_c = -torch.acos(cos_c) / (radius * temperature)
 
-    # Parallel transport approximation: modulate logits by proximity factor
-    # closer tokens (cos_sim→1) get a small bonus on top of the geodesic logit.
-    # transport_scale ∈ [0,1]; apply in log-space to logits before softmax.
-    transport_scale = (1.0 + cos_sim) * 0.5            # [B, H, T, T]  ∈ [0, 1]
-    logits = logits + torch.log(transport_scale.clamp(min=1e-7))
+        if arc_bias is not None:
+            logits_c = logits_c + arc_bias[q_start:q_end, :].unsqueeze(0).unsqueeze(0)
 
-    attn_w = F.softmax(logits, dim=-1)
-    out    = torch.matmul(attn_w, v)                   # [B, H, T_q, D]
+        # Transport scale in log-space (proximity bonus)
+        logits_c = logits_c + torch.log(((1.0 + cos_c) * 0.5).clamp(min=1e-7))
+
+        # Causal mask: each query row can only see keys up to its own index
+        if causal:
+            q_idx  = torch.arange(q_start, q_end, device=q.device).unsqueeze(1)
+            k_idx  = torch.arange(T, device=q.device).unsqueeze(0)
+            future = (k_idx > q_idx)                       # [chunk, T]
+            logits_c = logits_c.masked_fill(future.unsqueeze(0).unsqueeze(0), float('-inf'))
+
+        attn_c  = F.softmax(logits_c, dim=-1)              # [B, H, chunk, T]
+        out[:, :, q_start:q_end, :] = torch.matmul(attn_c, v)
+
     return out
 
 # ─── Drop-in replacement for GPT2Block._attn ─────────────────────────────────

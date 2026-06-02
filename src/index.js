@@ -49,6 +49,12 @@ export { default as SMGM16Runtime, SMGM16_CONFIG, LOSS_LAMBDAS, SHARD_MAP, PARAM
 export { KuhulAtomicBrain, resolveGlyph, opcodesForFold,
          piGeodesicSequence, piMatrixSeries, deepThinkingIndex,
          MUPY_ATOMIC_BRAIN_KXML, MUPY_ATOMIC_BRAIN_SPEC,
+         ATOMIC_BRAIN_IR,
+         // Math functions (Layer 0) tied to glyph opcodes
+         fibonacci, fibonacciFold, zeckendorf, PHI,     // 0x34 TENSOR_INT, 0x36 TRI_SUM
+         mayanEncode, mayanDecode, longCount,            // 0x67 TRIPLE_GEO
+         dot, matmul, outer, norm, normalize, softmax,   // 0x42 TENSOR_CORE, 0x44 TENSOR_PROD, 0x40 DOT
+         cross3, geodesicDist,                           // 0x3F CROSS, 0x64 PARALLEL_GEO
          GLYPH_SPEC, PI_DIGITS } from './xcfe/atomic-brain.js';
 
 // muPY — Python evolutionary layer for µMODEL Drivers/Kernels

@@ -57,6 +57,14 @@ export { KuhulAtomicBrain, resolveGlyph, opcodesForFold,
          cross3, geodesicDist,                           // 0x3F CROSS, 0x64 PARALLEL_GEO
          GLYPH_SPEC, PI_DIGITS } from './xcfe/atomic-brain.js';
 
+// µJSONL — Atomic JSONL Grammar Units: differentiable linguistic patterns
+// Each line = one provable µModel (Lipschitz bound + trainable weight + phase gate)
+// Bridge: symbolic grammar rules <-> connectionist weights + gradient descent
+// Forward = Sek, Backward = Ch'en, Compile = Wo, Load = Pop
+export { MuJSONLCompiler, MuJSONLTrainer, MuJSONLOptimizer,
+         MuJSONLGrammar, BASE_GRAMMAR,
+         Loss, MU_MODEL_TYPES, PHASES } from './mupy/mu-jsonl.js';
+
 // Base µMODEL registry — 11 canonical Drivers/Kernels shipped with every runtime
 //   Numeric:  fibonacci_fold  pi_field  mayan_fold  linalg_solver  geodesic_router
 //   Glyphs:   tensor_ops  geodesic_ops  logic_ops  phase_ops

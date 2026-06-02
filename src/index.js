@@ -57,6 +57,17 @@ export { KuhulAtomicBrain, resolveGlyph, opcodesForFold,
          cross3, geodesicDist,                           // 0x3F CROSS, 0x64 PARALLEL_GEO
          GLYPH_SPEC, PI_DIGITS } from './xcfe/atomic-brain.js';
 
+// Mayan MatrixMath — tensors as living fields that age, not learn
+// FluxTensor:   ages via decay_factor = 0.5^(age_days/half_life)
+// FLUXTensor:   evolves via Lorenz/Rossler/logistic chaotic attractor
+// CarryField:   persistent cross-pass memory (the carry IS the experience)
+// MayanVersionBoundary: 1000 steps = New Year's Day = fossil snapshot
+// MayanMatrixMath: full JS living-tensor chat model
+// tools/trainers/mayan_matrix_math.py: Python implementation
+export { FluxTensor, FLUXTensor, CarryField,
+         MayanEvolutionLayer, MayanMatrixMath, MayanVersionBoundary,
+         MUPY_MAYAN_KXML, MUPY_MAYAN_SPEC } from './mupy/flux-tensor.js';
+
 // µPY — Python->KXML transpilation bridge (write Python-like tensors, compile to µBRAIN)
 // MuPYTranspiler: Python op AST -> KXML nodes with Lipschitz bounds + backward edges
 // MuPYRuntime:    execute KXML graphs, train with backward pass, export to µJSONL

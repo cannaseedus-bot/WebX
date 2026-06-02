@@ -343,6 +343,7 @@ tools = "coder_tool,shell_run,file_read,file_write,git_status,kuhul_agent"
 import { MUPY_ATOMIC_BRAIN_SPEC, MUPY_ATOMIC_BRAIN_KXML } from '../xcfe/atomic-brain.js';
 import { BASE_MUMODELS } from './base-models.js';
 import { MUPY_BRAIN_SPEC, MUPY_BRAIN_KXML } from './mu-brain.js';
+import { MUPY_MAYAN_SPEC, MUPY_MAYAN_KXML } from './flux-tensor.js';
 
 // Specialist trained models + µBRAIN cognitive architecture
 for (const [spec, kxml] of [
@@ -350,6 +351,7 @@ for (const [spec, kxml] of [
   [MUPY_CODER_SPEC,        MUPY_CODER_KXML],
   [MUPY_ATOMIC_BRAIN_SPEC, MUPY_ATOMIC_BRAIN_KXML],
   [MUPY_BRAIN_SPEC,        MUPY_BRAIN_KXML],
+  [MUPY_MAYAN_SPEC,        MUPY_MAYAN_KXML],
 ]) {
   registerMupy(buildMupyDescriptor(spec, kxml));
 }

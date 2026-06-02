@@ -23,6 +23,12 @@ export { default as FiberPool1000, OP_EXT as XVM_OP_EXT, WARP_SIZE, DEFAULT_CONF
 // SMGM-16 model descriptor and runtime (v0.1.0-xvm-cpu-thread-cluster)
 export { default as SMGM16Runtime, SMGM16_CONFIG, LOSS_LAMBDAS, SHARD_MAP, PARAM_COUNTS, tokenFeatures, cardSlotShape } from './smgm16/index.js';
 
+// muPY — Python evolutionary layer for µMODEL Drivers/Kernels
+// µMODEL: Schema/TOML/YAML/XML/MD as behavioral spec — no hand-written weights needed
+// µPY: Python trainer + evolver that turns specs into running specialist models
+export { parseMupySpec, buildMupyDescriptor, registerMupy, getMupy, listMupy,
+         MUPY_MATH_SPEC, MUPY_CODER_SPEC } from './mupy/index.js';
+
 // KLSL compiler — K'UHUL Language Shading Language (.gpu_trainer)
 export { default as klslCompile, KLSL_OP, GLYPHS as KLSL_GLYPHS } from './klsl/index.js';
 

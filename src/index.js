@@ -57,6 +57,25 @@ export { KuhulAtomicBrain, resolveGlyph, opcodesForFold,
          cross3, geodesicDist,                           // 0x3F CROSS, 0x64 PARALLEL_GEO
          GLYPH_SPEC, PI_DIGITS } from './xcfe/atomic-brain.js';
 
+// KXC Compiler — K'uhul (.kxx/.kslx) → DirectX (.cpp/.hlsl)
+// KXCLexer: tokenises [Pop][Wo][Sek]⊗⊕⊖⊘⊛⊜⊝⊞ grammar
+// KXCParser: builds typed AST (Kernel/Alloc/Load/Store/GeoOp/Loop/Dispatch)
+// HLSLCodegen: Kernel→[numthreads] Alloc→RWStructuredBuffer GeoOp→mul/max/+
+// CppHostCodegen: Kernel→class::Execute() Wo→CreateCommittedResource Muwan→Dispatch
+// KXC_EXTENSIONS: .kxx/.kslx/.kuhul/.kxml file extension registry
+export { KXC, KXCLexer, KXCParser, HLSLCodegen, CppHostCodegen,
+         GEO_TO_HLSL, KXC_EXTENSIONS } from './xcfe/kxc.js';
+
+// Geometric Tensor IR — K'uhul control grammar + Manifold M execution
+// TWO PLANES: Control (K'uhul grammar) + State (SVG-3D geometric storage)
+// Manifold M = ℝ² / ℝ³ shared coordinate domain for all tensors
+// Operators: ⊗ product  ⊕ compose  ⊖ diff  ⊘ scale  ⊛ hadamard  ⊜ satisfies  ⊝ project  ⊞ translate
+// KuhulExecutor: deterministic phase-aware instruction dispatch
+// PhaseCycle: Pop→Wo→Sek→Ch'en cycle, rAF binding optional (rendering ≠ execution)
+// manifestToSVG / svgToManifold: canonical lossless tensor serialization
+export { Manifold, GeoTensor, KuhulExecutor, PhaseCycle,
+         denseLayerProgram, manifestToSVG, svgToManifold } from './xcfe/geo-ir.js';
+
 // Mayan MatrixMath — tensors as living fields that age, not learn
 // FluxTensor:   ages via decay_factor = 0.5^(age_days/half_life)
 // FLUXTensor:   evolves via Lorenz/Rossler/logistic chaotic attractor

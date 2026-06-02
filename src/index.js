@@ -57,6 +57,32 @@ export { KuhulAtomicBrain, resolveGlyph, opcodesForFold,
          cross3, geodesicDist,                           // 0x3F CROSS, 0x64 PARALLEL_GEO
          GLYPH_SPEC, PI_DIGITS } from './xcfe/atomic-brain.js';
 
+// Micronaut Runtime (Pillar 2: lifecycle + scheduling + resources + fault tolerance)
+// STATE machine: CREATED→INITIALIZING→READY→RUNNING→PAUSED→DEGRADED→RECOVERING→TERMINATED
+// SchedulerFactory: round_robin / priority / earliest_deadline / work_stealing
+// CircuitBreaker: CLOSED/OPEN/HALF_OPEN, fallback support
+// retry(fn,opts): fixed/linear/expo/fibonacci backoff
+// MetricsCollector: counters/gauges/histograms/timers + snapshot()
+// HealthChecker: register named checks, runAll(), stopAll()
+// CheckpointManager: save/restore/history per instance
+// MicronautRuntime: create/get/all/breaker/checkpoint/recover/scheduler
+export { MicronautRuntime, MicronautInstance, SchedulerFactory,
+         CircuitBreaker, RetryStrategies, retry,
+         MetricsCollector, HealthChecker, CheckpointManager,
+         STATE, runtimeEventJSONL } from './xkx/micronaut-runtime.js';
+
+// Micronaut Parallelism (Pillar 3: batches + threads + processes + network)
+// Batch: sequential/parallel/staged/adaptive with fold-pressure aware concurrency
+// ThreadPool: fixed size, Promise-based work queue
+// Mutex/Semaphore/Barrier: synchronization primitives
+// MessageQueue: in-process IPC
+// Sandbox: timeout-guarded code execution
+// Network: createHub() / createPubSub() / loadBalancer()
+// ParallelOrchestrator: unified API for all parallelism patterns
+export { Batch, BatchStrategies, ThreadPool, Mutex, Semaphore, Barrier,
+         MessageQueue, Sandbox, Network,
+         ParallelOrchestrator } from './xkx/micronaut-parallelism.js';
+
 // JSONL Tool Registry — K'UHUL agentic tool execution layer
 // ToolRegistry: load from kuhul.tools.jsonl, index by type/fold/permission
 // ToolExecutor: call(id,args) with rate-limit, gravity, sandbox enforcement

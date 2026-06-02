@@ -100,22 +100,26 @@ class ARCWeightMatrix:
                     self._count[s, d] += 1
         self._total_arcs += 1
 
-    def record_batch(self, input_ids: torch.Tensor, loss_per_token: torch.Tensor):
+    def record_batch(self, input_ids: torch.Tensor, loss_per_token):
         """
         Auto-record arcs from a training batch.
-        Tokens with low loss → high quality arc between consecutive tokens.
+        input_ids: [B, T] token ids  OR  [B] row indices into the dataset
+        loss_per_token: scalar or [B, T] tensor
         Called after each training step.
         """
+        loss_val = float(loss_per_token.detach()) if hasattr(loss_per_token, 'detach') \
+                   else float(loss_per_token)
+        quality = math.exp(-loss_val / 10.0)
+        if quality < MIN_QUALITY:
+            return
+        if input_ids.ndim == 1 or input_ids.shape[-1] < 2:
+            return   # row indices only — skip, need actual token ids
         B, T = input_ids.shape
-        for b in range(B):
+        for b in range(min(B, 4)):   # cap at 4 sequences per step for speed
             for t in range(T - 1):
                 src = int(input_ids[b, t])
                 dst = int(input_ids[b, t + 1])
-                loss_val = float(loss_per_token[b, t]) if loss_per_token.ndim == 2 \
-                           else float(loss_per_token)
-                quality = math.exp(-loss_val / 10.0)   # high loss → low quality arc
-                entropy = min(1.0, loss_val / 10.0)
-                if quality >= MIN_QUALITY:
+                if 0 <= src < self.vocab and 0 <= dst < self.vocab:
                     self._bias[src, dst] = 0.99 * self._bias[src, dst] + 0.01 * quality
                     self._count[src, dst] += 1
 

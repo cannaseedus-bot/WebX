@@ -264,8 +264,9 @@ def train(model, data, steps, batch, lr, log_every, ckpt_every, out_dir,
         acc += loss.item()
 
         # ARC weight accumulation: record token co-occurrence quality
+        # Pass full sequences (x = data[rows, :-1]) so record_batch sees token ids
         if arc_weights is not None:
-            arc_weights.record_batch(x, loss)
+            arc_weights.record_batch(x.detach(), loss.detach())
 
         if step % log_every == 0:
             elapsed = time.monotonic() - t0

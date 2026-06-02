@@ -57,6 +57,23 @@ export { KuhulAtomicBrain, resolveGlyph, opcodesForFold,
          cross3, geodesicDist,                           // 0x3F CROSS, 0x64 PARALLEL_GEO
          GLYPH_SPEC, PI_DIGITS } from './xcfe/atomic-brain.js';
 
+// Base µMODEL registry — 11 canonical Drivers/Kernels shipped with every runtime
+//   Numeric:  fibonacci_fold  pi_field  mayan_fold  linalg_solver  geodesic_router
+//   Glyphs:   tensor_ops  geodesic_ops  logic_ops  phase_ops
+//   Runtime:  flux_runtime  semantic_reader
+export { BASE_MUMODELS,
+         FIBONACCI_FOLD_SPEC, FIBONACCI_FOLD_KXML,
+         PI_FIELD_SPEC,        PI_FIELD_KXML,
+         MAYAN_FOLD_SPEC,      MAYAN_FOLD_KXML,
+         LINALG_SOLVER_SPEC,   LINALG_SOLVER_KXML,
+         GEODESIC_ROUTER_SPEC, GEODESIC_ROUTER_KXML,
+         TENSOR_OPS_SPEC,      TENSOR_OPS_KXML,
+         GEODESIC_OPS_SPEC,    GEODESIC_OPS_KXML,
+         LOGIC_OPS_SPEC,       LOGIC_OPS_KXML,
+         PHASE_OPS_SPEC,       PHASE_OPS_KXML,
+         FLUX_RUNTIME_SPEC,    FLUX_RUNTIME_KXML,
+         SEMANTIC_READER_SPEC, SEMANTIC_READER_KXML } from './mupy/base-models.js';
+
 // muPY — Python evolutionary layer for µMODEL Drivers/Kernels
 // µMODEL: Schema/TOML/YAML/XML/MD as behavioral spec — no hand-written weights needed
 // µPY: Python trainer + evolver that turns specs into running specialist models

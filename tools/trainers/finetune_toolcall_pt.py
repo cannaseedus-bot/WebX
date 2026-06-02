@@ -69,19 +69,36 @@ class GPT2Block(nn.Module):
         var  = x.var(-1, unbiased=False, keepdim=True)
         return w * (x - mean) / (var + eps).sqrt() + b
 
-    def _attn(self, x: torch.Tensor) -> torch.Tensor:
-        B, T, C = x.shape
-        # QKV projection: Conv1D -> x @ W + b
-        qkv = x @ self.c_attn_w + self.c_attn_b           # [B, T, 3C]
-        q, k, v = qkv.split(self.n_embd, dim=-1)           # each [B, T, C]
+    # Geodesic attention components — set by patch_model_geodesic()
+    geo_map        = None
+    arc_weights    = None
+    geo_temperature: float = 1.0
 
-        # Reshape to multi-head
-        q = q.view(B, T, self.n_head, self.head_dim).transpose(1, 2)  # [B, H, T, D]
+    def _attn(self, x: torch.Tensor,
+              token_ids: 'Optional[torch.Tensor]' = None) -> torch.Tensor:
+        B, T, C = x.shape
+        qkv = x @ self.c_attn_w + self.c_attn_b
+        q, k, v = qkv.split(self.n_embd, dim=-1)
+        q = q.view(B, T, self.n_head, self.head_dim).transpose(1, 2)
         k = k.view(B, T, self.n_head, self.head_dim).transpose(1, 2)
         v = v.view(B, T, self.n_head, self.head_dim).transpose(1, 2)
 
-        # Numerically stable causal attention (PyTorch 2.x fused kernel)
-        out = F.scaled_dot_product_attention(q, k, v, is_causal=True)
+        if self.geo_map is not None and self.geo_map.is_compiled():
+            # ── Geodesic + ARC attention ──────────────────────────────────────
+            from geodesic_attention_bridge import (
+                geodesic_arc_attention, project_to_sphere)
+            arc_bias = None
+            if self.arc_weights is not None and token_ids is not None:
+                arc_bias = self.arc_weights.bias_for_tokens(
+                    token_ids[0, :T]).to(x.device).clamp(-5.0, 5.0)
+            out = geodesic_arc_attention(q, k, v,
+                                         arc_bias=arc_bias,
+                                         temperature=self.geo_temperature,
+                                         causal=True)
+        else:
+            # ── Standard dot-product attention ────────────────────────────────
+            out = F.scaled_dot_product_attention(q, k, v, is_causal=True)
+
         out = out.transpose(1, 2).contiguous().view(B, T, C)
         return out @ self.c_proj_w + self.c_proj_b
 
@@ -115,9 +132,15 @@ class GPT2(nn.Module):
         pos  = torch.arange(T, device=idx.device)
         x = self.wte(idx) + self.wpe(pos)
         for block in self.blocks:
-            x = block(x)
+            # Pass token_ids so geodesic attention can look up ARC biases
+            if hasattr(block, 'geo_map') and block.geo_map is not None:
+                x = block._ln(x, block.ln_1_w, block.ln_1_b)
+                x = x + block._attn(x, token_ids=idx)
+                x = x + block._mlp(block._ln(x, block.ln_2_w, block.ln_2_b))
+            else:
+                x = block(x)
         x = self._ln(x, self.ln_f_w, self.ln_f_b)
-        return x @ self.wte.weight.T   # [B, T, vocab] — tied lm_head
+        return x @ self.wte.weight.T
 
 
 def load_gpt2(path: pathlib.Path) -> GPT2:
@@ -199,7 +222,7 @@ def load_bin(path: pathlib.Path) -> tuple[torch.Tensor, int]:
 # ─── Training loop ─────────────────────────────────────────────────────────────
 
 def train(model, data, steps, batch, lr, log_every, ckpt_every, out_dir,
-          cosine_total: int = 0):
+          cosine_total: int = 0, arc_weights=None):
     n_seqs, block = data.shape
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.1)
     # cosine_total: full training length for the scheduler.
@@ -239,6 +262,11 @@ def train(model, data, steps, batch, lr, log_every, ckpt_every, out_dir,
         sch.step()
 
         acc += loss.item()
+
+        # ARC weight accumulation: record token co-occurrence quality
+        if arc_weights is not None:
+            arc_weights.record_batch(x, loss)
+
         if step % log_every == 0:
             elapsed = time.monotonic() - t0
             print(f"  step {step:4d}/{steps}  loss={acc/log_every:.4f}"
@@ -267,8 +295,10 @@ def main():
     ap.add_argument("--log_every",     type=int,   default=25)
     ap.add_argument("--ckpt_every",    type=int,   default=100)
     ap.add_argument("--cosine_total",  type=int,   default=0,
-                    help="Full LR schedule length. 0=use --steps. Set to total remaining "
-                         "steps when calling from cluster runner so LR decays gradually.")
+                    help="Full LR schedule length. 0=use --steps.")
+    ap.add_argument("--geodesic",      action="store_true", default=False,
+                    help="Enable geodesic + ARC attention (requires Haswell iGPU for fast "
+                         "map compilation; falls back to CPU NumPy if unavailable).")
     ap.add_argument("--data",          type=str,   default=str(TRAIN_BIN))
     ap.add_argument("--model",         type=str,   default=str(BASE_MODEL))
     ap.add_argument("--out_dir",       type=str,   default=str(OUT_DIR))
@@ -298,6 +328,14 @@ def main():
     model = load_gpt2(model_path)
     print(f"  loaded in {time.monotonic()-t0:.1f}s")
 
+    arc_weights = None
+    if args.geodesic:
+        from geodesic_attention_bridge import build_geo_system, patch_model_geodesic
+        print("[Geodesic] Compiling Haswell iGPU spherical map...")
+        geo_map, arc_weights = build_geo_system(model)
+        patch_model_geodesic(model, geo_map, arc_weights, temperature=1.0)
+        print("[Geodesic] Geodesic + ARC attention active")
+
     train(model, data,
           steps        = args.steps,
           batch        = args.batch,
@@ -305,7 +343,13 @@ def main():
           log_every    = args.log_every,
           ckpt_every   = args.ckpt_every,
           out_dir      = out_dir,
-          cosine_total = args.cosine_total)
+          cosine_total = args.cosine_total,
+          arc_weights  = arc_weights)
+
+    if arc_weights is not None:
+        from geodesic_attention_bridge import CACHE_DIR
+        arc_weights.save(CACHE_DIR)
+        print(f"[Geodesic] ARC weights saved: {arc_weights.stats()}")
 
     print("=" * 60)
     print("DONE")

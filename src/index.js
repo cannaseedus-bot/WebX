@@ -57,6 +57,33 @@ export { KuhulAtomicBrain, resolveGlyph, opcodesForFold,
          cross3, geodesicDist,                           // 0x3F CROSS, 0x64 PARALLEL_GEO
          GLYPH_SPEC, PI_DIGITS } from './xcfe/atomic-brain.js';
 
+// XKX layer: XCFE + KXML + XJSL unified runtime
+// XKXRuntime:  KXML graph executor + phase gate enforcement + forward/backward pass
+// XCFERuntime: flow control over XKX (for/if/switch/parallel/try-catch)
+// createXKX(): factory -> { xcfe, kxml, xjsl }
+// XKX_GRAMMAR_SUMMARY: EBNF summary + extension registry
+export { XKXNode, XKXEdge, XKXGraph, KXMLXJSLRuntime, XCFERuntime,
+         XJSLEngine as XKXSJSLEngine, createXKX, XKX_GRAMMAR_SUMMARY,
+         PHASE_ORDER, FOLD } from './xkx/xkx-runtime.js';
+
+// XJSL D3D11 lowering: XJSL (WGSL) -> HLSL -> cs_5_0 DXBC
+// XJSLD3D11Lowering.lower(shaderDef) -> { hlsl, bindingTable }
+// XJSLD3D11Pipeline: compileShader() + executeShader() -> WebGPU fallback
+export { XJSLD3D11Lowering, XJSLD3D11Pipeline,
+         WGSL_TO_HLSL_TYPES, WGSL_TO_HLSL_BUILTINS } from './xkx/xjsl-d3d11.js';
+
+// XJSL Engine: XJSON IS the shader language
+// XJSLEngine: state proxy + shader registry + XJSON app loader + reactive bindings
+// XJSLReactiveShader: watch(path) -> auto-dispatch bound shaders
+// createXJSLEngine(): async factory
+export { XJSLEngine, XJSLReactiveShader, createXJSLEngine } from './xkx/xjsl-engine.js';
+
+// XKX velocity packing (Microsoft Minigraph style)
+export { packVelocity, unpackVelocity, packVelocity_MSFT, unpackVelocity_MSFT,
+         packVelocity_R10G10B10A2, unpackVelocity_R10G10B10A2,
+         compressionPSNR, selectPackingMode,
+         PACK_MODE, MODE_INFO, VELOCITY_PACKING_NODE } from './xkx/velocity-packing.js';
+
 // KXC Compiler — K'uhul (.kxx/.kslx) → DirectX (.cpp/.hlsl)
 // KXCLexer: tokenises [Pop][Wo][Sek]⊗⊕⊖⊘⊛⊜⊝⊞ grammar
 // KXCParser: builds typed AST (Kernel/Alloc/Load/Store/GeoOp/Loop/Dispatch)

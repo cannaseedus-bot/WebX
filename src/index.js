@@ -223,6 +223,15 @@ export { VERBS, VerbChain, EndpointRegistry, Paginator, Generator, Validator,
 export { KernelJsonSchemaBuilder, kernelFunction, registerKernelFunction,
          micronautToTool, buildMicronautManifest, t } from './xcfe/sk-schema-builder.js';
 
+// Fold Pressure Mapper + Pressure Reserves
+// PressureReserve: stored gravity buffer — absorbs shocks before live bounds tighten
+// FoldNode: fold type + rank + reserve per node
+// Fold2DMapper: balloon_factor = source_pressure / target_pressure (e.g. COMPUTE→UI = 128x)
+// PRESSURE_TABLE: pressure[fold][rank 0..4] for all 5 fold types
+// buildMathMupyMapper(): canonical math_tool fold configuration with reserves
+export { Fold2DMapper, FoldNode, PressureReserve, buildMathMupyMapper,
+         PRESSURE_TABLE, getPressure, balloonFactor, FOLD as FOLD_TYPES } from './xcfe/pressure-mapper.js';
+
 // XCFE Gravity — K'UHUL physics engine (gravity/antigravity field + Poisson solver)
 // ⟁Grav⟁ = constrained (phase-gated, Lipschitz-bounded, gradient-clipped)
 // ⟁AntiGrav⟁ = float (debug nodes, telemetry, bypass phase machine)

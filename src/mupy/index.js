@@ -215,16 +215,28 @@ export function listMupy() {
 export const MUPY_MATH_KXML = `<?xml version="1.0" encoding="utf-8"?>
 <kxml domain="math_tool" phase="Sek" gravity="Normal">
 
-  <fold id="arithmetic"    domain="arithmetic"/>
-  <fold id="calculus"      domain="calculus"/>
-  <fold id="linalg"        domain="linear_algebra"/>
-  <fold id="statistics"    domain="statistics"/>
+  <!-- Gravity-aware compute folds (⟁Grav⟁ = phase-gated, Lipschitz-bounded) -->
+  <fold id="arithmetic"  domain="arithmetic"     gravity="1.0"/>
+  <fold id="calculus"    domain="calculus"        gravity="1.0"/>
+  <fold id="linalg"      domain="linear_algebra"  gravity="1.0"/>
+  <fold id="statistics"  domain="statistics"      gravity="1.0"/>
+
+  <!-- Antigravity telemetry folds (⟁AntiGrav⟁ = float, bypass phase gate) -->
+  <!-- These ARE the [dbg] lines — they observe without constraining training -->
+  <fold id="dbg_embed"   domain="telemetry" antigravity="true" gravity="0.0"/>
+  <fold id="dbg_logits"  domain="telemetry" antigravity="true" gravity="0.0"/>
+  <fold id="dbg_loss"    domain="telemetry" antigravity="true" gravity="0.0"/>
 
   <geodesic from="arithmetic" to="calculus"   cost="0.3"/>
   <geodesic from="calculus"   to="linalg"     cost="0.4"/>
   <geodesic from="linalg"     to="statistics" cost="0.2"/>
 
-  <lane id="compute" type="math_compute" permission="math_only"/>
+  <!-- Antigravity telemetry edges — no phase gate required -->
+  <geodesic from="dbg_embed"  to="dbg_logits" cost="0.0" antigravity="true"/>
+  <geodesic from="dbg_logits" to="dbg_loss"   cost="0.0" antigravity="true"/>
+
+  <lane id="compute"    type="math_compute"  permission="math_only"/>
+  <lane id="telemetry"  type="debug_observe" permission="inherit" antigravity="true"/>
 
   <policy id="math_only">
     <directive type="restrict" domain="code_execution" permission="deny"/>
@@ -235,8 +247,15 @@ export const MUPY_MATH_KXML = `<?xml version="1.0" encoding="utf-8"?>
     Pop: load input expression, validate numeric domain
     Wo:  declare symbolic intent, bind MathML resolver
     Sek: execute — route to fibonacci_fold / pi_field / linalg_solver / mayan_fold
+         gravity_scale=1.0 (Normal) — gradient clipped to norm 1.0, logits clamped [-20,20]
+         ⟁Grav⟁ nodes: compute folds (arithmetic/calculus/linalg/statistics)
+         ⟁AntiGrav⟁ nodes: telemetry (dbg_embed / dbg_logits / dbg_loss) — float outside phase machine
     Ch'en: accumulate gradient across math folds
+           KuhulPhysicsSolver.observe(step, loss, grad_norms) → auto-adjust gravity
+           ∇²Φ = ρ_grav + ρ_anti  stable when ratio ≥ 10
+           step 700 loss=10.03 → solver nudges gravity +0.1 on oscillating folds
     Xul: emit MathML output, verify Lipschitz soft-landing
+         GravityAdvisor.advise(lr=2e-5, wd=0, loss=10.03) → ratio check
   ]]>
 
   <![CDATA[

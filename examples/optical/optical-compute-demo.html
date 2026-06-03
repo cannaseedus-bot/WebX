@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<!--
+  Optical Processor + SVG3D Compute Engine Demo
+
+  Wires: OpticalProcessor → SVG3DComputeGraph → live Canvas render
+
+  Three visual layers (matching the three shaders):
+    1. Vector green screen  — S² coordinate grid (the execution surface)
+    2. Optical sphere nodes — SH wave state rendered as lit spheres
+    3. ARC trajectories     — replayable geodesic paths between clusters
+
+  K'UHUL phase cycle per animation frame:
+    Pop   (0)    — optical nodes initialized
+    Wo    (π/4)  — inject energy into seed cluster
+    Sek   (π/2)  — SVG3D compute dispatch (wave propagation)
+    Ch'en (3π/4) — collect results → update canvas
+    Xul   (π)    — next tick
+-->
+<html lang="en" activation="Pop" data-manifest="optical-compute-demo">
+<head declaration="Wo">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>&#x27C1; Optical Compute · SVG3D Engine Demo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0c10;--card:#111720;--code:#0d1117;
+  --cyan:#00e5ff;--green:#00ff88;--orange:#ff8800;
+  --purple:#b000ff;--fg:#e8eaf0;--mono:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--fg);font-family:var(--mono);display:flex;
+     flex-direction:column;align-items:center;padding:16px;min-height:100vh}
+h1{font-size:18px;color:var(--cyan);margin-bottom:4px;letter-spacing:.05em}
+.sub{font-size:11px;color:#666;margin-bottom:16px}
+.layout{display:grid;grid-template-columns:1fr 380px;gap:16px;width:100%;max-width:1200px}
+canvas{width:100%;border-radius:16px;border:1px solid rgba(0,229,255,.2);
+       background:#000;display:block}
+.panel{background:var(--card);border-radius:16px;padding:16px;
+       border:1px solid rgba(0,229,255,.15);display:flex;flex-direction:column;gap:12px}
+.stat-row{display:flex;justify-content:space-between;font-size:11px;padding:6px 0;
+          border-bottom:1px solid #1a2030}
+.stat-row .lbl{color:#556}
+.stat-row .val{color:var(--cyan);font-weight:bold}
+.phase-bar{height:6px;border-radius:3px;background:#1a2030;overflow:hidden;margin-top:4px}
+.phase-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--green),var(--cyan));
+            transition:width .1s}
+.log{font-size:10px;color:#445;height:120px;overflow-y:auto;
+     background:var(--code);border-radius:8px;padding:8px;line-height:1.6}
+.log .tick{color:var(--cyan)}
+.log .ev{color:var(--green)}
+.log .warn{color:var(--orange)}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+button{background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);
+       border-radius:20px;color:var(--cyan);padding:5px 14px;cursor:pointer;
+       font-family:var(--mono);font-size:11px;transition:all .15s}
+button:hover{background:rgba(0,229,255,.2)}
+button.active{background:rgba(0,229,255,.25);border-color:var(--cyan)}
+.section-hdr{font-size:10px;color:#334;text-transform:uppercase;letter-spacing:.1em;
+             margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<h1>&#x27C1; Optical Compute · SVG3D Engine</h1>
+<p class="sub">optical nodes = compute clusters · SH wave = execution · S² = vector green screen</p>
+
+<div class="layout">
+
+  <!-- Canvas: the three rendering layers -->
+  <canvas id="c" width="760" height="680"></canvas>
+
+  <!-- Control panel -->
+  <div class="panel">
+
+    <!-- π-phase indicator -->
+    <div>
+      <div class="section-hdr">K'UHUL π-Phase</div>
+      <div class="stat-row"><span class="lbl">Phase</span><span class="val" id="phaseLabel">Pop (0)</span></div>
+      <div class="phase-bar"><div class="phase-fill" id="phaseBar" style="width:0%"></div></div>
+    </div>
+
+    <!-- Compute stats -->
+    <div>
+      <div class="section-hdr">Compute State</div>
+      <div class="stat-row"><span class="lbl">Nodes</span><span class="val" id="nodeCount">—</span></div>
+      <div class="stat-row"><span class="lbl">Tick</span><span class="val" id="tickCount">0</span></div>
+      <div class="stat-row"><span class="lbl">Coherence</span><span class="val" id="coherence">—</span></div>
+      <div class="stat-row"><span class="lbl">Active ARCs</span><span class="val" id="arcCount">0</span></div>
+      <div class="stat-row"><span class="lbl">Seed node</span><span class="val" id="seedNode">0</span></div>
+    </div>
+
+    <!-- Controls -->
+    <div>
+      <div class="section-hdr">Controls</div>
+      <div class="controls">
+        <button id="btnRun" class="active">&#x25B6; Run</button>
+        <button id="btnPause">&#x23F8; Pause</button>
+        <button id="btnReset">&#x21BA; Reset</button>
+        <button id="btnInject">&#x27C1; Inject</button>
+      </div>
+      <div class="controls" style="margin-top:8px">
+        <button id="btnGreen" class="active">Green Screen</button>
+        <button id="btnSpheres" class="active">Spheres</button>
+        <button id="btnArcs" class="active">ARCs</button>
+        <button id="btnGrid" class="active">Grid</button>
+      </div>
+    </div>
+
+    <!-- Subdivision level -->
+    <div>
+      <div class="section-hdr">Icosphere level</div>
+      <div class="controls">
+        <button id="lv1">Lv 1 (42)</button>
+        <button id="lv2" class="active">Lv 2 (162)</button>
+        <button id="lv3">Lv 3 (642)</button>
+      </div>
+    </div>
+
+    <!-- Event log -->
+    <div>
+      <div class="section-hdr">Compute Log</div>
+      <div class="log" id="log"></div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+// ─── Inline ports of optical-mesh.js + svg3d-compute.js ──────────────────────
+// (self-contained so the demo works without a bundler)
+
+const PI = Math.PI;
+
+// ── Icosphere generation ──────────────────────────────────────────────────────
+function norm3(v){const n=Math.sqrt(v[0]**2+v[1]**2+v[2]**2)||1;return v.map(x=>x/n)}
+function midpt(a,b,vs,cache){
+  const k=a<b?`${a}_${b}`:`${b}_${a}`;if(cache.has(k))return cache.get(k);
+  const va=vs[a],vb=vs[b];const m=norm3([(va[0]+vb[0])*.5,(va[1]+vb[1])*.5,(va[2]+vb[2])*.5]);
+  const idx=vs.length;vs.push(m);cache.set(k,idx);return idx;
+}
+
+function buildIcosphere(subdivs=2){
+  const t=(1+Math.sqrt(5))/2;
+  let vs=[[-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],[0,-1,t],[0,1,t],[0,-1,-t],[0,1,-t],
+          [t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1]].map(v=>norm3(v));
+  let fs=[[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],
+          [10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],
+          [2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+  for(let s=0;s<subdivs;s++){
+    const cache=new Map(),nf=[];
+    for(const[a,b,c]of fs){const ab=midpt(a,b,vs,cache),bc=midpt(b,c,vs,cache),ca=midpt(c,a,vs,cache);
+      nf.push([a,ab,ca],[b,bc,ab],[c,ca,bc],[ab,bc,ca]);}fs=nf;
+  }
+  // adjacency
+  const adj=vs.map(()=>new Set());
+  for(const[a,b,c]of fs){adj[a].add(b);adj[a].add(c);adj[b].add(a);adj[b].add(c);adj[c].add(a);adj[c].add(b);}
+  const nodes=vs.map((pos,i)=>({
+    pos, sh:new Float32Array(18), neighbors:[...adj[i]],
+    energy:0, phase:(i/vs.length)*2*PI
+  }));
+  return{nodes,faces:fs};
+}
+
+// ── SH seeding + propagation ──────────────────────────────────────────────────
+function evalSH(idx,theta,phi){
+  const c=Math.cos(theta),s=Math.sin(theta);
+  switch(idx){
+    case 0:return 0.282095; case 1:return 0.488603*c;
+    case 2:return 0.488603*s*Math.cos(phi); case 3:return 0.488603*s*Math.sin(phi);
+    case 4:return 1.092548*(c*c-0.333333); case 5:return 2.185095*s*c*Math.cos(phi);
+    case 6:return 2.185095*s*c*Math.sin(phi); case 7:return 1.092548*s*s*Math.cos(2*phi);
+    case 8:return 1.092548*s*s*Math.sin(2*phi); default:return 0;
+  }
+}
+function seedSH(nodes){
+  for(const n of nodes){
+    const[x,y,z]=n.pos,theta=Math.acos(Math.max(-1,Math.min(1,y))),phi=Math.atan2(x,-z)+PI;
+    for(let j=0;j<9;j++){const Y=evalSH(j,theta,phi),ph=phi*(j+1)*.5;
+      n.sh[j*2]=Y*Math.cos(ph)*.08;n.sh[j*2+1]=Y*Math.sin(ph)*.08;}
+  }
+}
+function nodeEnergy(n){let e=0;for(let i=0;i<9;i++){const c=n.sh[i*2],s=n.sh[i*2+1];e+=Math.sqrt(c*c+s*s);}return e/9;}
+function propagate(nodes){
+  const out=nodes.map(()=>new Float32Array(18));
+  for(let i=0;i<nodes.length;i++){
+    const n=nodes[i];
+    for(let band=0;band<9;band++){
+      let rc=n.sh[band*2]*.7,rs=n.sh[band*2+1]*.7;
+      for(const nb of n.neighbors){rc+=nodes[nb].sh[band*2]*.1;rs+=nodes[nb].sh[band*2+1]*.1;}
+      const l=Math.floor(Math.sqrt(band)),angle=l*.1,c=Math.cos(angle),s=Math.sin(angle);
+      const rc2=rc*c-rs*s,rs2=rc*s+rs*c;
+      const nb2=(band+1)%9,xc=n.sh[nb2*2]*.02,xs=n.sh[nb2*2+1]*.02;
+      let mc=rc2+xc,ms=rs2+xs;
+      const len=Math.sqrt(mc*mc+ms*ms)||1e-5;
+      mc=mc/len*Math.min(len,1)+.002;ms=ms/len*Math.min(len,1)+.001;
+      out[i][band*2]=mc*.99;out[i][band*2+1]=ms*.99;
+    }
+  }
+  for(let i=0;i<nodes.length;i++){nodes[i].sh=out[i];nodes[i].energy=nodeEnergy(nodes[i]);}
+}
+function inject(nodes,idx,band,amp){
+  if(idx>=nodes.length||band>=9)return;
+  nodes[idx].sh[band*2]+=amp;nodes[idx].sh[band*2+1]+=amp*.5;
+}
+
+// ── ARC system ────────────────────────────────────────────────────────────────
+const arcs=[];
+function recordArc(nodes,fromIdx,toIdx,quality){
+  arcs.push({from:nodes[fromIdx].pos,to:nodes[toIdx].pos,quality,entropy:1-quality,age:0});
+  if(arcs.length>32)arcs.shift();
+}
+function slerp(a,b,t){
+  const cosA=a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+  const cA=Math.max(-1,Math.min(1,cosA)),A=Math.acos(cA);
+  if(A<1e-6)return a;
+  const s=Math.sin(A);
+  return[(Math.sin((1-t)*A)*a[0]+Math.sin(t*A)*b[0])/s,
+         (Math.sin((1-t)*A)*a[1]+Math.sin(t*A)*b[1])/s,
+         (Math.sin((1-t)*A)*a[2]+Math.sin(t*A)*b[2])/s];
+}
+
+// ── Canvas 3D projection ──────────────────────────────────────────────────────
+let rotX=.4,rotY=0,rotZ=0;
+function project(p,W,H){
+  // Simple rotation + orthographic
+  const[x,y,z]=p;
+  const rx=x,ry=y*Math.cos(rotX)-z*Math.sin(rotX),rz=y*Math.sin(rotX)+z*Math.cos(rotX);
+  const rx2=rx*Math.cos(rotY)+rz*Math.sin(rotY),ry2=ry,rz2=-rx*Math.sin(rotY)+rz*Math.cos(rotY);
+  const scale=Math.min(W,H)*0.35;
+  return[W/2+rx2*scale,H/2-ry2*scale,rz2];
+}
+
+// ── Rendering ─────────────────────────────────────────────────────────────────
+function phaseToHSL(phase,energy){
+  const h=((phase/(2*PI))*360)|0;
+  const s=Math.round(40+energy*50),l=Math.round(30+energy*30);
+  return`hsl(${h},${s}%,${l}%)`;
+}
+
+function render(ctx,W,H,nodes,faces,tick,piPhase,showGreen,showSpheres,showArcs,showGrid){
+  ctx.clearRect(0,0,W,H);
+
+  // ── Layer 1: Vector green screen (S² coordinate grid) ────────────────────
+  if(showGreen){
+    // Draw sphere outline
+    const cx=W/2,cy=H/2,r=Math.min(W,H)*0.35;
+    const grd=ctx.createRadialGradient(cx,cy,r*.2,cx,cy,r);
+    grd.addColorStop(0,'rgba(0,30,12,0.95)');grd.addColorStop(1,'rgba(0,8,3,0.98)');
+    ctx.beginPath();ctx.arc(cx,cy,r,0,2*PI);ctx.fillStyle=grd;ctx.fill();
+    // Grid lines: latitude circles
+    if(showGrid){
+      for(let lat=0;lat<=180;lat+=30){
+        const theta=lat*PI/180,sinT=Math.sin(theta),cosT=Math.cos(theta);
+        const yr=cy-cosT*r,ellR=sinT*r;
+        ctx.beginPath();ctx.ellipse(cx,yr,ellR,ellR*.35,0,0,2*PI);
+        ctx.strokeStyle=lat===90?'rgba(0,150,50,.6)':'rgba(0,80,25,.3)';
+        ctx.lineWidth=lat===90?1.5:.5;ctx.stroke();
+      }
+      // Longitude lines
+      for(let lon=0;lon<360;lon+=30){
+        const angle=lon*PI/180;
+        const x1=cx+Math.sin(angle)*r,y1=cy;
+        const x2=cx-Math.sin(angle)*r,y2=cy;
+        ctx.beginPath();ctx.moveTo(x1,y1);ctx.quadraticCurveTo(cx,cy+r*.35,x2,y2);
+        ctx.strokeStyle=lon===0?'rgba(0,150,50,.6)':'rgba(0,80,25,.25)';
+        ctx.lineWidth=lon===0?1.5:.5;ctx.stroke();
+      }
+    }
+    // π-phase pulse ring
+    const pulseR=r*(0.97+0.03*Math.sin(piPhase*2));
+    ctx.beginPath();ctx.arc(cx,cy,pulseR,0,2*PI);
+    ctx.strokeStyle=`rgba(0,${100+Math.sin(piPhase)*80|0},40,${0.3+0.2*Math.sin(piPhase*3)})`;
+    ctx.lineWidth=1;ctx.stroke();
+  }
+
+  // ── Layer 2: ARC trajectories ─────────────────────────────────────────────
+  if(showArcs&&arcs.length){
+    for(const arc of arcs){
+      const pts=[];for(let t=0;t<=1;t+=.05)pts.push(project(slerp(arc.from,arc.to,t),W,H));
+      if(pts.length<2)continue;
+      ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
+      for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i][0],pts[i][1]);
+      const hue=arc.entropy<.5?180:40;
+      ctx.strokeStyle=`hsla(${hue},90%,60%,${arc.quality*.7})`;
+      ctx.lineWidth=arc.quality*2;ctx.stroke();
+      arc.age++;
+    }
+    // Fade old arcs
+    for(let i=arcs.length-1;i>=0;i--)if(arcs[i].age>200)arcs.splice(i,1);
+  }
+
+  // ── Layer 3: Optical node spheres ─────────────────────────────────────────
+  if(showSpheres&&nodes.length){
+    // Sort back-to-front by projected Z
+    const projected=nodes.map((n,i)=>({...project(n.pos,W,H),n,i}));
+    projected.sort((a,b)=>a[2]-b[2]);
+
+    for(const{0:px,1:py,2:pz,n,i}of projected){
+      const r=Math.max(3,n.energy*22);
+      const col=phaseToHSL(n.phase,n.energy);
+      // Glow
+      if(n.energy>.1){
+        const g=ctx.createRadialGradient(px,py,r*.3,px,py,r*2.5);
+        g.addColorStop(0,col.replace('hsl','hsla').replace(')',',0.3)'));
+        g.addColorStop(1,'transparent');
+        ctx.beginPath();ctx.arc(px,py,r*2.5,0,2*PI);ctx.fillStyle=g;ctx.fill();
+      }
+      // Sphere body
+      const sg=ctx.createRadialGradient(px-r*.3,py-r*.3,r*.1,px,py,r);
+      sg.addColorStop(0,col.replace('hsl','hsla').replace(')',',0.95)'));
+      sg.addColorStop(.7,col.replace('hsl','hsla').replace(')',',0.7)'));
+      sg.addColorStop(1,'rgba(0,0,0,0.8)');
+      ctx.beginPath();ctx.arc(px,py,r,0,2*PI);ctx.fillStyle=sg;ctx.fill();
+    }
+  }
+}
+
+// ── Main ─────────────────────────────────────────────────────────────────────
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height;
+
+let nodes=[],faces=[],tick=0,running=true,piPhase=0;
+let subdivLevel=2,seedIdx=0;
+let showGreen=true,showSpheres=true,showArcs=true,showGrid=true;
+
+function init(lvl=2){
+  subdivLevel=lvl;const{nodes:n,faces:f}=buildIcosphere(lvl);
+  nodes=n;faces=f;seedSH(nodes);tick=0;piPhase=0;arcs.length=0;seedIdx=0;
+  document.getElementById('nodeCount').textContent=nodes.length;
+  log(`Pop: icosphere lv${lvl} — ${nodes.length} optical nodes`,'tick');
+}
+init(2);
+
+function log(msg,cls=''){
+  const el=document.getElementById('log');
+  const d=document.createElement('div');
+  if(cls)d.className=cls;
+  d.textContent=`[t${tick}] ${msg}`;
+  el.appendChild(d);el.scrollTop=el.scrollHeight;
+  if(el.children.length>60)el.children[0].remove();
+}
+
+const phaseNames=['Pop (0)','Wo (π/4)','Sek (π/2)','Chʼen (3π/4)','Xul (π)'];
+let frameCount=0;
+
+function step(){
+  piPhase=(piPhase+PI/8)%(2*PI);
+  const phaseIdx=Math.round(piPhase/(PI/4))%5;
+  document.getElementById('phaseLabel').textContent=phaseNames[phaseIdx]??'Sek';
+  document.getElementById('phaseBar').style.width=`${(piPhase/(2*PI))*100}%`;
+
+  // K'UHUL phase execution
+  switch(phaseIdx){
+    case 0: // Pop: record best arc
+      if(nodes.length>1&&tick%20===0){
+        const best=nodes.reduce((m,n,i)=>n.energy>m.e?{i,e:n.energy}:m,{i:0,e:0});
+        const far=nodes.reduce((m,n,i)=>{
+          const d=nodes[seedIdx].pos.reduce((s,v,k)=>s+(v-n.pos[k])**2,0);
+          return d>m.d?{i,d}:m;},{i:0,d:0});
+        recordArc(nodes,seedIdx,far.i,nodes[best.i].energy);
+        if(tick%20===0)log(`Pop: ARC recorded → node ${far.i}`,'ev');
+      }
+      break;
+    case 1: // Wo: bind — inject into seed cluster
+      inject(nodes,seedIdx,1,0.3);
+      inject(nodes,seedIdx,3,0.2);
+      if(tick%30===0)log(`Wo: inject band1+3 → node ${seedIdx}`,'ev');
+      break;
+    case 2: // Sek: iGPU dispatch — propagate SH wave
+      propagate(nodes);
+      // Rotate seed
+      if(tick%15===0)seedIdx=(seedIdx+7)%nodes.length;
+      break;
+    case 3: // Ch'en: collect coherence
+      break;
+    case 4: // Xul: close tick
+      tick++;
+      document.getElementById('tickCount').textContent=tick;
+      break;
+  }
+
+  // Update stats
+  const coh=nodes.reduce((s,n)=>s+n.energy,0)/nodes.length;
+  document.getElementById('coherence').textContent=coh.toFixed(4);
+  document.getElementById('arcCount').textContent=arcs.length;
+  document.getElementById('seedNode').textContent=seedIdx;
+
+  // Auto-rotate
+  rotY+=0.004;
+
+  render(ctx,W,H,nodes,faces,tick,piPhase,showGreen,showSpheres,showArcs,showGrid);
+
+  if(running)requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+document.getElementById('btnRun').onclick=()=>{running=true;requestAnimationFrame(step);};
+document.getElementById('btnPause').onclick=()=>{running=false;};
+document.getElementById('btnReset').onclick=()=>init(subdivLevel);
+document.getElementById('btnInject').onclick=()=>{
+  const i=(Math.random()*nodes.length)|0;
+  inject(nodes,i,0,1.0);log(`Manual inject → node ${i}`,'warn');};
+
+function togBtn(id,get,set){
+  const b=document.getElementById(id);
+  b.onclick=()=>{set(!get());b.classList.toggle('active');};
+}
+togBtn('btnGreen',()=>showGreen,v=>{showGreen=v});
+togBtn('btnSpheres',()=>showSpheres,v=>{showSpheres=v});
+togBtn('btnArcs',()=>showArcs,v=>{showArcs=v});
+togBtn('btnGrid',()=>showGrid,v=>{showGrid=v});
+
+[['lv1',1],['lv2',2],['lv3',3]].forEach(([id,lv])=>{
+  document.getElementById(id).onclick=()=>{
+    document.querySelectorAll('[id^=lv]').forEach(b=>b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    init(lv);if(running)requestAnimationFrame(step);
+  };
+});
+</script>
+</body>
+</html>

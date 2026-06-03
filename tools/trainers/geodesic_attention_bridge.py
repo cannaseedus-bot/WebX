@@ -69,109 +69,99 @@ def geodesic_dist_matrix(p: torch.Tensor, q: torch.Tensor) -> torch.Tensor:
 
 class ARCWeightMatrix:
     """
-    Accumulates arc quality scores into an attention bias matrix.
-    Each (src_token, dst_token) pair records the quality of semantic arcs
-    between those tokens observed during training.
-
-    Connection to replayable-arcs.js / SphericalReplayBuffer:
-      arc.quality  = 0.5 * length_score + 0.5 * entropy_score
-      arc.entropy  = mean entropy along path (lower = more certain = better bias)
-      Here we store: bias[i,j] += quality * exp(-entropy)
+    Accumulates arc quality scores as a SPARSE dict.
+    Dense [50257,50257] float16+int32 = 14GB — killed the process.
+    Sparse dict: zero memory until a pair is seen, ~4 bytes/pair.
+    268K pairs from previous run = ~1MB. 1500 steps ≈ 300K pairs = ~1MB.
     """
     def __init__(self, vocab_size: int, dtype=np.float16):
-        self.vocab  = vocab_size
-        self._bias  = np.zeros((vocab_size, vocab_size), dtype=dtype)
-        self._count = np.zeros((vocab_size, vocab_size), dtype=np.int32)
+        self.vocab       = vocab_size
+        self._pairs: dict = {}   # (src, dst) -> float bias value
+        self._counts: dict = {}  # (src, dst) -> int count
         self._total_arcs = 0
 
-    def record_arc(self, src_tokens: np.ndarray, dst_tokens: np.ndarray,
-                   quality: float, entropy: float):
-        """
-        Record a training arc from src_tokens → dst_tokens with given quality.
-        quality ∈ [0,1], entropy ∈ [0,1]
-        """
-        if quality < MIN_QUALITY:
-            return
+    # ── internal helpers ──
+    def _get(self, s, d): return self._pairs.get((s, d), 0.0)
+    def _set(self, s, d, v): self._pairs[(s, d)] = v; self._counts[(s, d)] = self._counts.get((s,d),0)+1
+
+    def record_arc(self, src_tokens, dst_tokens, quality: float, entropy: float):
+        if quality < MIN_QUALITY: return
         weight = quality * math.exp(-entropy)
-        for s in src_tokens[:32]:  # cap per arc
+        for s in src_tokens[:32]:
             for d in dst_tokens[:32]:
                 if 0 <= s < self.vocab and 0 <= d < self.vocab:
-                    self._bias[s, d]  += weight
-                    self._count[s, d] += 1
+                    self._set(s, d, self._get(s, d) + weight)
         self._total_arcs += 1
 
     def record_batch(self, input_ids: torch.Tensor, loss_per_token):
-        """
-        Auto-record arcs from a training batch.
-        input_ids: [B, T] token ids  OR  [B] row indices into the dataset
-        loss_per_token: scalar or [B, T] tensor
-        Called after each training step.
-        """
         loss_val = float(loss_per_token.detach()) if hasattr(loss_per_token, 'detach') \
                    else float(loss_per_token)
         quality = math.exp(-loss_val / 10.0)
-        if quality < MIN_QUALITY:
-            return
-        if input_ids.ndim == 1 or input_ids.shape[-1] < 2:
-            return   # row indices only — skip, need actual token ids
+        if quality < MIN_QUALITY: return
+        if input_ids.ndim == 1 or input_ids.shape[-1] < 2: return
         B, T = input_ids.shape
-        for b in range(min(B, 4)):   # cap at 4 sequences per step for speed
+        for b in range(min(B, 4)):
             for t in range(T - 1):
                 src = int(input_ids[b, t])
                 dst = int(input_ids[b, t + 1])
                 if 0 <= src < self.vocab and 0 <= dst < self.vocab:
-                    self._bias[src, dst] = 0.99 * self._bias[src, dst] + 0.01 * quality
-                    self._count[src, dst] += 1
+                    old = self._get(src, dst)
+                    self._set(src, dst, old * 0.99 + quality * 0.01)
 
     def bias_for_tokens(self, token_ids: torch.Tensor) -> torch.Tensor:
-        """
-        Return arc bias submatrix for a sequence of token ids.
-        token_ids: [T]  →  bias: [T, T]  (additive attention logit bias)
-        """
+        if not self._pairs:
+            return None   # no arcs yet — skip bias entirely
         ids = token_ids.cpu().numpy().astype(np.int32)
-        bias = self._bias[np.ix_(ids, ids)]   # [T, T] submatrix
-        return torch.from_numpy(bias.astype(np.float32))
+        T = len(ids)
+        bias = np.zeros((T, T), dtype=np.float32)
+        # Only iterate over actually-recorded pairs, not all T² combinations
+        for (s, d), v in self._pairs.items():
+            si = np.where(ids == s)[0]
+            di = np.where(ids == d)[0]
+            if len(si) and len(di):
+                bias[np.ix_(si, di)] = v
+        return torch.from_numpy(bias)
 
     def save(self, path: pathlib.Path):
-        # Dense [50257,50257] = 10GB (int32) / 5GB (float16) — never save dense.
-        # Save only non-zero entries as sparse COO (row, col, value).
-        rows, cols = np.nonzero(self._bias)
-        if len(rows) == 0:
-            print(f"[ARCWeights] Nothing to save (0 non-zero pairs)")
+        # Sparse COO from dict — zero allocation, ~4 bytes/pair
+        if not self._pairs:
+            print(f"[ARCWeights] Nothing to save (0 pairs)")
             return
-        values = self._bias[rows, cols]
-        counts = self._count[rows, cols]
-        np.save(str(path / 'arc_bias_rows.npy'),   rows.astype(np.int32))
-        np.save(str(path / 'arc_bias_cols.npy'),   cols.astype(np.int32))
-        np.save(str(path / 'arc_bias_vals.npy'),   values.astype(np.float16))
-        np.save(str(path / 'arc_bias_counts.npy'), counts.astype(np.int32))
-        size_kb = (rows.nbytes + cols.nbytes + values.nbytes + counts.nbytes) // 1024
-        print(f"[ARCWeights] Saved {len(rows):,} arc pairs ({size_kb} KB sparse) → {path}")
+        rows = np.array([k[0] for k in self._pairs], dtype=np.int32)
+        cols = np.array([k[1] for k in self._pairs], dtype=np.int32)
+        vals = np.array(list(self._pairs.values()), dtype=np.float16)
+        cnts = np.array([self._counts.get(k,1) for k in self._pairs], dtype=np.int32)
+        np.save(str(path / 'arc_bias_rows.npy'),   rows)
+        np.save(str(path / 'arc_bias_cols.npy'),   cols)
+        np.save(str(path / 'arc_bias_vals.npy'),   vals)
+        np.save(str(path / 'arc_bias_counts.npy'), cnts)
+        size_kb = (rows.nbytes + cols.nbytes + vals.nbytes + cnts.nbytes) // 1024
+        print(f"[ARCWeights] Saved {len(rows):,} arc pairs ({size_kb} KB sparse) -> {path}")
 
     def load(self, path: pathlib.Path):
         rf = path / 'arc_bias_rows.npy'
         if not rf.exists():
-            # Legacy dense format fallback
-            bf = path / 'arc_bias.npy'
-            if bf.exists(): self._bias = np.load(str(bf))
             return
         rows   = np.load(str(rf))
         cols   = np.load(str(path / 'arc_bias_cols.npy'))
-        vals   = np.load(str(path / 'arc_bias_vals.npy')).astype(np.float64)
+        vals   = np.load(str(path / 'arc_bias_vals.npy')).astype(np.float32)
         counts = np.load(str(path / 'arc_bias_counts.npy'))
-        self._bias[rows, cols]  = vals
-        self._count[rows, cols] = counts
-        print(f"[ARCWeights] Loaded {len(rows):,} arc pairs")
+        for r, c, v, n in zip(rows, cols, vals, counts):
+            self._pairs[(int(r), int(c))]  = float(v)
+            self._counts[(int(r), int(c))] = int(n)
+        print(f"[ARCWeights] Loaded {len(rows):,} arc pairs from {path}")
 
     @property
     def total_arcs(self): return self._total_arcs
 
     def stats(self):
-        nonzero = int((self._count > 0).sum())
+        nonzero = len(self._pairs)
+        max_bias = max(self._pairs.values()) if self._pairs else 0.0
         return {'total_arcs': self._total_arcs,
                 'active_pairs': nonzero,
                 'coverage': nonzero / (self.vocab * self.vocab),
-                'max_bias': float(self._bias.max())}
+                'max_bias': float(max_bias),
+                'memory_kb': (nonzero * 12) // 1024}
 
 # ─── Geodesic map compiler (CPU mirror of spherical_map_compiler.hlsl) ───────
 

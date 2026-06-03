@@ -89,8 +89,9 @@ class GPT2Block(nn.Module):
                 geodesic_arc_attention, project_to_sphere)
             arc_bias = None
             if self.arc_weights is not None and token_ids is not None:
-                arc_bias = self.arc_weights.bias_for_tokens(
-                    token_ids[0, :T]).to(x.device).clamp(-5.0, 5.0)
+                raw = self.arc_weights.bias_for_tokens(token_ids[0, :T])
+                if raw is not None:
+                    arc_bias = raw.to(x.device).clamp(-5.0, 5.0)
             out = geodesic_arc_attention(q, k, v,
                                          arc_bias=arc_bias,
                                          temperature=self.geo_temperature,
@@ -132,10 +133,9 @@ class GPT2(nn.Module):
         pos  = torch.arange(T, device=idx.device)
         x = self.wte(idx) + self.wpe(pos)
         for block in self.blocks:
-            # Pass token_ids so geodesic attention can look up ARC biases
             if hasattr(block, 'geo_map') and block.geo_map is not None:
-                x = block._ln(x, block.ln_1_w, block.ln_1_b)
-                x = x + block._attn(x, token_ids=idx)
+                # Correct pre-norm residual: x = x + f(LN(x))
+                x = x + block._attn(block._ln(x, block.ln_1_w, block.ln_1_b), token_ids=idx)
                 x = x + block._mlp(block._ln(x, block.ln_2_w, block.ln_2_b))
             else:
                 x = block(x)
@@ -245,7 +245,13 @@ def train(model, data, steps, batch, lr, log_every, ckpt_every, out_dir,
         y = data[rows, 1:]
 
         opt.zero_grad(set_to_none=True)
-        logits = model(x)                                        # [B, T, vocab]
+        try:
+            logits = model(x)
+        except Exception as e:
+            import traceback
+            print(f"\n[CRASH] model(x) failed on step {step}:")
+            traceback.print_exc()
+            raise
         loss   = F.cross_entropy(logits.reshape(-1, logits.size(-1)), y.reshape(-1))
 
         if not loss.isfinite():

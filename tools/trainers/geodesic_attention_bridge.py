@@ -43,7 +43,7 @@ import torch.nn.functional as F
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 
-CACHE_DIR   = pathlib.Path(r"C:\Users\canna\.gpu_trainer\bin\geodesic_cache")
+CACHE_DIR   = pathlib.Path(r"E:\models\GPT2\geodesic_cache")  # E: has 1.2TB free; C: had only 10GB
 KNN         = 32       # nearest neighbours per token (matches spherical_map_compiler.hlsl)
 RADIUS      = 1.0      # unit sphere
 ARC_DECAY   = 0.99     # entropy decay per replay (matches arc_replay_kernel.hlsl fogReduction)
@@ -133,14 +133,35 @@ class ARCWeightMatrix:
         return torch.from_numpy(bias.astype(np.float32))
 
     def save(self, path: pathlib.Path):
-        np.save(str(path / 'arc_bias.npy'),  self._bias)
-        np.save(str(path / 'arc_count.npy'), self._count)
+        # Dense [50257,50257] = 10GB (int32) / 5GB (float16) — never save dense.
+        # Save only non-zero entries as sparse COO (row, col, value).
+        rows, cols = np.nonzero(self._bias)
+        if len(rows) == 0:
+            print(f"[ARCWeights] Nothing to save (0 non-zero pairs)")
+            return
+        values = self._bias[rows, cols]
+        counts = self._count[rows, cols]
+        np.save(str(path / 'arc_bias_rows.npy'),   rows.astype(np.int32))
+        np.save(str(path / 'arc_bias_cols.npy'),   cols.astype(np.int32))
+        np.save(str(path / 'arc_bias_vals.npy'),   values.astype(np.float16))
+        np.save(str(path / 'arc_bias_counts.npy'), counts.astype(np.int32))
+        size_kb = (rows.nbytes + cols.nbytes + values.nbytes + counts.nbytes) // 1024
+        print(f"[ARCWeights] Saved {len(rows):,} arc pairs ({size_kb} KB sparse) → {path}")
 
     def load(self, path: pathlib.Path):
-        bf = path / 'arc_bias.npy'
-        cf = path / 'arc_count.npy'
-        if bf.exists(): self._bias  = np.load(str(bf))
-        if cf.exists(): self._count = np.load(str(cf))
+        rf = path / 'arc_bias_rows.npy'
+        if not rf.exists():
+            # Legacy dense format fallback
+            bf = path / 'arc_bias.npy'
+            if bf.exists(): self._bias = np.load(str(bf))
+            return
+        rows   = np.load(str(rf))
+        cols   = np.load(str(path / 'arc_bias_cols.npy'))
+        vals   = np.load(str(path / 'arc_bias_vals.npy')).astype(np.float64)
+        counts = np.load(str(path / 'arc_bias_counts.npy'))
+        self._bias[rows, cols]  = vals
+        self._count[rows, cols] = counts
+        print(f"[ARCWeights] Loaded {len(rows):,} arc pairs")
 
     @property
     def total_arcs(self): return self._total_arcs

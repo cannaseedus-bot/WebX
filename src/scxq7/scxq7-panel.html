@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SCXQ7 Ω — Atomic Black Panel Guide</title>
+
+<style>
+:root{
+  --bg:#05060a;
+  --panel:#0c0f17;
+  --edge:#1b2233;
+  --text:#e6ecff;
+  --muted:#8fa3ff;
+  --accent:#6ef3ff;
+  --danger:#ff5e7a;
+  --good:#7affc8;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--mono);
+  line-height:1.4;
+}
+
+/* HEADER */
+.header{
+  position:sticky;
+  top:0;
+  background:#070913;
+  border-bottom:1px solid var(--edge);
+  padding:14px 24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  z-index:100;
+}
+.header .title{
+  color:var(--accent);
+  font-weight:bold;
+}
+.header .meta{
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* LAYOUT */
+.wrapper{
+  display:grid;
+  grid-template-columns: 1fr 320px;
+  gap:32px;
+  max-width:1300px;
+  margin:40px auto;
+  padding:0 24px;
+}
+.panel{
+  background:var(--panel);
+  border:1px solid var(--edge);
+  padding:40px;
+}
+.legend{
+  background:#0a0e18;
+  border:1px solid var(--edge);
+  padding:20px;
+  position:sticky;
+  top:80px;
+  height:fit-content;
+}
+
+/* CONTENT */
+h1,h2,h3{margin:0 0 14px 0;color:var(--accent)}
+h1{font-size:20px}
+h2{font-size:16px;margin-top:32px}
+pre{
+  background:#0a0d15;
+  padding:14px;
+  border:1px solid var(--edge);
+  overflow:auto;
+  font-size:13px;
+}
+.block{
+  border-left:3px solid var(--accent);
+  padding-left:12px;
+  margin:18px 0;
+}
+.rule{
+  border-left:3px solid var(--danger);
+  padding-left:12px;
+  margin:18px 0;
+}
+.good{
+  border-left:3px solid var(--good);
+  padding-left:12px;
+  margin:18px 0;
+}
+
+/* LEGEND */
+.legend h3{
+  margin-top:0;
+  font-size:14px;
+}
+.symbol{
+  cursor:pointer;
+  padding:6px 8px;
+  margin:4px 0;
+  border:1px solid transparent;
+  font-size:13px;
+}
+.symbol:hover{
+  border-color:var(--accent);
+}
+.symbol.active{
+  border-color:var(--good);
+  background:#111626;
+}
+.desc{
+  margin-top:12px;
+  font-size:12px;
+  color:var(--muted);
+  min-height:60px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">SCXQ7 Ω — Sovereign Computational Object</div>
+  <div class="meta">Kernel Law · SCO/1 · SCXQ2-IA/1 · SVG-3D Tensors · Trace</div>
+</div>
+
+<div class="wrapper">
+
+<div class="panel">
+
+<h1>Atomic Black Panel Guide</h1>
+
+<h2>SCXQ7 Kernel</h2>
+<pre>
+MAGIC: 0x53 0x43 0x58 0x51 0x37 0x00 0xAA 0x55
+Kernel: 256 bytes immutable
+Authority: file-internal
+Hash: SCXQ7_KERNEL_LAW.v1
+</pre>
+
+<div class="rule">
+Host may verify. Host may project. Host may never extend execution.
+</div>
+
+<h2>SCO/1 Structure</h2>
+<pre>
+header
+kernel
+compressed_state
+μ-op_methods
+projection_config
+persistence_rules
+trace
+</pre>
+
+<h2>SCXQ2-IA/1</h2>
+<pre>
+Inference = μ-op execution
+Compression = address space
+Symbols = semantic microcode
+</pre>
+
+<div class="good">
+SCXQ2 = microcode for thought.
+</div>
+
+<h2>Trace</h2>
+<pre>
+t: monotonic
+ctx: domain
+op: μ-op
+state: delta-only
+hash: chained
+</pre>
+
+<h2>SVG-3D Tensor</h2>
+<pre>
+node  = belief variable
+edge  = constraint
+group = domain
+weight = scalar/vector
+</pre>
+
+<div class="block">
+Geometry is computation.
+Rendering is optional.
+</div>
+
+<h2>Learning</h2>
+<pre>
+update: @∇
+objective: @∑ reward
+constraints:
+  - no new μ-ops
+  - no kernel mutation
+  - append-only trace
+</pre>
+
+<div class="rule">
+Inference is law-bound.
+Learning is bounded.
+Authority is internal.
+</div>
+
+</div>
+
+<!-- LIVE SYMBOL LEGEND -->
+<div class="legend">
+<h3>SCXQ2 Symbol Legend</h3>
+
+<div class="symbol" data-desc="Branch if condition true.">?</div>
+<div class="symbol" data-desc="Else branch.">:</div>
+<div class="symbol" data-desc="Logical AND intersection.">&amp;</div>
+<div class="symbol" data-desc="Logical OR union.">|</div>
+<div class="symbol" data-desc="Logical NOT negation.">!</div>
+
+<div class="symbol" data-desc="Mathematical reasoning domain.">@π</div>
+<div class="symbol" data-desc="Transformation domain.">@λ</div>
+<div class="symbol" data-desc="Gradient / optimization.">@∇</div>
+<div class="symbol" data-desc="Aggregation / summation.">@∑</div>
+
+<div class="symbol" data-desc="Control authority marker.">@@</div>
+<div class="symbol" data-desc="State mutation write.">&lt;-</div>
+<div class="symbol" data-desc="Invocation / call.">-&gt;</div>
+
+<div class="desc" id="legend-desc">
+Click a symbol to see its semantic μ-op meaning.
+</div>
+</div>
+
+</div>
+
+<script>
+const symbols = document.querySelectorAll('.symbol');
+const desc = document.getElementById('legend-desc');
+
+symbols.forEach(sym=>{
+  sym.addEventListener('click',()=>{
+    symbols.forEach(s=>s.classList.remove('active'));
+    sym.classList.add('active');
+    desc.textContent = sym.dataset.desc;
+  });
+});
+</script>
+
+</body>
+</html>

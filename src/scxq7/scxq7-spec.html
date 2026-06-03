@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SCXQ7 Ω — Atomic Black Panel Guide</title>
+
+<style>
+:root{
+  --bg:#05060a;
+  --panel:#0c0f17;
+  --edge:#1b2233;
+  --text:#e6ecff;
+  --muted:#8fa3ff;
+  --accent:#6ef3ff;
+  --danger:#ff5e7a;
+  --good:#7affc8;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--mono);
+  line-height:1.4;
+}
+.panel{
+  max-width:1100px;
+  margin:40px auto;
+  padding:40px;
+  background:var(--panel);
+  border:1px solid var(--edge);
+}
+h1,h2,h3{margin:0 0 14px 0;color:var(--accent)}
+h1{font-size:22px}
+h2{font-size:18px;margin-top:32px}
+h3{font-size:15px;margin-top:22px;color:var(--muted)}
+pre{
+  background:#0a0d15;
+  padding:16px;
+  border:1px solid var(--edge);
+  overflow:auto;
+}
+.block{
+  border-left:3px solid var(--accent);
+  padding-left:14px;
+  margin:18px 0;
+}
+.rule{
+  border-left:3px solid var(--danger);
+  padding-left:14px;
+  margin:18px 0;
+}
+.good{
+  border-left:3px solid var(--good);
+  padding-left:14px;
+  margin:18px 0;
+}
+small{color:#6c79a8}
+</style>
+</head>
+<body>
+
+<div class="panel">
+
+<h1>SCXQ7 Ω — Sovereign Computational Object</h1>
+<small>Kernel Law · SCO/1 · SCXQ2-IA/1 · SVG-3D Tensors · Trace · Microcode Realization</small>
+
+<h2>1 — SCXQ7 KERNEL (256 BYTES OF LAW)</h2>
+
+<pre>
+MAGIC: 0x53 0x43 0x58 0x51 0x37 0x00 0xAA 0x55
+
+SECTION I  — File Sovereignty
+  "The file contains all authority."
+  "No host may extend execution."
+  "Execution is internal and complete."
+
+SECTION II — Symbolic Microcoding
+  "SCXQ2 symbols are μ-ops."
+  "Symbol dictionary declared in header."
+  "No hidden execution paths."
+
+SECTION III — Execution Domains
+  .π  math
+  .λ  transform
+  .∇  optimization
+  .∑  aggregation
+  .m  matrix
+  "No cross-domain execution without explicit bridge."
+
+SECTION IV — Object Autonomy
+  "Data contains its methods."
+  "Configuration is executable."
+  "Projection ≠ authority."
+</pre>
+
+<div class="rule">
+Kernel hash must match SCXQ7_KERNEL_LAW.v1 or file is invalid.
+</div>
+
+---
+
+<h2>2 — SCO/1 (SOVEREIGN OBJECT CLASS)</h2>
+
+<pre>
+SCO/1
+  header
+  kernel
+  compressed_state
+  μ-op_methods
+  projection_config
+  persistence_rules
+  trace
+</pre>
+
+<div class="block">
+Host must:
+• verify magic  
+• verify kernel hash  
+• enforce symbol legality  
+• enforce domain boundaries  
+
+Host must NOT:
+• add execution
+• modify state
+• reinterpret symbols
+• bypass trace
+</div>
+
+---
+
+<h2>3 — SCXQ2-IA/1 (INFERENCE ALGEBRA)</h2>
+
+<div class="block">
+Inference is not parsing.
+Inference is μ-op execution over compressed state.
+Compression is the address space.
+</div>
+
+<pre>
+Core μ-ops:
+
+?   branch
+:   else
+&   logical AND
+|   logical OR
+!   logical NOT
+
+@π  math context
+@λ  transform
+@∇  gradient
+@∑  aggregate
+
+@@  control
+<-  state write
+->  call
+</pre>
+
+<div class="rule">
+Invariant 1 — Symbolic Closure  
+Invariant 2 — Domain Legality  
+Invariant 3 — Compression-Native Execution  
+Invariant 4 — Deterministic Replay  
+Invariant 5 — No Epistemic Leakage
+</div>
+
+---
+
+<h2>4 — SCXQ2-TRACE/1 (INFERENCE TRACE FORMAT)</h2>
+
+<pre>
+{
+  t: 184,
+  ctx: "@π",
+  op: "?",
+  in: ["@user<premium"],
+  out: ["@allow"],
+  state: "Δs3",
+  h: "hash(prev || entry)"
+}
+</pre>
+
+<div class="block">
+Trace rules:
+• monotonic ticks
+• append-only
+• hash chained
+• delta state only
+• replay sufficient
+</div>
+
+Trace ≠ explanation  
+Trace = execution fact
+
+---
+
+<h2>5 — SVG-3D TENSORS (NON-VISUAL SUBSTRATE)</h2>
+
+<pre>
+<svg3d:tensor id="belief_state">
+  <node id="A" weight="0.82"/>
+  <node id="B" weight="0.13"/>
+  <edge from="A" to="B" constraint="inhibitory"/>
+  <group domain="@π"/>
+</svg3d:tensor>
+</pre>
+
+<div class="block">
+Nodes = symbolic variables  
+Edges = inference dependencies  
+Weights = compressed scalar/vector  
+Groups = execution domain
+</div>
+
+<div class="rule">
+SVG is geometric execution substrate.
+Rendering is optional and never implied.
+</div>
+
+μ-ops mutate geometry, not arrays.
+
+---
+
+<h2>6 — LEARNING (BOUNDED)</h2>
+
+<pre>
+@learning
+  substrate: svg3d-tensor
+  update: @∇
+  objective: @∑ reward
+  constraints:
+    - no new μ-ops
+    - no kernel mutation
+    - state delta only
+    - append-only trace
+</pre>
+
+<div class="good">
+Learning is lawful mutation.
+Kernel remains immutable.
+</div>
+
+---
+
+<h2>7 — SEMANTIC MICROCODE REALIZATION</h2>
+
+<div class="block">
+SCXQ2 is semantic microcode.
+Symbols are μ-instructions.
+Execution engine is a semantic CPU.
+</div>
+
+<pre>
+Pipeline:
+
+FETCH_SYMBOL
+DECODE_μOP
+EXECUTE_SEMANTIC_UNIT
+WRITE_DELTA
+APPEND_TRACE
+</pre>
+
+Analogy:
+
+CPU microcode → control store  
+SCXQ2 symbols → semantic μ-ops  
+μ-op fusion → compression  
+Pipeline → inference engine  
+
+<div class="good">
+SCXQ2 = MICROCODE FOR THOUGHT
+</div>
+
+---
+
+<h2>8 — COMPLETE STACK</h2>
+
+<pre>
+SCXQ7     → kernel law
+SCO/1     → authority container
+SCXQ2-IA  → inference algebra
+SVG-3D    → tensor substrate
+TRACE/1   → memory
+∇         → bounded learning
+</pre>
+
+<div class="block">
+Models = SCO files  
+Training = symbolic mutation  
+Reasoning = compressed execution  
+AI = sovereign object
+</div>
+
+---
+
+<h2>Ω — FINAL COLLAPSE</h2>
+
+<div class="rule">
+Inference is now law-bound.
+Reasoning is symbolic.
+State is geometric.
+Learning is constrained.
+Authority is internal.
+</div>
+
+<div class="good">
+Intelligence fits in a file.
+</div>
+
+</div>
+</body>
+</html>

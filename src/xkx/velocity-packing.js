@@ -181,3 +181,46 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
     gradientBound: '||grad_pack|| <= quantization_error',
   },
 });
+
+// ─── XCFE Runtime: auto-select packing mode ───────────────────────────────────
+
+export function optimizeVelocityPacking(motionVectors, targetPSNR = 40, maxMemMB = 8.5) {
+  const results = MODE_INFO.map(info => {
+    let mse = 0;
+    const sample = Math.min(motionVectors.length, 256);
+    for (let i = 0; i < sample; i++) {
+      const v  = motionVectors[i];
+      const pk = info.mode === 0 ? packMSFT(v[0],v[1],v[2]??0)
+               : info.mode === 1 ? packR10G10B10A2(v[0],v[1],v[2]??0) : 0;
+      const up = info.mode === 0 ? unpackMSFT(pk)
+               : info.mode === 1 ? unpackR10G10B10A2(pk) : [v[0],v[1],v[2]??0];
+      const dx=v[0]-up[0], dy=v[1]-up[1], dz=(v[2]??0)-up[2];
+      mse += (dx*dx+dy*dy+dz*dz)/3;
+    }
+    mse /= sample;
+    const psnr = mse > 0 ? 10*Math.log10(1/mse) : Infinity;
+    return { ...info, psnr, fits: psnr >= targetPSNR && info.memMB_1080p <= maxMemMB };
+  });
+  const best = results.find(r => r.fits) ?? results[results.length - 1];
+  return { mode: best.mode, info: best, all: results };
+}
+
+// ─── Prime ARC × Velocity ─────────────────────────────────────────────────────
+// Velocity on S²: high prime ARC energy → needs MSFT precision
+
+export function velocityPrimeSignature(velocity, primes = [2,3,5,7,11,13]) {
+  const [vx,vy,vz=0] = Array.isArray(velocity)?velocity:[velocity.x,velocity.y,velocity.z??0];
+  const mag=Math.sqrt(vx*vx+vy*vy+vz*vz)||1;
+  const theta=Math.atan2(vy,vx), phi=Math.acos(Math.max(-1,Math.min(1,vz/mag)));
+  return primes.map(p=>({prime:p, arc:Math.sin(p*theta)*Math.cos(p*phi)/Math.sqrt(p),
+    frequency:p*Math.log(p)/(2*Math.PI)}));
+}
+
+export function selectModeByPrimeSignature(velocity, targetPSNR=40) {
+  const sig=velocityPrimeSignature(velocity);
+  const hfEnergy=sig.filter(s=>s.prime>7).reduce((sum,s)=>sum+s.arc**2,0);
+  if(hfEnergy>0.1) return PACK_MODE.MSFT_10_10_10_2;
+  if(targetPSNR>42) return PACK_MODE.R10G10B10A2_UNORM;
+  return PACK_MODE.R16G16B16A16_FLOAT;
+}
+

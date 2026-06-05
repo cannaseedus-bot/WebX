@@ -244,7 +244,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   font-size:10px;color:var(--dim);font-family:var(--font-mono);letter-spacing:2px;
 }
 #splash-actions{
-  display:flex;gap:12px;pointer-events:all;
+  display:flex;gap:12px;pointer-events:auto;  /* auto not all — all is SVG-only */
 }
 .splash-btn{
   padding:10px 22px;font-size:12px;font-weight:600;
@@ -742,10 +742,11 @@ function setTopNav(page){
   });
 }
 
-function nav(page, updateHash=true){
+function nav(page, pushState=true){
   currentPage=page;
   setTopNav(page);
-  if(updateHash) location.hash = page==='home' ? '' : page;
+  // pushState changes URL without firing hashchange — no feedback loop with routeHash()
+  if(pushState) history.pushState({page}, '', page==='home' ? './' : '#'+page);
 
   document.getElementById('src-toggle').style.display='none';
 
@@ -755,7 +756,7 @@ function nav(page, updateHash=true){
   } else if(page==='app'){
     setLoad(30);
     showPanel('frame');
-    document.getElementById('content-frame').src = 'src/index.html';
+    document.getElementById('content-frame').src='src/index.html';
     setBreadcrumb('KUHUL','3D App');
     setLoad(100);
   } else if(page==='demos'){
@@ -765,7 +766,7 @@ function nav(page, updateHash=true){
   } else if(page==='trainer'){
     setLoad(30);
     showPanel('frame');
-    document.getElementById('content-frame').src = 'src/index.html';
+    document.getElementById('content-frame').src='src/index.html';
     setBreadcrumb('KUHUL','Trainer');
     setLoad(100);
   }
@@ -779,7 +780,7 @@ function loadDemo(name, updateHash=true){
   setBreadcrumb('Demos', label);
   document.getElementById('src-toggle').style.display='inline-block';
   setTopNav('demos');
-  if(updateHash) location.hash=`demo:${name}`;
+  if(updateHash) history.pushState({page:'demo',name}, '', `#demo:${name}`);
   setLoad(100);
 }
 
@@ -789,14 +790,14 @@ function loadJsDemo(name){
   document.getElementById('content-frame').src=`examples/js/${name}.html`;
   setBreadcrumb('JS Examples', name);
   setTopNav('demos');
-  location.hash=`demo:js/${name}`;
+  history.pushState({page:'demo',name:`js/${name}`}, '', `#demo:js/${name}`);
   setLoad(100);
 }
 
 function loadDoc(name){
   setLoad(20);
   setTopNav('docs');
-  location.hash=`doc:${name}`;
+  history.pushState({page:'doc',name}, '', `#doc:${name}`);
   showPanel('panel');
   document.getElementById('md-body').innerHTML=
     `<p style="color:var(--muted);font-family:monospace">Loading ${name}.md…</p>`;
@@ -960,19 +961,28 @@ setInterval(checkServer,8000);
 
 // ════════════════════════════════════════════════════════ HASH ROUTING
 
-function routeHash(){
-  const h=location.hash.replace('#','').trim();
-  if(!h||h==='home') { nav('home',false); return; }
-  if(h==='app')          nav('app',false);
-  else if(h==='demos')   nav('demos',false);
-  else if(h==='docs')    nav('docs',false);
-  else if(h==='trainer') nav('trainer',false);
+function routeFromHash(){
+  const h = location.hash.replace('#','').trim();
+  if(!h||h==='home')         { nav('home', false); return; }
+  if(h==='app')                nav('app',     false);
+  else if(h==='demos')         nav('demos',   false);
+  else if(h==='docs')          nav('docs',    false);
+  else if(h==='trainer')       nav('trainer', false);
   else if(h.startsWith('demo:')) loadDemo(h.replace('demo:',''), false);
   else if(h.startsWith('doc:'))  loadDoc(h.replace('doc:',''));
 }
-window.addEventListener('hashchange', routeHash);
-// Route on load (don't overwrite hash the user may have set via bookmark)
-routeHash();
+
+// popstate handles browser back/forward (pushState navigation)
+window.addEventListener('popstate', e => {
+  const s = e.state;
+  if(!s)                      { nav('home', false); return; }
+  if(s.page==='demo')         loadDemo(s.name, false);
+  else if(s.page==='doc')     loadDoc(s.name);
+  else                        nav(s.page || 'home', false);
+});
+
+// On initial load, read the hash (bookmarks / direct links)
+routeFromHash();
 </script>
 </body>
 </html>

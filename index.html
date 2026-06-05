@@ -573,8 +573,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
   </div>
 
-  <!-- iframe for demos -->
-  <iframe id="content-frame" style="display:none" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+  <!-- iframe for demos — no sandbox so SharedArrayBuffer works for same-origin apps -->
+  <iframe id="content-frame" style="display:none" allow="cross-origin-isolated"></iframe>
 
   <!-- markdown / JSON panel -->
   <div id="content-panel" style="display:none">
@@ -725,12 +725,15 @@ function setActiveSidebar(key){
 }
 
 function showPanel(which){
-  document.getElementById('splash-panel').style.display='none';
-  document.getElementById('content-frame').style.display='none';
-  document.getElementById('content-panel').style.display='none';
-  if(which==='splash')  document.getElementById('splash-panel').style.display='flex';
-  if(which==='frame')   document.getElementById('content-frame').style.display='block';
-  if(which==='panel')   document.getElementById('content-panel').style.display='block';
+  const splash = document.getElementById('splash-panel');
+  const frame  = document.getElementById('content-frame');
+  const panel  = document.getElementById('content-panel');
+  splash.style.display = 'none';
+  frame.style.display  = 'none';
+  panel.style.display  = 'none';
+  if(which==='splash'){ splash.style.display='flex'; }
+  if(which==='frame'){  frame.style.display='flex'; frame.style.flex='1'; }
+  if(which==='panel'){  panel.style.display='block'; }
 }
 
 function setTopNav(page){
@@ -739,38 +742,46 @@ function setTopNav(page){
   });
 }
 
-function nav(page){
+function nav(page, updateHash=true){
   currentPage=page;
   setTopNav(page);
+  if(updateHash) location.hash = page==='home' ? '' : page;
+
+  document.getElementById('src-toggle').style.display='none';
 
   if(page==='home'){
     showPanel('splash');
     setBreadcrumb('KUHUL','Home');
-    document.getElementById('src-toggle').style.display='none';
   } else if(page==='app'){
+    setLoad(30);
     showPanel('frame');
-    document.getElementById('content-frame').src='src/index.html';
+    const f=document.getElementById('content-frame');
+    if(!f.src || !f.src.includes('src/index.html')) f.src='src/index.html';
     setBreadcrumb('KUHUL','3D App');
-    document.getElementById('src-toggle').style.display='none';
+    setLoad(100);
   } else if(page==='demos'){
-    loadDemo('mx2lm-directwrite-gpu');
+    loadDemo('mx2lm-directwrite-gpu', false);
   } else if(page==='docs'){
     loadDoc('KUHUL');
   } else if(page==='trainer'){
-    // Open 3D app focused on trainer tab
+    setLoad(30);
     showPanel('frame');
-    document.getElementById('content-frame').src='src/index.html#trainer';
+    const f=document.getElementById('content-frame');
+    f.src='src/index.html';
     setBreadcrumb('KUHUL','Trainer');
+    setLoad(100);
   }
 }
 
-function loadDemo(name){
+function loadDemo(name, updateHash=true){
   setLoad(30);
   showPanel('frame');
   document.getElementById('content-frame').src=`examples/${name}.html`;
-  setBreadcrumb('Demos', name.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()));
+  const label=name.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  setBreadcrumb('Demos', label);
   document.getElementById('src-toggle').style.display='inline-block';
   setTopNav('demos');
+  if(updateHash) location.hash=`demo:${name}`;
   setLoad(100);
 }
 
@@ -780,66 +791,93 @@ function loadJsDemo(name){
   document.getElementById('content-frame').src=`examples/js/${name}.html`;
   setBreadcrumb('JS Examples', name);
   setTopNav('demos');
+  location.hash=`demo:js/${name}`;
   setLoad(100);
 }
 
 function loadDoc(name){
   setLoad(20);
-  fetch(`docs/${name}.md`).then(r=>r.text()).then(md=>{
-    showPanel('panel');
-    document.getElementById('md-body').innerHTML=renderMd(md);
-    document.getElementById('content-panel').scrollTop=0;
-    setBreadcrumb('Docs', name);
-    setTopNav('docs');
-    setLoad(100);
-  }).catch(()=>{
-    // try kuhul/docs
-    fetch(`kuhul/docs/${name}.md`).then(r=>r.text()).then(md=>{
-      showPanel('panel');
-      document.getElementById('md-body').innerHTML=renderMd(md);
-      setBreadcrumb('Docs',name);
-      setTopNav('docs');
-      setLoad(100);
-    }).catch(()=>{
-      document.getElementById('md-body').innerHTML=`<p style="color:var(--muted)">Doc not found: ${name}.md</p>`;
-      showPanel('panel'); setLoad(100);
-    });
-  });
+  setTopNav('docs');
+  location.hash=`doc:${name}`;
+  showPanel('panel');
+  document.getElementById('md-body').innerHTML=
+    `<p style="color:var(--muted);font-family:monospace">Loading ${name}.md…</p>`;
+
+  const tryFetch = urls => {
+    if(!urls.length){
+      document.getElementById('md-body').innerHTML=
+        `<p style="color:var(--red)">Not found: ${name}.md — is the server running?</p>
+         <p style="color:var(--muted);font-size:11px">Start with: <code>node server.cjs</code> then open http://127.0.0.1:7430</p>`;
+      setLoad(100); return;
+    }
+    const [url,...rest]=urls;
+    fetch(url)
+      .then(r=>{ if(!r.ok) throw new Error(r.status); return r.text(); })
+      .then(md=>{
+        document.getElementById('md-body').innerHTML=renderMd(md);
+        document.getElementById('content-panel').scrollTop=0;
+        setBreadcrumb('Docs',name);
+        setLoad(100);
+      })
+      .catch(()=>tryFetch(rest));
+  };
+
+  tryFetch([`docs/${name}.md`, `kuhul/docs/${name}.md`]);
 }
 
 function loadSrc(name){
   setLoad(20);
-  fetch(`src/${name}.js`).then(r=>r.text()).then(src=>{
-    showPanel('panel');
-    document.getElementById('md-body').innerHTML=
-      `<h1>${name}.js</h1><pre><code>${escHtml(src)}</code></pre>`;
-    document.getElementById('content-panel').scrollTop=0;
-    setBreadcrumb('Source',`src/${name}.js`);
-    setLoad(100);
-  }).catch(()=>{setLoad(100)});
+  showPanel('panel');
+  setBreadcrumb('Source',`src/${name}.js`);
+  document.getElementById('md-body').innerHTML=`<p style="color:var(--muted)">Loading…</p>`;
+  fetch(`src/${name}.js`)
+    .then(r=>{ if(!r.ok) throw new Error(r.status); return r.text(); })
+    .then(src=>{
+      document.getElementById('md-body').innerHTML=`<h1>${name}.js</h1><pre><code>${escHtml(src)}</code></pre>`;
+      document.getElementById('content-panel').scrollTop=0;
+      setLoad(100);
+    })
+    .catch(e=>{
+      document.getElementById('md-body').innerHTML=`<p style="color:var(--red)">Could not load src/${name}.js (${e.message})</p>`;
+      setLoad(100);
+    });
 }
 
 function loadRegistry(name){
   setLoad(20);
-  fetch(`registry/${name}.registry.json`).then(r=>r.json()).then(data=>{
-    showPanel('panel');
-    document.getElementById('md-body').innerHTML=
-      `<h1>${name} Registry</h1><pre><code>${escHtml(JSON.stringify(data,null,2))}</code></pre>`;
-    setBreadcrumb('Registry',name);
-    setLoad(100);
-  }).catch(()=>{setLoad(100)});
+  showPanel('panel');
+  setBreadcrumb('Registry',name);
+  document.getElementById('md-body').innerHTML=`<p style="color:var(--muted)">Loading registry…</p>`;
+  fetch(`registry/${name}.registry.json`)
+    .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(data=>{
+      document.getElementById('md-body').innerHTML=
+        `<h1>${name} Registry</h1><pre><code>${escHtml(JSON.stringify(data,null,2))}</code></pre>`;
+      setLoad(100);
+    })
+    .catch(e=>{
+      document.getElementById('md-body').innerHTML=`<p style="color:var(--red)">Registry not found (${e.message})</p>`;
+      setLoad(100);
+    });
 }
 
 function loadManifest(type){
   setLoad(20);
+  showPanel('panel');
   const file=type==='server'?'server.manifest.json':'cache.manifest.json';
-  fetch(file).then(r=>r.json()).then(data=>{
-    showPanel('panel');
-    document.getElementById('md-body').innerHTML=
-      `<h1>${type} Manifest</h1><pre><code>${escHtml(JSON.stringify(data,null,2))}</code></pre>`;
-    setBreadcrumb('Registry',file);
-    setLoad(100);
-  }).catch(()=>{setLoad(100)});
+  setBreadcrumb('Registry',file);
+  document.getElementById('md-body').innerHTML=`<p style="color:var(--muted)">Loading…</p>`;
+  fetch(file)
+    .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(data=>{
+      document.getElementById('md-body').innerHTML=
+        `<h1>${type} Manifest</h1><pre><code>${escHtml(JSON.stringify(data,null,2))}</code></pre>`;
+      setLoad(100);
+    })
+    .catch(e=>{
+      document.getElementById('md-body').innerHTML=`<p style="color:var(--red)">${file} not found (${e.message})</p>`;
+      setLoad(100);
+    });
 }
 
 // ════════════════════════════════════════════════════════ MINIMAL MD RENDERER
@@ -925,14 +963,17 @@ setInterval(checkServer,8000);
 // ════════════════════════════════════════════════════════ HASH ROUTING
 
 function routeHash(){
-  const h=location.hash.replace('#','');
-  if(!h||h==='home') return;
-  if(h==='app')     nav('app');
-  else if(h==='trainer') nav('trainer');
-  else if(h.startsWith('demo:')) loadDemo(h.replace('demo:',''));
+  const h=location.hash.replace('#','').trim();
+  if(!h||h==='home') { nav('home',false); return; }
+  if(h==='app')          nav('app',false);
+  else if(h==='demos')   nav('demos',false);
+  else if(h==='docs')    nav('docs',false);
+  else if(h==='trainer') nav('trainer',false);
+  else if(h.startsWith('demo:')) loadDemo(h.replace('demo:',''), false);
   else if(h.startsWith('doc:'))  loadDoc(h.replace('doc:',''));
 }
-window.addEventListener('hashchange',routeHash);
+window.addEventListener('hashchange', routeHash);
+// Route on load (don't overwrite hash the user may have set via bookmark)
 routeHash();
 </script>
 </body>

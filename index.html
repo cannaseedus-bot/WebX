@@ -189,8 +189,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .cb-btn:hover{color:var(--text);border-color:var(--gold)}
 
 /* Content iframe / panel */
-#content-frame{flex:1;border:none;background:var(--bg)}
-#content-panel{flex:1;overflow:auto;padding:24px 28px}
+#content-frame{flex:1;min-height:0;width:100%;border:none;background:var(--bg);display:block}
+#content-panel{flex:1;min-height:0;overflow:auto;padding:24px 28px}
 #content-panel::-webkit-scrollbar{width:4px}
 #content-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
 
@@ -731,9 +731,9 @@ function showPanel(which){
   splash.style.display = 'none';
   frame.style.display  = 'none';
   panel.style.display  = 'none';
-  if(which==='splash'){ splash.style.display='flex'; }
-  if(which==='frame'){  frame.style.display='flex'; frame.style.flex='1'; }
-  if(which==='panel'){  panel.style.display='block'; }
+  if(which==='splash'){ splash.style.display = 'flex'; }
+  if(which==='frame'){  frame.style.display  = 'block'; }   // block, not flex — iframes collapse with display:flex
+  if(which==='panel'){  panel.style.display  = 'block'; }
 }
 
 function setTopNav(page){
@@ -755,8 +755,7 @@ function nav(page, updateHash=true){
   } else if(page==='app'){
     setLoad(30);
     showPanel('frame');
-    const f=document.getElementById('content-frame');
-    if(!f.src || !f.src.includes('src/index.html')) f.src='src/index.html';
+    document.getElementById('content-frame').src = 'src/index.html';
     setBreadcrumb('KUHUL','3D App');
     setLoad(100);
   } else if(page==='demos'){
@@ -766,8 +765,7 @@ function nav(page, updateHash=true){
   } else if(page==='trainer'){
     setLoad(30);
     showPanel('frame');
-    const f=document.getElementById('content-frame');
-    f.src='src/index.html';
+    document.getElementById('content-frame').src = 'src/index.html';
     setBreadcrumb('KUHUL','Trainer');
     setLoad(100);
   }

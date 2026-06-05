@@ -134,13 +134,22 @@ const { points, phases } = decodeFromSVG(svg);
 
 ## Screenshots
 
-> _Add screenshots here — suggested captures:_
->
-> 1. Landing page with SVG-3D splash animation + sidebar
-> 2. 3D App — 7-brain orbit view with field particles
-> 3. Train tab — Hybrid mode selected, loss canvas live
-> 4. Docs — K'UHUL++ Language spec rendered in sidebar shell
-> 5. MX2LM DirectWrite GPU demo in iframe
+### Landing Page — SVG-3D Splash
+![Landing page with live 7-brain SVG-3D animation, sidebar navigation, and KUHUL top bar](docs/screenshots/landing.png)
+
+### MX2LM DirectWrite GPU — Orbital Halo
+![MX2LM DirectWrite GPU demo: Orbital Halo attention ring compute with 12 heads across 3 rings](docs/screenshots/mx2lm-orbital.png)
+
+### MX2LM DirectWrite GPU — Full Dashboard
+![Stack Grid (12 layers), Tunnel Rail (token stream 1448 queue), HUD Ring monitor at cycle 2031](docs/screenshots/mx2lm-dashboard.png)
+
+### Neural Inference Demo
+![K'UHUL++ Neural Inference Demo: input/hidden layer/output probabilities running in the app shell](docs/screenshots/neural-inference.png)
+
+### Geometric Substrate Demo
+![D12WebX Geometric Execution Substrate: tensor embedding in manifold M, SharedArrayBuffer arena, geometric operators panel](docs/screenshots/geometric-substrate.png)
+
+> Screenshots taken at v3.5.0 on Intel HD Graphics 4600 (D3D11 feature level 45312)
 
 ---
 

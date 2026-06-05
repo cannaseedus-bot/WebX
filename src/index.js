@@ -525,6 +525,7 @@ export { SyncWorker, SECURITY_PLUGIN_OPS } from './agents-net/sync-worker.js';
 export { PGGTF }                                           from './pggtf/pggtf.js';
 export { PhaseTensor, PHASE_INDEX as PGGTF_PHASE_INDEX, PHASE_NAMES, N_PHASES } from './pggtf/phase-tensor.js';
 export { GeodesicTensor }                                  from './pggtf/geodesic-tensor.js';
+export { GeodesicFoldSphere, createGeodesicFoldSphere }    from './pggtf/geodesic-fold-sphere.js';
 export { FoldTensor, SCXQ2_LANES as PGGTF_LANES }          from './pggtf/fold-tensor.js';
 export { PiPhaseTensor }                                   from './pggtf/pi-tensor.js';
 export {

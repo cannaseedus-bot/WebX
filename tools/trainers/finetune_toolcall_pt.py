@@ -11,21 +11,50 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import math
+import json
+import os
 import pathlib
 import shutil
 import struct
 import time
-from typing import Optional
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from pydantic import BaseModel
 from safetensors.torch import load_file, save_file
 
-BIN_DIR    = pathlib.Path(r"C:\Users\canna\.gpu_trainer\bin")
-BASE_MODEL = pathlib.Path(r"E:\models\GPT2\med-GPT\model.safetensors")
-OUT_DIR    = pathlib.Path(r"E:\models\GPT2\med-GPT")
+
+class FinetuneConfig(BaseModel):
+    bin_dir:    pathlib.Path = pathlib.Path(r"C:\Users\canna\.gpu_trainer\bin")
+    base_model: pathlib.Path = pathlib.Path(r"E:\models\GPT2\med-GPT\model.safetensors")
+    out_dir:    pathlib.Path = pathlib.Path(r"E:\models\GPT2\med-GPT")
+
+    @classmethod
+    def from_env(cls) -> FinetuneConfig:
+        kw: dict = {}
+        if v := os.environ.get('KUHUL_BIN_DIR'):    kw['bin_dir']    = pathlib.Path(v)
+        if v := os.environ.get('KUHUL_BASE_MODEL'): kw['base_model'] = pathlib.Path(v)
+        if v := os.environ.get('KUHUL_OUT_DIR'):    kw['out_dir']    = pathlib.Path(v)
+        return cls(**kw)
+
+    def to_jsonl(self) -> str:
+        return json.dumps({k: str(v) for k, v in self.model_dump().items()})
+
+    def to_kxml(self) -> str:
+        return (
+            '<kxml:compute op="finetune_config" domain="trainer" phase="Pop">\n'
+            f'  <step phase="Pop">bin_dir: {self.bin_dir}</step>\n'
+            f'  <step phase="Wo">base_model: {self.base_model.name}</step>\n'
+            f'  <result phase="Ch\'en">out_dir: {self.out_dir}</result>\n'
+            '</kxml:compute>'
+        )
+
+
+_cfg      = FinetuneConfig.from_env()
+BIN_DIR   = _cfg.bin_dir
+BASE_MODEL = _cfg.base_model
+OUT_DIR   = _cfg.out_dir
 TRAIN_BIN  = BIN_DIR / "tokens_toolcall.bin"
 
 
@@ -75,7 +104,7 @@ class GPT2Block(nn.Module):
     geo_temperature: float = 1.0
 
     def _attn(self, x: torch.Tensor,
-              token_ids: 'Optional[torch.Tensor]' = None) -> torch.Tensor:
+              token_ids: torch.Tensor | None = None) -> torch.Tensor:
         B, T, C = x.shape
         qkv = x @ self.c_attn_w + self.c_attn_b
         q, k, v = qkv.split(self.n_embd, dim=-1)
@@ -85,8 +114,7 @@ class GPT2Block(nn.Module):
 
         if self.geo_map is not None and self.geo_map.is_compiled():
             # ── Geodesic + ARC attention ──────────────────────────────────────
-            from geodesic_attention_bridge import (
-                geodesic_arc_attention, project_to_sphere)
+            from geodesic_attention_bridge import geodesic_arc_attention
             arc_bias = None
             if self.arc_weights is not None and token_ids is not None:
                 raw = self.arc_weights.bias_for_tokens(token_ids[0, :T])
@@ -247,7 +275,7 @@ def train(model, data, steps, batch, lr, log_every, ckpt_every, out_dir,
         opt.zero_grad(set_to_none=True)
         try:
             logits = model(x)
-        except Exception as e:
+        except Exception:
             import traceback
             print(f"\n[CRASH] model(x) failed on step {step}:")
             traceback.print_exc()
@@ -356,7 +384,7 @@ def main():
     if arc_weights is not None:
         from geodesic_attention_bridge import CACHE_DIR
         arc_weights.save(CACHE_DIR)
-        print(f"[Geodesic] ARC weights saved: {arc_weights.stats()}")
+        print(f"[Geodesic] ARC weights saved: {arc_weights.stats().to_jsonl()}")
 
     print("=" * 60)
     print("DONE")

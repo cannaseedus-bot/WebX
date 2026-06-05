@@ -1,4 +1,5 @@
 export { PGGTF }                                          from './pggtf.js';
+export { GeodesicFoldSphere, createGeodesicFoldSphere }   from './geodesic-fold-sphere.js';
 export { PhaseTensor, PHASE_INDEX, PHASE_NAMES, N_PHASES } from './phase-tensor.js';
 export { GeodesicTensor }                                  from './geodesic-tensor.js';
 export { FoldTensor, SCXQ2_LANES }                        from './fold-tensor.js';

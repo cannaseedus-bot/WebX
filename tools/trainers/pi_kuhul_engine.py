@@ -19,11 +19,13 @@ interference() = arccos(q·k^T) geodesic attention
 coherence_history = EntropyField values
 """
 
+import json
 import math
-import numpy as np
-from typing import List, Dict, Tuple, Optional, Union
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
+
+import numpy as np
+from pydantic import BaseModel
 
 # ============================================================
 # MAYAN DIGIT SYMBOLS TO NUMERIC VALUES
@@ -155,7 +157,56 @@ class Token:
 class CardField:
     amplitude: np.ndarray; gradient: np.ndarray; curvature: np.ndarray
     pi_mod: float; maya_digit: int
-    adjacency: List[int]; adjacency_strength: List[float]
+    adjacency: list[int]; adjacency_strength: list[float]
+
+# ============================================================
+# KXML/JSONL METRIC MODELS
+# ============================================================
+
+class EngineMetrics(BaseModel):
+    final_coherence: float
+    avg_coherence: float
+    shard_transitions: int
+    time_seconds: float
+    steps_per_second: float
+
+    def to_jsonl(self) -> str:
+        return json.dumps(self.model_dump())
+
+    def to_kxml(self) -> str:
+        m = self.model_dump()
+        return (
+            '<kxml:compute op="run_metrics" domain="trainer" phase="Ch\'en">\n'
+            f'  <step phase="Pop">transitions: {m["shard_transitions"]} elapsed: {m["time_seconds"]:.2f}s</step>\n'
+            f'  <step phase="Wo">speed: {m["steps_per_second"]:.1f}steps/s</step>\n'
+            f'  <result phase="Ch\'en">coherence={m["final_coherence"]:.4f} avg={m["avg_coherence"]:.4f}</result>\n'
+            '</kxml:compute>'
+        )
+
+
+class TokenMetrics(BaseModel):
+    coherence: float
+    avg_phase: float
+    pi_time: float
+    global_long_count: str
+    shard_transitions: int
+    active_tokens: int
+    tzolkin: str
+    haab: str
+
+    def to_jsonl(self) -> str:
+        return json.dumps(self.model_dump())
+
+    def to_kxml(self, phase: str = 'Sek') -> str:
+        m = self.model_dump()
+        return (
+            f'<kxml:compute op="step_metrics" domain="trainer" phase="{phase}">\n'
+            f'  <step phase="Pop">long_count: {m["global_long_count"]}</step>\n'
+            f'  <step phase="Wo">tzolkin: {m["tzolkin"]}  haab: {m["haab"]}</step>\n'
+            f'  <result phase="Ch\'en">coherence={m["coherence"]:.4f} active={m["active_tokens"]}</result>\n'
+            '</kxml:compute>'
+        )
+
 
 # ============================================================
 # π-KUHUL FIELD ENGINE
@@ -174,8 +225,8 @@ class PiKuhulFieldEngine:
         self.num_tokens=num_tokens; self.num_cards=num_cards
         self.dimensions=dimensions; self.dt=dt; self.sigma=sigma
         self.temperature=temperature
-        self.tokens: List[Token]=[]
-        self.cards: List[CardField]=[]
+        self.tokens: list[Token]=[]
+        self.cards: list[CardField]=[]
         self.pi_time=0.0
         self.global_long_count=LongCount(13,0,0,0,0)
         self.coherence_history=[]; self.shard_transitions=0
@@ -239,29 +290,35 @@ class PiKuhulFieldEngine:
         self.coherence_history.append(avg)
         return avg
 
-    def run(self, steps=1000, callback=None) -> Dict:
+    def run(self, steps=1000, callback=None) -> EngineMetrics:
         t0=datetime.now()
         for s in range(steps):
             c=self.step()
             if callback and s%10==0: callback(s,c,self.get_metrics())
             elif s%100==0: print(f"Step {s}: coherence={c*100:.1f}%")
         elapsed=(datetime.now()-t0).total_seconds()
-        return {'final_coherence':self.coherence_history[-1] if self.coherence_history else 0,
-                'avg_coherence':float(np.mean(self.coherence_history)) if self.coherence_history else 0,
-                'shard_transitions':self.shard_transitions,
-                'time_seconds':elapsed,'steps_per_second':steps/elapsed if elapsed>0 else 0}
+        return EngineMetrics(
+            final_coherence=self.coherence_history[-1] if self.coherence_history else 0.0,
+            avg_coherence=float(np.mean(self.coherence_history)) if self.coherence_history else 0.0,
+            shard_transitions=self.shard_transitions,
+            time_seconds=elapsed,
+            steps_per_second=steps/elapsed if elapsed>0 else 0.0,
+        )
 
-    def get_metrics(self) -> Dict:
+    def get_metrics(self) -> TokenMetrics:
         lc=self.global_long_count
-        return {
-            'coherence':float(np.mean([t.coherence for t in self.tokens])),
-            'avg_phase':float(np.mean([t.phase for t in self.tokens])),
-            'pi_time':self.pi_time,'global_long_count':str(lc),
-            'shard_transitions':self.shard_transitions,
-            'active_tokens':sum(1 for t in self.tokens if t.coherence>0.1),
-            'tzolkin':str(Tzolkin.from_days(lc.to_days())),
-            'haab':str(Haab.from_days(lc.to_days()))
-        }
+        coh = np.fromiter((t.coherence for t in self.tokens), dtype=np.float64, count=self.num_tokens)
+        ph  = np.fromiter((t.phase for t in self.tokens),    dtype=np.float64, count=self.num_tokens)
+        return TokenMetrics(
+            coherence=float(np.mean(coh)),
+            avg_phase=float(np.mean(ph)),
+            pi_time=self.pi_time,
+            global_long_count=str(lc),
+            shard_transitions=self.shard_transitions,
+            active_tokens=int(np.sum(coh > 0.1)),
+            tzolkin=str(Tzolkin.from_days(lc.to_days())),
+            haab=str(Haab.from_days(lc.to_days())),
+        )
 
     def to_optical_nodes(self):
         """
@@ -292,6 +349,7 @@ if __name__=='__main__':
     engine=PiKuhulFieldEngine(num_tokens=args.tokens,temperature=args.temperature)
     results=engine.run(args.steps)
     m=engine.get_metrics()
-    print(f"Coherence: {results['final_coherence']*100:.2f}%")
-    print(f"Long Count: {m['global_long_count']}  Tzolk'in: {m['tzolkin']}  Haab: {m['haab']}")
-    print(f"Shard transitions: {results['shard_transitions']}")
+    print(f"Coherence: {results.final_coherence*100:.2f}%")
+    print(f"Long Count: {m.global_long_count}  Tzolk'in: {m.tzolkin}  Haab: {m.haab}")
+    print(f"Shard transitions: {results.shard_transitions}")
+    print(results.to_jsonl())

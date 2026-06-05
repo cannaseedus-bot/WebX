@@ -34,12 +34,16 @@ iGPU acceleration (Intel HD 4600):
   Otherwise: CPU NumPy fallback (still fast with 8 threads for k-NN)
 """
 from __future__ import annotations
-import math, pathlib, time, os
-from typing import Optional
+
+import json
+import math
+import pathlib
+import time
 
 import numpy as np
 import torch
 import torch.nn.functional as F
+from pydantic import BaseModel
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -64,6 +68,29 @@ def geodesic_dist_matrix(p: torch.Tensor, q: torch.Tensor) -> torch.Tensor:
     cos_sim = torch.matmul(p, q.transpose(-2, -1))   # [*, N, M]
     cos_sim = cos_sim.clamp(-1.0 + 1e-7, 1.0 - 1e-7)
     return torch.acos(cos_sim)
+
+# ─── KXML/JSONL metric model ──────────────────────────────────────────────────
+
+class ArcStatistics(BaseModel):
+    total_arcs: int
+    active_pairs: int
+    coverage: float
+    max_bias: float
+    memory_kb: int
+
+    def to_jsonl(self) -> str:
+        return json.dumps(self.model_dump())
+
+    def to_kxml(self) -> str:
+        m = self.model_dump()
+        return (
+            '<kxml:compute op="arc_stats" domain="trainer" phase="Ch\'en">\n'
+            f'  <step phase="Pop">total_arcs: {m["total_arcs"]:,}</step>\n'
+            f'  <step phase="Wo">active_pairs: {m["active_pairs"]:,} coverage: {m["coverage"]:.2e}</step>\n'
+            f'  <result phase="Ch\'en">max_bias={m["max_bias"]:.4f} mem={m["memory_kb"]}KB</result>\n'
+            '</kxml:compute>'
+        )
+
 
 # ─── ARC weight accumulator ───────────────────────────────────────────────────
 
@@ -125,7 +152,7 @@ class ARCWeightMatrix:
     def save(self, path: pathlib.Path):
         # Sparse COO from dict — zero allocation, ~4 bytes/pair
         if not self._pairs:
-            print(f"[ARCWeights] Nothing to save (0 pairs)")
+            print("[ARCWeights] Nothing to save (0 pairs)")
             return
         rows = np.array([k[0] for k in self._pairs], dtype=np.int32)
         cols = np.array([k[1] for k in self._pairs], dtype=np.int32)
@@ -154,14 +181,16 @@ class ARCWeightMatrix:
     @property
     def total_arcs(self): return self._total_arcs
 
-    def stats(self):
+    def stats(self) -> ArcStatistics:
         nonzero = len(self._pairs)
         max_bias = max(self._pairs.values()) if self._pairs else 0.0
-        return {'total_arcs': self._total_arcs,
-                'active_pairs': nonzero,
-                'coverage': nonzero / (self.vocab * self.vocab),
-                'max_bias': float(max_bias),
-                'memory_kb': (nonzero * 12) // 1024}
+        return ArcStatistics(
+            total_arcs=self._total_arcs,
+            active_pairs=nonzero,
+            coverage=nonzero / (self.vocab * self.vocab),
+            max_bias=float(max_bias),
+            memory_kb=(nonzero * 12) // 1024,
+        )
 
 # ─── Geodesic map compiler (CPU mirror of spherical_map_compiler.hlsl) ───────
 
@@ -185,13 +214,13 @@ class GeodesicMapCompiler:
         self.knn       = knn
         cache_dir.mkdir(parents=True, exist_ok=True)
 
-        self._sphere_pos : Optional[np.ndarray] = None  # [V, d] unit vectors
-        self._knn_idx    : Optional[np.ndarray] = None  # [V, K] nearest neighbour ids
-        self._knn_dist   : Optional[np.ndarray] = None  # [V, K] geodesic distances
+        self._sphere_pos : np.ndarray | None = None  # [V, d] unit vectors
+        self._knn_idx    : np.ndarray | None = None  # [V, K] nearest neighbour ids
+        self._knn_dist   : np.ndarray | None = None  # [V, K] geodesic distances
         self._vocab      : int = 0
 
     def compile(self, embedding_weight: torch.Tensor,
-                force: bool = False) -> 'GeodesicMapCompiler':
+                force: bool = False) -> GeodesicMapCompiler:
         """
         Project token embeddings to sphere, compute k-NN geodesic distances.
         embedding_weight: [V, d]  (model.wte.weight)
@@ -231,15 +260,16 @@ class GeodesicMapCompiler:
             # cos_sim with all tokens: [C, V]
             cosim = (p @ self._sphere_pos.T).clip(-1 + 1e-7, 1 - 1e-7)
             dists = np.arccos(cosim).astype(np.float32)             # [C, V]
-            # zero out self-distance
-            for i in range(end - start):
-                dists[i, start + i] = float('inf')
-            # k nearest
-            top_k_idx = np.argpartition(dists, self.knn, axis=1)[:, :self.knn]
-            for i in range(end - start):
-                sorted_local = np.argsort(dists[i, top_k_idx[i]])
-                knn_idx[start + i]  = top_k_idx[i][sorted_local]
-                knn_dist[start + i] = dists[i, knn_idx[start + i]].astype(np.float16)
+            # vectorized self-distance zero-out (no Python loop)
+            chunk_len = end - start
+            ci = np.arange(chunk_len)
+            dists[ci, start + ci] = np.inf
+            # k nearest — batch argsort within top-k (no Python loop)
+            top_k_idx  = np.argpartition(dists, self.knn, axis=1)[:, :self.knn]
+            top_k_dist = dists[ci[:, None], top_k_idx]
+            sort_ord   = np.argsort(top_k_dist, axis=1)
+            knn_idx[start:end]  = top_k_idx[ci[:, None], sort_ord]
+            knn_dist[start:end] = top_k_dist[ci[:, None], sort_ord].astype(np.float16)
 
             if (start // chunk) % 10 == 0:
                 elapsed = time.time() - t0
@@ -275,7 +305,7 @@ def geodesic_arc_attention(
     q: torch.Tensor,
     k: torch.Tensor,
     v: torch.Tensor,
-    arc_bias: Optional[torch.Tensor] = None,
+    arc_bias: torch.Tensor | None = None,
     radius: float = RADIUS,
     temperature: float = 1.0,
     causal: bool = True,
@@ -362,12 +392,12 @@ class GeodesicAttentionMixin:
     Mixin to add to GPT2Block.
     Set block.geo_map and block.arc_weights to enable geodesic attention.
     """
-    geo_map    : Optional[GeodesicMapCompiler] = None
-    arc_weights: Optional[ARCWeightMatrix]     = None
+    geo_map    : GeodesicMapCompiler | None = None
+    arc_weights: ARCWeightMatrix | None     = None
     geo_temperature: float = 1.0
 
     def _attn_geodesic(self, x: torch.Tensor,
-                        token_ids: Optional[torch.Tensor] = None) -> torch.Tensor:
+                        token_ids: torch.Tensor | None = None) -> torch.Tensor:
         B, T, C = x.shape
         qkv = x @ self.c_attn_w + self.c_attn_b
         q, k, v = qkv.split(self.n_embd, dim=-1)
@@ -415,7 +445,7 @@ def patch_model_geodesic(model, geo_map: GeodesicMapCompiler,
 
     print(f"[GeoMap] Patched {len(model.blocks)} blocks with geodesic + ARC attention")
     print(f"  radius={RADIUS}  temperature={temperature}  "
-          f"arc_pairs={arc_weights.stats()['active_pairs']}")
+          f"arc_pairs={arc_weights.stats().active_pairs}")
     return model
 
 # ─── Startup helper ───────────────────────────────────────────────────────────
@@ -435,8 +465,8 @@ def build_geo_system(model, cache_dir: pathlib.Path = CACHE_DIR,
     arc_cache   = cache_dir / 'arc_bias.npy'
     if arc_cache.exists():
         arc_weights.load(cache_dir)
-        print(f"[ARCWeights] Loaded: {arc_weights.stats()}")
+        print(f"[ARCWeights] Loaded: {arc_weights.stats().to_jsonl()}")
     else:
-        print(f"[ARCWeights] Starting fresh (will accumulate from training)")
+        print("[ARCWeights] Starting fresh (will accumulate from training)")
 
     return geo_map, arc_weights

@@ -58,6 +58,31 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Courie
 #field-controls input[type=range]{flex:1;accent-color:var(--gold)}
 #field-controls input[type=checkbox]{accent-color:var(--gold)}
 
+/* Left panel tabs */
+#left-tabs{display:flex;border-bottom:1px solid var(--border)}
+.ltab{flex:1;padding:6px 0;font-size:10px;text-align:center;cursor:pointer;
+      color:var(--muted);border-bottom:2px solid transparent;user-select:none}
+.ltab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.ltab-panel{display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0}
+.ltab-panel.active{display:flex}
+
+/* Trainer panel */
+#trainer-panel{display:flex;flex-direction:column;gap:0;overflow:hidden;flex:1}
+.tr-row{display:flex;align-items:center;gap:6px;padding:5px 8px;
+        font-size:10px;border-bottom:1px solid var(--border)}
+.tr-row label{color:var(--muted);white-space:nowrap;width:46px}
+.tr-row select,.tr-row input[type=number]{flex:1;background:var(--bg);
+  border:1px solid var(--border);color:var(--text);padding:3px 5px;font-size:10px;
+  font-family:monospace}
+.tr-btns{display:flex;gap:6px;padding:6px 8px;border-bottom:1px solid var(--border)}
+.tr-btn{flex:1;padding:5px;border:1px solid var(--border);background:var(--bg3);
+        color:var(--text);cursor:pointer;font-family:monospace;font-size:10px}
+.tr-btn:hover{border-color:var(--gold);color:var(--gold)}
+.tr-btn.danger:hover{border-color:var(--red);color:var(--red)}
+#loss-canvas{width:100%;flex:1;display:block;background:var(--bg);min-height:80px}
+#trainer-status{padding:4px 8px;font-size:10px;color:var(--muted);
+                border-top:1px solid var(--border)}
+
 /* Center 3D scene */
 #scene-wrap{position:relative;display:flex;align-items:stretch}
 #scene3d{width:100%;height:100%;display:block;cursor:grab}
@@ -111,9 +136,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Courie
 <!-- Main -->
 <div id="main">
 
-  <!-- Left: K3D + field controls -->
+  <!-- Left: K3D + field controls + trainer -->
   <div id="left">
-    <div class="panel-title">⟁ K3D Compiler</div>
+    <div id="left-tabs">
+      <div class="ltab active" data-tab="k3d">⟁ K3D</div>
+      <div class="ltab" data-tab="trainer">⚙ Train</div>
+      <div class="ltab" data-tab="fields">⊛ Fields</div>
+    </div>
+
+    <!-- K3D tab -->
+    <div class="ltab-panel active" id="tab-k3d">
     <div id="k3d-editor">
 <textarea id="k3d-src">// KUHUL 3D — hello world
 Tensor Pos = [0.0, 0.0, 0.0];
@@ -139,7 +171,134 @@ dx12 {
       <button id="k3d-compile-btn">▶ COMPILE K3D</button>
       <div id="k3d-output"><span style="color:var(--muted)">// IR output appears here</span></div>
     </div>
-    <div id="field-controls">
+    </div><!-- /tab-k3d -->
+
+    <!-- Trainer tab -->
+    <div class="ltab-panel" id="tab-trainer">
+    <div id="trainer-panel">
+
+      <!-- Mode -->
+      <div class="tr-row">
+        <label>Mode</label>
+        <select id="tr-mode">
+          <option value="causal_gpu">Causal GPU (D3D11)</option>
+          <option value="shard_chain">Shard Chain (DDS)</option>
+          <option value="toolcall_cpu">Tool-Call CPU</option>
+          <option value="curriculum_cpu">Curriculum CPU</option>
+          <option value="glyph_pretrain">Glyph Pretrain</option>
+          <option value="fiber_chain">Fiber Chain</option>
+          <option value="hybrid">Hybrid iGPU→CPU</option>
+        </select>
+      </div>
+      <div id="tr-mode-desc" style="padding:4px 8px;font-size:9px;color:var(--muted);border-bottom:1px solid var(--border);line-height:1.4"></div>
+
+      <!-- Model -->
+      <div class="tr-row">
+        <label>Model</label>
+        <select id="tr-model"><option value="">loading…</option></select>
+      </div>
+
+      <!-- JSONL + domain — hybrid mode -->
+      <div class="tr-row tr-param" data-modes="hybrid">
+        <label>JSONL</label>
+        <select id="tr-jsonl">
+          <option value="E:/models/GPT2/domain_train.jsonl">domain_train.jsonl</option>
+          <option value="E:/models/GPT2/med-GPT/toolcall_harvested.jsonl">toolcall_harvested.jsonl</option>
+        </select>
+      </div>
+      <div class="tr-row tr-param" data-modes="hybrid">
+        <label>Domain</label>
+        <select id="tr-domain">
+          <option value="math">math</option>
+          <option value="coder">coder</option>
+          <option value="agent">agent</option>
+          <option value="powershell">powershell</option>
+          <option value="kuhul">kuhul</option>
+          <option value="">all</option>
+        </select>
+      </div>
+      <div class="tr-row tr-param" data-modes="hybrid">
+        <label>GPU Steps</label>
+        <input type="number" id="tr-gpu-steps" value="500" min="0" max="5000" step="50">
+      </div>
+      <div class="tr-row tr-param" data-modes="hybrid">
+        <label>CPU Steps</label>
+        <input type="number" id="tr-cpu-steps" value="500" min="0" max="5000" step="50">
+      </div>
+
+      <!-- Tokens (.bin) — GPU modes -->
+      <div class="tr-row tr-param" data-modes="causal_gpu,shard_chain,fiber_chain">
+        <label>Tokens</label>
+        <select id="tr-tokens"><option value="">loading…</option></select>
+      </div>
+
+      <!-- Shard (.scxqdds) — shard_chain -->
+      <div class="tr-row tr-param" data-modes="shard_chain">
+        <label>Shard</label>
+        <select id="tr-shard"><option value="">loading…</option></select>
+      </div>
+
+      <!-- Resume (CPU modes) -->
+      <div class="tr-row tr-param" data-modes="toolcall_cpu,curriculum_cpu,glyph_pretrain">
+        <label>Resume</label>
+        <select id="tr-resume"><option value="">(fresh start)</option></select>
+      </div>
+
+      <!-- Steps -->
+      <div class="tr-row">
+        <label>Steps</label>
+        <input type="number" id="tr-steps" value="500" min="10" max="10000" step="50">
+      </div>
+
+      <!-- LR -->
+      <div class="tr-row">
+        <label>LR</label>
+        <input type="number" id="tr-lr" value="0.00003" min="0.000001" max="0.01" step="0.000001">
+      </div>
+
+      <!-- Batch -->
+      <div class="tr-row">
+        <label>Batch</label>
+        <input type="number" id="tr-batch" value="4" min="1" max="32">
+      </div>
+
+      <!-- Grad accum — CPU modes only -->
+      <div class="tr-row tr-param" data-modes="toolcall_cpu,curriculum_cpu,glyph_pretrain">
+        <label>GradAcc</label>
+        <input type="number" id="tr-grad-accum" value="8" min="1" max="32">
+      </div>
+
+      <!-- Block -->
+      <div class="tr-row">
+        <label>Block</label>
+        <input type="number" id="tr-block" value="128" min="32" max="512" step="32">
+      </div>
+
+      <!-- Data chunks — CPU modes -->
+      <div class="tr-row tr-param" data-modes="toolcall_cpu,curriculum_cpu,glyph_pretrain">
+        <label>Chunks</label>
+        <input type="number" id="tr-data-chunks" value="10" min="1" max="100">
+      </div>
+
+      <!-- Save every -->
+      <div class="tr-row">
+        <label>SaveEvery</label>
+        <input type="number" id="tr-save-every" value="200" min="10" max="1000" step="10">
+      </div>
+
+      <div class="tr-btns">
+        <button class="tr-btn" id="tr-start-btn">▶ START</button>
+        <button class="tr-btn danger" id="tr-stop-btn">■ STOP</button>
+        <button class="tr-btn" id="tr-refresh-btn">↺</button>
+      </div>
+      <canvas id="loss-canvas" height="120"></canvas>
+      <div id="trainer-status">server: checking…</div>
+    </div>
+    </div><!-- /tab-trainer -->
+
+    <!-- Fields tab -->
+    <div class="ltab-panel" id="tab-fields">
+    <div id="field-controls" style="border-top:none">
       <div class="panel-title">⊛ Field System</div>
       <label><input type="checkbox" id="wind-on" checked> Wind Field</label>
       <label>Strength <input type="range" id="wind-str" min="0" max="3" step="0.1" value="0.8"></label>
@@ -148,7 +307,9 @@ dx12 {
       <label><input type="checkbox" id="inertia-on"> Scroll Inertia</label>
       <label>Particles <input type="range" id="p-count" min="20" max="400" step="10" value="150"></label>
     </div>
-  </div>
+    </div><!-- /tab-fields -->
+
+  </div><!-- /left -->
 
   <!-- Center: 3D scene -->
   <div id="scene-wrap">
@@ -648,6 +809,239 @@ class WebX3DApp {
             this.cam.ry=_lt.ry+(t.clientX-_lt.x)*0.007;
             this.cam.rx=Math.max(-PI/2+0.05,Math.min(PI/2-0.05,_lt.rx-(t.clientY-_lt.y)*0.007));
         },{passive:true});
+
+        // Tab switching
+        document.querySelectorAll('.ltab').forEach(tab=>{
+            tab.addEventListener('click',()=>{
+                document.querySelectorAll('.ltab').forEach(t=>t.classList.remove('active'));
+                document.querySelectorAll('.ltab-panel').forEach(p=>p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
+                if(tab.dataset.tab==='trainer') this._trainerRefresh();
+            });
+        });
+
+        // Trainer wiring
+        this._trainerSSE    = null;
+        this._lossData      = [];
+        this._trainerServer = 'http://127.0.0.1:7431';
+        this._modes         = {};
+
+        document.getElementById('tr-start-btn').onclick   = ()=>this._trainerStart();
+        document.getElementById('tr-stop-btn').onclick    = ()=>this._trainerStop();
+        document.getElementById('tr-refresh-btn').onclick = ()=>this._trainerRefresh();
+        document.getElementById('tr-mode').onchange       = ()=>this._trainerModeChanged();
+
+        this._trainerRefresh();
+    }
+
+    _trainerModeChanged() {
+        const mode = document.getElementById('tr-mode').value;
+        const def  = this._modes[mode] || {};
+
+        // Show/hide param rows
+        document.querySelectorAll('.tr-param').forEach(row=>{
+            const modes = (row.dataset.modes||'').split(',');
+            row.style.display = modes.includes(mode) ? '' : 'none';
+        });
+
+        // Apply defaults
+        const d = def.defaults || {};
+        if(d.steps)     document.getElementById('tr-steps').value      = d.steps;
+        if(d.lr)        document.getElementById('tr-lr').value         = d.lr;
+        if(d.batch)     document.getElementById('tr-batch').value      = d.batch;
+        if(d.gradAccum) document.getElementById('tr-grad-accum').value = d.gradAccum;
+        if(d.block)     document.getElementById('tr-block').value      = d.block;
+        if(d.saveEvery) document.getElementById('tr-save-every').value = d.saveEvery;
+        if(d.dataChunks)document.getElementById('tr-data-chunks').value= d.dataChunks;
+
+        // Mode description
+        document.getElementById('tr-mode-desc').textContent =
+            (def.description||'') + (def.micronauts ? `  [${def.micronauts.join(', ')}]` : '');
+
+        // Label
+        const gpuModes = ['causal_gpu','shard_chain','fiber_chain'];
+        document.getElementById('tr-lr').value =
+            document.getElementById('tr-lr').value || (gpuModes.includes(mode) ? '0.00003' : '0.00001');
+    }
+
+    _trainerRefresh() {
+        const srv = this._trainerServer;
+
+        // Load modes
+        fetch(srv+'/modes').then(r=>r.json()).then(modes=>{
+            this._modes = modes;
+            this._trainerModeChanged();
+        }).catch(()=>{
+            document.getElementById('trainer-status').textContent = 'server: offline — run: node native/trainer-server.js';
+        });
+
+        // Models
+        fetch(srv+'/models').then(r=>r.json()).then(models=>{
+            const opt = m=>`<option value="${m.path}" title="${m.path}">${m.label} (${m.mb}MB)</option>`;
+            document.getElementById('tr-model').innerHTML  = models.map(opt).join('');
+            document.getElementById('tr-resume').innerHTML = '<option value="">(fresh)</option>'+models.map(opt).join('');
+        }).catch(()=>{});
+
+        // Tokens
+        fetch(srv+'/tokens').then(r=>r.json()).then(toks=>{
+            const opt = t=>`<option value="${t.path}">${t.label} (${t.mb}MB)</option>`;
+            document.getElementById('tr-tokens').innerHTML = toks.map(opt).join('');
+        }).catch(()=>{});
+
+        // Shards
+        fetch(srv+'/shards').then(r=>r.json()).then(shards=>{
+            const opt = s=>`<option value="${s.path}">${s.label} (${s.mb}MB)</option>`;
+            document.getElementById('tr-shard').innerHTML = '<option value="">(none)</option>'+shards.map(opt).join('');
+        }).catch(()=>{});
+
+        // Status
+        fetch(srv+'/train/status').then(r=>r.json()).then(s=>{
+            this._updateTrainerStatus(s);
+        }).catch(()=>{});
+    }
+
+    _trainerStart() {
+        const mode      = document.getElementById('tr-mode').value;
+        const model     = document.getElementById('tr-model').value;
+        const tokens    = document.getElementById('tr-tokens').value;
+        const shard     = document.getElementById('tr-shard').value;
+        const resume    = document.getElementById('tr-resume').value;
+        const steps     = parseInt(document.getElementById('tr-steps').value, 10);
+        const lr        = parseFloat(document.getElementById('tr-lr').value);
+        const batch     = parseInt(document.getElementById('tr-batch').value, 10);
+        const gradAccum = parseInt(document.getElementById('tr-grad-accum').value, 10);
+        const block     = parseInt(document.getElementById('tr-block').value, 10);
+        const saveEvery = parseInt(document.getElementById('tr-save-every').value, 10);
+        const dataChunks= parseInt(document.getElementById('tr-data-chunks').value, 10);
+
+        if(!model){ this._log('Select a model first','r'); return; }
+
+        this._lossData = [];
+        this._log(`[${mode}] ${model.split('/').pop()} — ${steps} steps  lr=${lr}  batch=${batch}`, 'g');
+
+        const jsonl     = document.getElementById('tr-jsonl')?.value     || '';
+        const domain    = document.getElementById('tr-domain')?.value    || 'math';
+        const gpuSteps  = parseInt(document.getElementById('tr-gpu-steps')?.value || '500', 10);
+        const cpuSteps  = parseInt(document.getElementById('tr-cpu-steps')?.value || '500', 10);
+        const payload = { mode, model, tokens, shard, resume, steps, lr, batch, gradAccum, block,
+                          saveEvery, dataChunks, jsonl, domain, gpuSteps, cpuSteps,
+                          gpuLr: lr, cpuLr: lr * (2/3), gpuBatch: batch, cpuBatch: Math.max(1, batch - 2) };
+        fetch(this._trainerServer+'/train/start',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(payload),
+        }).then(r=>r.json()).then(r=>{
+            if(r.ok) { this._trainerConnectSSE(); }
+            else { this._log('Start failed: '+r.error,'r'); }
+        }).catch(e=>this._log('Server offline: '+e.message,'r'));
+    }
+
+    _trainerStop() {
+        fetch(this._trainerServer+'/train/stop',{method:'POST'})
+            .then(r=>r.json()).then(()=>this._log('Trainer stopped','c'))
+            .catch(()=>{});
+        if(this._trainerSSE){ this._trainerSSE.close(); this._trainerSSE=null; }
+    }
+
+    _trainerConnectSSE() {
+        if(this._trainerSSE) this._trainerSSE.close();
+        const sse = new EventSource(this._trainerServer+'/train/stream');
+        this._trainerSSE = sse;
+
+        sse.addEventListener('step', e=>{
+            const d = JSON.parse(e.data);
+            this._lossData.push(d);
+            this._drawLoss();
+            document.getElementById('trainer-status').textContent =
+                `step ${d.step} | loss ${d.loss.toFixed(4)}`;
+        });
+        sse.addEventListener('checkpoint', e=>{
+            const d = JSON.parse(e.data);
+            this._log(`Checkpoint: ${d.path.split('/').pop()} step=${d.step} loss=${d.loss.toFixed(4)}`,'p');
+        });
+        sse.addEventListener('done', e=>{
+            const d = JSON.parse(e.data);
+            this._log(`Training done — step=${d.step} final_loss=${d.loss.toFixed(4)}`,'g');
+            sse.close(); this._trainerSSE=null;
+        });
+        sse.addEventListener('error', e=>{
+            const d = JSON.parse(e.data||'{}');
+            this._log('Trainer error: '+(d.message||'connection lost'),'r');
+        });
+        sse.addEventListener('log', e=>{
+            const d = JSON.parse(e.data);
+            if(!d.line.startsWith('[dbg]'))
+                document.getElementById('trainer-status').textContent = d.line;
+        });
+        sse.onerror = ()=>{
+            this._log('SSE disconnected','r');
+            sse.close(); this._trainerSSE=null;
+        };
+    }
+
+    _updateTrainerStatus(s) {
+        const el = document.getElementById('trainer-status');
+        if(s.running){
+            el.textContent = `running | step ${s.step} | loss ${s.loss.toFixed?s.loss.toFixed(4):s.loss} | ${s.elapsed}s`;
+            if(s.lossLog && s.lossLog.length){ this._lossData=s.lossLog; this._drawLoss(); }
+        } else {
+            el.textContent = 'server: online | idle';
+        }
+    }
+
+    _drawLoss() {
+        const cv  = document.getElementById('loss-canvas');
+        const ctx = cv.getContext('2d');
+        const w = cv.offsetWidth || cv.width || 200;
+        const h = cv.offsetHeight || cv.height || 120;
+        cv.width = w; cv.height = h;
+        ctx.clearRect(0,0,w,h);
+        const data = this._lossData;
+        if(data.length < 2) return;
+
+        const losses = data.map(d=>d.loss);
+        const minL   = Math.min(...losses);
+        const maxL   = Math.max(...losses);
+        const range  = maxL - minL || 1;
+
+        // Grid lines
+        ctx.strokeStyle='#2d2d44'; ctx.lineWidth=0.5;
+        for(let i=0;i<=4;i++){
+            const y=Math.round(h*i/4)+0.5;
+            ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+            const val=(maxL - range*i/4).toFixed(2);
+            ctx.fillStyle='#8f9bad'; ctx.font='8px monospace';
+            ctx.fillText(val,2,y-2);
+        }
+
+        // Loss curve
+        ctx.beginPath();
+        data.forEach((d,i)=>{
+            const x = i/(data.length-1)*w;
+            const y = h - (d.loss-minL)/range*(h-10)-5;
+            i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+        });
+        ctx.strokeStyle='#ffd93d'; ctx.lineWidth=1.5; ctx.stroke();
+
+        // Moving average (window=10)
+        if(data.length>=10){
+            ctx.beginPath();
+            for(let i=9;i<data.length;i++){
+                const avg=losses.slice(i-9,i+1).reduce((a,b)=>a+b,0)/10;
+                const x=i/(data.length-1)*w;
+                const y=h-(avg-minL)/range*(h-10)-5;
+                i===9 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+            }
+            ctx.strokeStyle='#4ecdc4'; ctx.lineWidth=1; ctx.stroke();
+        }
+
+        // Last value dot
+        const last=data[data.length-1];
+        const lx=(data.length-1)/(data.length-1)*w;
+        const ly=h-(last.loss-minL)/range*(h-10)-5;
+        ctx.beginPath(); ctx.arc(lx,ly,3,0,6.28);
+        ctx.fillStyle='#ffd93d'; ctx.fill();
     }
 
     _resize() {

@@ -1,0 +1,75 @@
+{
+  "$schema": "kuhul-server-manifest-v1",
+  "version": "3.5.0",
+  "name": "KUHUL WebX-3D Server",
+  "created": "2026-05-29",
+
+  "http": {
+    "port": 7430,
+    "host": "127.0.0.1",
+    "root": "./",
+    "index": "index.html",
+    "mime_types": {
+      ".html": "text/html",
+      ".js":   "application/javascript",
+      ".mjs":  "application/javascript",
+      ".cjs":  "application/javascript",
+      ".json": "application/json",
+      ".css":  "text/css",
+      ".md":   "text/markdown",
+      ".hlsl": "text/plain",
+      ".wgsl": "text/plain",
+      ".kuhul":"text/plain",
+      ".svg":  "image/svg+xml",
+      ".png":  "image/png",
+      ".bin":  "application/octet-stream",
+      ".safetensors": "application/octet-stream"
+    },
+    "cors": {
+      "enabled": true,
+      "origins": ["http://127.0.0.1:7430", "http://127.0.0.1:7431", "null"]
+    },
+    "headers": {
+      "Cross-Origin-Opener-Policy":   "same-origin",
+      "Cross-Origin-Embedder-Policy": "require-corp"
+    }
+  },
+
+  "services": {
+    "trainer": {
+      "port": 7431,
+      "script": "native/trainer-server.cjs",
+      "auto_start": false,
+      "description": "Hybrid iGPU/CPU trainer SSE bridge"
+    }
+  },
+
+  "routes": {
+    "/":             "index.html",
+    "/splash":       "splash.html",
+    "/app":          "src/index.html",
+    "/docs/*":       "docs/",
+    "/examples/*":   "examples/",
+    "/shaders/*":    "shaders/",
+    "/src/*":        "src/",
+    "/kuhul/*":      "kuhul/",
+    "/registry/*":   "registry/",
+    "/api/manifest": "server.manifest.json",
+    "/api/cache":    "cache.manifest.json"
+  },
+
+  "node_server": {
+    "script": "server.cjs",
+    "description": "Static file server with COOP/COEP headers (required for SharedArrayBuffer)"
+  },
+
+  "env": {
+    "KUHUL_PORT":        "7430",
+    "TRAINER_PORT":      "7431",
+    "KUHUL_VERSION":     "3.5.0",
+    "KUHUL_ROOT":        ".",
+    "KUHUL_GEODESIC":    "E:/models/GPT2/geodesic_cache",
+    "KUHUL_MODELS":      "E:/models/GPT2",
+    "KUHUL_TRAINER_EXE": "native/bin/gpt2_trainer.exe"
+  }
+}

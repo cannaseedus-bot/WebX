@@ -1,0 +1,165 @@
+{
+  "$schema": "kuhul-micronaut-registry-v1",
+  "created": "2026-05-29",
+  "base_model_family": "GPT2",
+  "tool_call_format": "### Instruction:\\n{system_prompt}\\n\\n{question}\\n\\n### Response:\\n<tool_call>{...}</tool_call>\\n<tool_response>{...}</tool_response>",
+  "kxml_pretraining": "⟁ glyph prefix on every tool call record for K'uhul semantic alignment",
+
+  "micronauts": {
+    "base_toolcall_small": {
+      "id": "TC-1",
+      "role": "base_tool_caller",
+      "description": "GPT-2 Small fine-tuned tool-call router. Detects intent → emits structured <tool_call> JSON. Routes to domain micronauts via micronaut_dispatch.",
+      "models": {
+        "primary":    "E:\\models\\GPT2\\small-instruct\\gpt2_small_ft_toolcall_fixed.safetensors",
+        "checkpoint": "E:\\models\\GPT2\\small-instruct\\checkpoints\\ckpt_tc_e01_s02000.safetensors",
+        "q8_gguf":    "E:\\models\\GPT2\\mini-GPT\\gpt2_small_ft_toolcall_q8.gguf"
+      },
+      "training_status": "partial — loss stuck at 10.8 (uniform). LayerNorm backward aliasing bug. Fix: separate dgamma/dbeta entry points in iGPU trainer.",
+      "recommended_upgrade": "GPT2-Small with fixed backward pass, 2000 steps on train.refined.jsonl",
+      "token_files": ["E:\\models\\GPT2\\small-instruct\\data\\tokens.bin"],
+      "tools": ["git_*", "file_*", "shell_run", "micronaut_dispatch", "supernaut_call", "kuhul_fold_query"],
+      "powershell_handling": "pending — needs retry-cycle training data"
+    },
+
+    "base_toolcall_medium": {
+      "id": "TC-2",
+      "role": "base_tool_caller_full",
+      "description": "GPT-2 Medium tool-call model. Larger capacity for complex multi-step tool chains. 355M params.",
+      "models": {
+        "primary":    "E:\\models\\GPT2\\med-GPT\\gpt2_medium_ft_toolcall.safetensors",
+        "checkpoint": "E:\\models\\GPT2\\med-GPT\\gpt2_medium_toolcall_s0500.safetensors",
+        "q8_gguf":    "E:\\models\\GPT2\\med-GPT\\gpt2_medium_ft_toolcall_q8.gguf"
+      },
+      "training_data": {
+        "harvested_codex":   "E:\\models\\GPT2\\med-GPT\\toolcall_harvested_codex.jsonl",
+        "harvested_gemini":  "E:\\models\\GPT2\\med-GPT\\toolcall_harvested_gemini.jsonl",
+        "harvested_history": "E:\\models\\GPT2\\med-GPT\\toolcall_harvested_history.jsonl",
+        "harvested_log":     "E:\\models\\GPT2\\med-GPT\\toolcall_harvested_log.jsonl",
+        "harvested_full":    "E:\\models\\GPT2\\med-GPT\\toolcall_harvested.jsonl",
+        "token_bins": [
+          "E:\\models\\GPT2\\med-GPT\\tokens_toolcall_v4.bin",
+          "E:\\models\\GPT2\\med-GPT\\tokens_toolcall_v5.bin"
+        ]
+      },
+      "training_status": "s0500 checkpoint. Loss trend: 3.50–4.00 plateau. Needs more data diversity.",
+      "loss_plateau_note": "Medium model plateaus at 3.5–4.0 — may need GPT2-Large for complex tool chains",
+      "tools": ["ALL — full supernaut surface + dxsk_* + svg_world_* + geodesic routing"]
+    },
+
+    "math_micronaut": {
+      "id": "MM-1",
+      "role": "math_specialist",
+      "description": "Math specialist micronaut. Routes math_tool calls. Handles algebra, calculus, linear algebra, statistics. Uses python math via tool_call when symbolic reasoning needed.",
+      "models": {
+        "best":       "E:\\models\\GPT2\\math_micronaut\\gpt2_medium_toolcall_s1500.safetensors",
+        "fibers": {
+          "fiber_00": "E:\\models\\GPT2\\math_micronaut\\fiber_00\\gpt2_medium_toolcall_s0050.safetensors",
+          "fiber_01": "E:\\models\\GPT2\\math_micronaut\\fiber_01\\gpt2_medium_toolcall_s0050.safetensors"
+        },
+        "checkpoints": {
+          "s1100": "E:\\models\\GPT2\\math_micronaut\\gpt2_medium_toolcall_s1100.safetensors",
+          "s1200": "E:\\models\\GPT2\\math_micronaut\\gpt2_medium_toolcall_s1200.safetensors",
+          "s1300": "E:\\models\\GPT2\\math_micronaut\\gpt2_medium_toolcall_s1300.safetensors",
+          "s1400": "E:\\models\\GPT2\\math_micronaut\\gpt2_medium_toolcall_s1400.safetensors"
+        }
+      },
+      "training_status": "s1500 reached. Loss plateau ~3.5 on medium. UPGRADE RECOMMENDED.",
+      "upgrade_recommendation": "GPT2-Large (774M) — medium too greedy for math reasoning. Target loss < 2.0.",
+      "math_via_python": "math_tool can emit shell_run({python -c 'import math; ...'}) for numeric computation via KXML chaining",
+      "kxml_domains": ["MathML", "physics_basics", "sympy_expressions", "numpy_arrays"],
+      "tools": ["math_tool", "shell_run", "kuhul_fold_query", "dxsk_route"]
+    },
+
+    "coder_micronaut": {
+      "id": "CM-1",
+      "role": "code_specialist",
+      "description": "Coding specialist micronaut. Routes coder_tool calls. Handles code generation, debugging, refactoring across Python/JS/C++/PowerShell/Bash.",
+      "models": {
+        "primary": "E:\\models\\GPT2\\coder_micronaut\\dx11\\model.safetensors"
+      },
+      "token_files": [
+        "E:\\models\\GPT2\\coder_micronaut\\tokens_coder_gpu.bin",
+        "E:\\models\\GPT2\\coder_micronaut\\tokens_coder_v2.bin",
+        "E:\\models\\GPT2\\coder_micronaut\\tokens_coder.bin"
+      ],
+      "training_status": "dx11 variant trained. Needs KXML tool-call wrapping + PowerShell retry cycles.",
+      "upgrade_recommendation": "GPT2-Large for complex multi-file coding tasks.",
+      "powershell_retry_protocol": {
+        "description": "When shell_run emits a PS error pattern, model must cycle through alternatives",
+        "error_patterns": [
+          "is not recognized as the name of a cmdlet",
+          "The term '.*' is not recognized",
+          "ParameterBindingException",
+          "Cannot bind argument to parameter",
+          "UnauthorizedAccessException",
+          "Access is denied"
+        ],
+        "retry_strategy": [
+          "1. Detect PS error in tool_response",
+          "2. If bash equivalent exists: emit shell_run with bash command",
+          "3. If python equivalent exists: emit shell_run with python -c '...'",
+          "4. If PS-only: rewrite cmdlet with correct parameter binding",
+          "5. Max 3 retry cycles before emitting error_response"
+        ]
+      },
+      "tools": ["coder_tool", "shell_run", "file_read", "file_write", "file_search", "git_*"]
+    },
+
+    "base_instruct_small": {
+      "id": "SI-1",
+      "role": "instruct_base",
+      "description": "GPT-2 Small instruction-following base. Not yet tool-call tuned. Used as starting checkpoint for domain fine-tunes.",
+      "models": {
+        "fixed":  "E:\\models\\GPT2\\small-instruct\\gpt2_small_ft_toolcall_fixed.safetensors",
+        "unfixed": "E:\\models\\GPT2\\small-instruct\\gpt2_small_ft_toolcall.safetensors"
+      },
+      "training_status": "Fixed version resolves shape mismatch. Use as base for domain FT runs.",
+      "data": "E:\\models\\GPT2\\small-instruct\\data\\train.refined.jsonl"
+    }
+  },
+
+  "geodesic_weights": {
+    "id": "GW-1",
+    "description": "Precomputed geodesic embedding cache for GPT-2 vocab sphere (50257 tokens). Used by dxsk_route for MoE expert selection via arc-bias mesh.",
+    "files": {
+      "sphere_positions":  "E:\\models\\GPT2\\geodesic_cache\\sphere_pos_V50257.npy",
+      "knn_indices_k32":   "E:\\models\\GPT2\\geodesic_cache\\knn_idx_k32.npy",
+      "knn_distances_k32": "E:\\models\\GPT2\\geodesic_cache\\knn_dist_k32.npy",
+      "arc_bias_rows":     "E:\\models\\GPT2\\geodesic_cache\\arc_bias_rows.npy",
+      "arc_bias_cols":     "E:\\models\\GPT2\\geodesic_cache\\arc_bias_cols.npy",
+      "arc_bias_vals":     "E:\\models\\GPT2\\geodesic_cache\\arc_bias_vals.npy",
+      "arc_bias_counts":   "E:\\models\\GPT2\\geodesic_cache\\arc_bias_counts.npy"
+    },
+    "usage": "Load into DXSK native runtime as bias overlay on attention weights. Also used by math_micronaut for token routing in MathML domain."
+  },
+
+  "upgrade_plan": {
+    "note": "GPT2-Medium plateaus at 3.5–4.0 for math and code — capacity ceiling hit.",
+    "math_large":  "Train GPT2-Large (774M) on KXML+MathML+physics JSONL. Target loss < 2.0.",
+    "coder_large": "Train GPT2-Large on tokens_coder_gpu.bin (137MB). Target loss < 1.5.",
+    "suggested_config": {
+      "model": "gpt2-large (via HuggingFace or existing medium as init)",
+      "steps": 3000,
+      "batch": 2,
+      "lr": "5e-5",
+      "block": 128,
+      "token_file": "tokens_coder_gpu.bin or new math JSONL tokenized"
+    }
+  },
+
+  "tool_call_stack": {
+    "description": "Full execution stack for a tool call through the micronaut system",
+    "layers": [
+      "1. User prompt → base TC-1/TC-2 model → <tool_call> JSON emitted",
+      "2. Tool router parses tool name → dispatches to micronaut (MM-1/CM-1/etc.)",
+      "3. Micronaut executes: shell_run / python / kuhul_fold_query / dxsk_*",
+      "4. tool_response returned → base model continues generation",
+      "5. PS error detected → retry cycle (max 3) → fallback to bash/python",
+      "6. Final response emitted + <|endoftext|>"
+    ],
+    "kxml_prefix": "⟁ KXML semantic tag prepended to each training record for glyph pretraining alignment",
+    "jsonl_format": "{ prompt, response, curriculum_bucket, domain, kxml_tag }",
+    "execution_language": "JSONL + KXML glyph annotations (⟁ markers for fold boundaries)"
+  }
+}

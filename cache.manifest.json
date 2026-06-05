@@ -1,0 +1,102 @@
+{
+  "$schema": "kuhul-cache-manifest-v1",
+  "version": "3.5.0",
+  "name": "KUHUL WebX-3D",
+  "created": "2026-05-29",
+
+  "static": {
+    "root": "./",
+    "serve": [
+      "index.html",
+      "splash.html",
+      "src/index.html",
+      "src/index.js",
+      "src/d12webx.js",
+      "src/mind-binder.js",
+      "src/svg3d.js",
+      "src/geometric-operators.js",
+      "src/kuhul.js",
+      "src/gpu-allocator.js",
+      "src/command-list.js",
+      "src/field-system.js",
+      "src/k3d/compiler.js"
+    ],
+    "examples": [
+      "examples/mx2lm-directwrite-gpu.html",
+      "examples/mind-binder-demo.html",
+      "examples/geometric-execution-demo.html",
+      "examples/geometric-substrate.html",
+      "examples/mesh-transform-demo.html",
+      "examples/micronaut-atlas.html",
+      "examples/neural-network-demo.html",
+      "examples/basic-buffers.html",
+      "examples/js/kuhul-basic.html",
+      "examples/js/mesh-viewer.html",
+      "examples/js/neural-inference.html"
+    ],
+    "docs": [
+      "docs/KUHUL.md",
+      "docs/API.md",
+      "docs/COMPILER.md",
+      "docs/GRAMMAR.md",
+      "docs/IR.md",
+      "docs/LLM-INTEGRATION.md",
+      "docs/MODELS.md",
+      "docs/KXML_GOVERNANCE.md",
+      "docs/capabilities.md",
+      "docs/use-cases.md",
+      "docs/EXAMPLES.md",
+      "docs/BUGS.md",
+      "docs/benchmarks.md",
+      "kuhul/docs/API.md",
+      "kuhul/docs/COMPILER.md",
+      "kuhul/docs/GRAMMAR.md",
+      "kuhul/docs/IR.md",
+      "kuhul/docs/LANGUAGE.md",
+      "kuhul/docs/LLM.md",
+      "kuhul/docs/RUNTIME.md",
+      "kuhul/docs/EXAMPLES.md"
+    ],
+    "kuhul_programs": [
+      "examples/kuhul/hello-world.kuhul",
+      "examples/kuhul/mesh-compression.kuhul",
+      "examples/kuhul/neural-layer.kuhul",
+      "examples/kuhul/physics-sim.kuhul",
+      "examples/kuhul/point-cloud.kuhul",
+      "kuhul/examples/hello-world.kuhul",
+      "kuhul/examples/mesh-compression.kuhul",
+      "kuhul/examples/neural-layer.kuhul",
+      "kuhul/examples/physics.kuhul",
+      "kuhul/examples/point-cloud.kuhul"
+    ],
+    "shaders": [
+      "shaders/fabric_kernels.hlsl",
+      "shaders/kuhul_fold_compute.hlsl",
+      "shaders/kuhul_fold_meta.hlsl",
+      "shaders/kuhul_fold_storage.hlsl",
+      "shaders/glyph_compute.hlsl",
+      "native/shaders/pi_field.wgsl",
+      "native/shaders/scxq2_infer_layer.hlsl"
+    ]
+  },
+
+  "cache_policy": {
+    "docs":     { "ttl": 3600,  "strategy": "network-first" },
+    "examples": { "ttl": 300,   "strategy": "cache-first" },
+    "src":      { "ttl": 0,     "strategy": "no-cache" },
+    "shaders":  { "ttl": 86400, "strategy": "cache-first" }
+  },
+
+  "preload": [
+    "index.html",
+    "src/index.js",
+    "src/svg3d.js",
+    "src/mind-binder.js"
+  ],
+
+  "trainer_server": {
+    "port": 7431,
+    "host": "127.0.0.1",
+    "start_cmd": "node native/trainer-server.cjs"
+  }
+}

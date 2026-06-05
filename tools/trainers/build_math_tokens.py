@@ -1,7 +1,11 @@
 """Build tokens_math_v2.bin at block=256 from math xshard JSONL.
 µMODEL target: math_tool specialist on mathematical reasoning data.
 """
-import json, struct, pathlib, tiktoken
+import json
+import pathlib
+import struct
+
+import tiktoken
 
 JSONL   = pathlib.Path(r"C:\Users\canna\.gpu_trainer\bin\xshard_jsonl\prompt_math_layer.jsonl")
 OUT     = pathlib.Path(r"C:\Users\canna\.gpu_trainer\bin\tokens_math_v2.bin")

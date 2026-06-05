@@ -4,9 +4,10 @@ Enhanced π Field Composition System
 Complete field system with all field types and world integration
 """
 
-import math
 import json
-from typing import Dict, List, Optional, Any, Callable
+import math
+from collections.abc import Callable
+from typing import Any
 
 
 class πFieldSystem:
@@ -16,9 +17,9 @@ class πFieldSystem:
     """
     
     def __init__(self):
-        self.fields: List[Dict] = []
-        self.field_calculators: Dict[str, Callable] = {}
-        self.world_state: Optional[Any] = None
+        self.fields: list[dict] = []
+        self.field_calculators: dict[str, Callable] = {}
+        self.world_state: Any | None = None
         
         # Register built-in field calculators
         self.register_builtin_calculators()
@@ -39,7 +40,7 @@ class πFieldSystem:
     def add_field_from_spec(self, spec_path: str):
         """Add a field from JSON specification file"""
         try:
-            with open(spec_path, 'r') as f:
+            with open(spec_path) as f:
                 spec = json.load(f)
             
             field_type = spec.get("field_type")
@@ -78,8 +79,8 @@ class πFieldSystem:
     
     def load_field_schema_directory(self, directory_path: str):
         """Load all field spec files from a directory"""
-        import os
         import glob
+        import os
         
         pattern = os.path.join(directory_path, "*.json")
         spec_files = glob.glob(pattern)
@@ -88,7 +89,7 @@ class πFieldSystem:
             if spec_file.endswith("_spec.json"):
                 self.add_field_from_spec(spec_file)
     
-    def apply_fields_to_body(self, body: Dict, dt: float = 0.0166667) -> List[float]:
+    def apply_fields_to_body(self, body: dict, dt: float = 0.0166667) -> list[float]:
         """
         Apply all registered fields to a body
         Returns total force vector [x, y, z]
@@ -151,7 +152,7 @@ class πFieldSystem:
         
         return total_force
     
-    def apply_fields_to_world(self, world_state: Dict, dt: float = 0.0166667):
+    def apply_fields_to_world(self, world_state: dict, dt: float = 0.0166667):
         """
         Apply all fields to all bodies in world state
         Modifies world_state in place

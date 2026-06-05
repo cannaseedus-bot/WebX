@@ -16,12 +16,11 @@ Three zones:
   1.0 ≤ loss ≤ 10.0        → stable orbit: normal training
 """
 from __future__ import annotations
-import math, pathlib, struct, time
-from dataclasses import dataclass, field
-from typing import Optional
 
-import torch
+import pathlib
+
 import numpy as np
+import torch
 
 try:
     from kuhul_physics import KuhulPhysicsSolverWithReserves, PressureReserve
@@ -72,7 +71,7 @@ class KUHULEpochLoop:
         else:
             self.solver = None
 
-        self._last_good_ckpt: Optional[pathlib.Path] = None
+        self._last_good_ckpt: pathlib.Path | None = None
         self._ema_loss = None
         self._milestone_fired = False   # fires once at step 1000
 
@@ -317,7 +316,7 @@ class KUHULEpochLoop:
 #   loop._update_from_step(model, optimizer, step_loss, logit_max)
 
 def retrofit_existing_trainer(loss_at_step: float, logit_max: float,
-                               step: int, loop: 'KUHULEpochLoop',
+                               step: int, loop: KUHULEpochLoop,
                                optimizer=None) -> dict:
     """
     Call this from an existing training loop after each step.
@@ -379,7 +378,6 @@ def retrofit_existing_trainer(loss_at_step: float, logit_max: float,
 
 if __name__ == '__main__':
     # Demo: simulate the step 1092 spike scenario
-    import random
     print("[K'UHUL Epoch Loop Demo]")
     print("Simulating training steps including a spike at step 1092...")
 

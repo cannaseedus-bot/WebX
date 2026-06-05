@@ -1,21 +1,20 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from typing import List
-from pydantic import BaseModel
 
-from fastapi import FastAPI
-from evaluate import load
 from comet import download_model, load_from_checkpoint
+from evaluate import load
+from fastapi import FastAPI
+from pydantic import BaseModel
 
 app = FastAPI()
 
 class SummarizationEvaluationRequest(BaseModel):
-    sources: List[str]
-    summaries: List[str]
+    sources: list[str]
+    summaries: list[str]
 
 class TranslationEvaluationRequest(BaseModel):
-    sources: List[str]
-    translations: List[str]
+    sources: list[str]
+    translations: list[str]
 
 @app.post("/bert-score/")
 def bert_score(request: SummarizationEvaluationRequest):

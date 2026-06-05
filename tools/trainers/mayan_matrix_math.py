@@ -22,10 +22,8 @@ Attractor types (FLUXTensor):
 from __future__ import annotations
 
 import math
-import os
 import pathlib
 from datetime import datetime
-from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -49,7 +47,7 @@ class FluxTensor(nn.Parameter):
         instance.mutation_count = 0
         return instance
 
-    def mutate(self, gradient: Optional[torch.Tensor] = None) -> 'FluxTensor':
+    def mutate(self, gradient: torch.Tensor | None = None) -> FluxTensor:
         self.mutation_count += 1
         age_days     = (datetime.now() - self.creation_date).days
         decay_factor = 0.5 ** (age_days / max(1, self.half_life))
@@ -73,7 +71,7 @@ class FLUXTensor(nn.Parameter):
         instance._state     = torch.zeros(3)
         return instance
 
-    def evolve(self, steps: int = 1) -> 'FLUXTensor':
+    def evolve(self, steps: int = 1) -> FLUXTensor:
         s = self._state
         for _ in range(steps):
             if self._attractor == 'lorenz':

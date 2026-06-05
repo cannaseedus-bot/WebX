@@ -13,11 +13,8 @@ Usage:
 
 import argparse
 import json
-import os
-import sys
 from pathlib import Path
 from textwrap import dedent
-
 
 # ── Skeleton generators ────────────────────────────────────────────────────────
 
@@ -112,7 +109,7 @@ def scaffold_agent(name: str, purpose: str, root: Path):
     print(f"Created: {skill_md_path}")
 
     openai_yaml_path = agents_dir / "openai.yaml"
-    openai_yaml_content = dedent(f"""\
+    openai_yaml_content = dedent("""\
         interface:
           display_name: "[FILL: Human-readable name]"
           short_description: "[FILL: One sentence, max 80 chars]"

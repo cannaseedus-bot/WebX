@@ -6,7 +6,7 @@ Fields combine to create meaningful movement in physics-driven UI.
 """
 
 import math
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any
 
 
 class πFieldCompositor:
@@ -16,7 +16,7 @@ class πFieldCompositor:
     """
     
     def __init__(self):
-        self.field_calculators: Dict[str, callable] = {}
+        self.field_calculators: dict[str, callable] = {}
         self.register_builtin_calculators()
     
     def register_builtin_calculators(self):
@@ -32,7 +32,7 @@ class πFieldCompositor:
         """Register a field calculator function"""
         self.field_calculators[field_type] = calculator
     
-    def calculate_wind_force(self, params: Dict[str, Any], body: Dict[str, Any], position: List[float]) -> List[float]:
+    def calculate_wind_force(self, params: dict[str, Any], body: dict[str, Any], position: list[float]) -> list[float]:
         """
         Wind Force Field
         Applies directional force to bodies
@@ -54,7 +54,7 @@ class πFieldCompositor:
         
         return force
     
-    def calculate_attraction_force(self, params: Dict[str, Any], body: Dict[str, Any], position: List[float]) -> List[float]:
+    def calculate_attraction_force(self, params: dict[str, Any], body: dict[str, Any], position: list[float]) -> list[float]:
         """
         Attraction Well Field
         Creates central attraction or repulsion force
@@ -84,7 +84,7 @@ class πFieldCompositor:
         
         return force
 
-    def calculate_navigation_force(self, params: Dict[str, Any], body: Dict[str, Any], position: List[float], velocity: List[float] = None) -> List[float]:
+    def calculate_navigation_force(self, params: dict[str, Any], body: dict[str, Any], position: list[float], velocity: list[float] = None) -> list[float]:
         """
         Navigation Force Field
         Guides bodies toward navigation targets with intelligent pathfinding
@@ -133,7 +133,7 @@ class πFieldCompositor:
         
         return force
 
-    def calculate_scroll_inertia(self, params: Dict[str, Any], body: Dict[str, Any], position: List[float], velocity: List[float]) -> List[float]:
+    def calculate_scroll_inertia(self, params: dict[str, Any], body: dict[str, Any], position: list[float], velocity: list[float]) -> list[float]:
         """
         Scroll Inertia Field
         Simulates physical scrolling with momentum and friction
@@ -176,14 +176,14 @@ class πFieldCompositor:
         
         return force
 
-    def calculate_magnetic_field(self, params: Dict[str, Any], body: Dict[str, Any], position: List[float]) -> List[float]:
+    def calculate_magnetic_field(self, params: dict[str, Any], body: dict[str, Any], position: list[float]) -> list[float]:
         """
         Magnetic Field for UI elements
         Creates attraction/repulsion between related UI elements
         """
         return [0.0, 0.0, 0.0]
 
-    def calculate_friction_field(self, params: Dict[str, Any], body: Dict[str, Any], position: List[float], velocity: List[float]) -> List[float]:
+    def calculate_friction_field(self, params: dict[str, Any], body: dict[str, Any], position: list[float], velocity: list[float]) -> list[float]:
         """
         Surface Friction Field
         Applies friction based on material properties

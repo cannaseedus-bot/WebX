@@ -5,7 +5,12 @@ build_math_tokens_v4.py — Math µMODEL data v4
   Keep:   Filtered math JSONL records with ### Instruction/Response
   Output: tokens_math_v4.bin
 """
-import json, re, struct, pathlib, random, textwrap
+import json
+import pathlib
+import random
+import re
+import struct
+
 import tiktoken
 
 JSONL  = pathlib.Path(r"C:\Users\canna\.gpu_trainer\bin\xshard_jsonl\prompt_math_layer.jsonl")
@@ -242,7 +247,7 @@ def main():
 
     print()
     print("=" * 60)
-    print(f"  tokens_math_v4.bin")
+    print("  tokens_math_v4.bin")
     print(f"  {seqs:,} seqs x {BLOCK}  ({OUT.stat().st_size/1e6:.1f} MB)")
     print(f"  1 epoch at batch=4: {seqs//4:,} steps")
     print(f"  KXML graphs: {len(kxml_recs)}  Direct Q/A: {len(qa_recs)}")

@@ -25,7 +25,10 @@ Gravity scale per layer (K'UHUL ⟁Grav⟁):
   lm_head:   2.0  (heavy — output logits critical)
   debug:     0.0  (antigravity — telemetry only)
 """
-import subprocess, sys, pathlib, json, struct, time, argparse
+import argparse
+import pathlib
+import subprocess
+import sys
 
 # ── Field system (Python orchestration, CPU-only coordination) ─────────────────
 sys.path.insert(0, r"C:\Users\canna\.gpu_trainer\kuhul\graphics\Win2D\brain-integration\field_system")
@@ -109,10 +112,10 @@ def run_field_training(model: str, data: str, out_dir: str,
         compositor = πFieldCompositor()
         print("[hybrid] πFieldCompositor loaded:")
         print(f"  Fields: {list(compositor.field_calculators.keys())}")
-        print(f"  attraction_well → gravity ⟁Grav⟁")
-        print(f"  scroll_inertia  → Adam momentum")
-        print(f"  wind_field      → L2 regularization")
-        print(f"  navigation_force→ arrival LR decay")
+        print("  attraction_well → gravity ⟁Grav⟁")
+        print("  scroll_inertia  → Adam momentum")
+        print("  wind_field      → L2 regularization")
+        print("  navigation_force→ arrival LR decay")
         print(f"  target_loss:    {target_loss}")
     else:
         compositor = None
@@ -125,16 +128,16 @@ def run_field_training(model: str, data: str, out_dir: str,
         print(f"  {layer:10s} g={scale:.1f}  [{mark}]")
 
     # Navigation force schedule preview
-    print(f"\n[hybrid] navigation_force schedule preview:")
+    print("\n[hybrid] navigation_force schedule preview:")
     for loss in [3.0, 2.0, 1.5, 1.0, 0.8, 0.6, target_loss]:
         nav = field_lr_schedule(500, steps, target_loss, loss, lr)
         print(f"  loss={loss:.1f} → lr={nav:.2e}")
 
     # Launch GPU trainer (no CPU usage)
-    print(f"\n[hybrid] Launching GPU trainer (D3D11, no CPU)...")
+    print("\n[hybrid] Launching GPU trainer (D3D11, no CPU)...")
     proc = launch_gpu_trainer(model, data, model_out, steps, batch, block, lr, save_every)
     print(f"[hybrid] PID {proc.pid} — GPU training in progress")
-    print(f"[hybrid] field_optimizer.cso loaded by trainer for Win2D parallel updates")
+    print("[hybrid] field_optimizer.cso loaded by trainer for Win2D parallel updates")
     print(f"[hybrid] Monitor: Get-Process -Id {proc.pid}")
 
     # Wait and report

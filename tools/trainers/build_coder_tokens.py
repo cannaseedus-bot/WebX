@@ -8,7 +8,11 @@ Format: {"id":N, "messages":[{"role":"user","content":"..."},{"role":"assistant"
 7.1M total examples — we sample 80,000 for a focused coder specialist.
 At block=256, batch=8: 1 epoch ≈ ~10,000 steps.
 """
-import json, struct, pathlib, random, sys
+import json
+import pathlib
+import random
+import struct
+
 import tiktoken
 
 DATA_DIR = pathlib.Path(r"E:\data\coder_outputs")

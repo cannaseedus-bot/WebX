@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -90,7 +90,7 @@ class AttentionBlock(nn.Module):
         self.phase_scale = nn.Parameter(torch.ones(1))
         self.sigma = nn.Parameter(torch.ones(1))
 
-    def forward(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, attn_mask: torch.Tensor | None = None) -> torch.Tensor:
         batch, seq_len, hidden = x.shape
         q = self.q_proj(x)
         k = self.k_proj(x)
@@ -127,14 +127,14 @@ class SMGM16(nn.Module):
         self,
         d_model: int = 768,
         layers: int = 6,
-        stage_dims: Tuple[int, ...] = (4, 4),
+        stage_dims: tuple[int, ...] = (4, 4),
         k: int = 4,
         patch_dim: int = 64,
         *,
         vocab_size: int = 1024,
-        hidden_size: Optional[int] = None,
+        hidden_size: int | None = None,
         max_positions: int = 1024,
-        num_layers: Optional[int] = None,
+        num_layers: int | None = None,
         num_cards: int = 52,
         maya_dim: int = 15,
         maya_hidden: int = 192,
@@ -212,7 +212,7 @@ class SMGM16(nn.Module):
         map_location: str | torch.device = "cpu",
         strict: bool = True,
         **kwargs: Any,
-    ) -> "SMGM16":
+    ) -> SMGM16:
         checkpoint = torch.load(checkpoint_path, map_location=map_location)
         model = cls(**kwargs)
         model.load_state_dict(checkpoint, strict=strict)
@@ -283,7 +283,7 @@ class SMGM16(nn.Module):
         ]
         return torch.stack(features, dim=-1)
 
-    def _phase_signal(self, token_ids: torch.Tensor, x: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def _phase_signal(self, token_ids: torch.Tensor, x: torch.Tensor | None = None) -> torch.Tensor:
         if token_ids.dtype in (torch.int8, torch.int16, torch.int32, torch.int64, torch.long):
             signal = token_ids.float() / max(self.vocab_size - 1, 1)
         else:
@@ -341,7 +341,7 @@ class SMGM16(nn.Module):
     def forward(
         self,
         input_ids: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
         return_hidden: bool = False,
     ):
         """
@@ -385,8 +385,8 @@ class SMGM16(nn.Module):
         if attention_mask is not None:
             hidden = hidden * attention_mask.unsqueeze(-1).to(hidden.dtype)
 
-        layer_gates: List[torch.Tensor] = []
-        stage_probs: List[torch.Tensor] = []
+        layer_gates: list[torch.Tensor] = []
+        stage_probs: list[torch.Tensor] = []
 
         for idx in range(self.num_layers):
             attn_input = self.norms[idx](hidden)

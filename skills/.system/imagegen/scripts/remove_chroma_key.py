@@ -8,15 +8,13 @@ generate an image on a flat key color, then convert that key color to alpha.
 from __future__ import annotations
 
 import argparse
+import re
+import sys
 from io import BytesIO
 from pathlib import Path
-import re
 from statistics import median
-import sys
-from typing import Tuple
 
-
-Color = Tuple[int, int, int]
+Color = tuple[int, int, int]
 KEY_DOMINANCE_THRESHOLD = 16.0
 ALPHA_NOISE_FLOOR = 8
 

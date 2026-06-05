@@ -31,11 +31,11 @@ import argparse
 import importlib.util
 import json
 import pathlib
+import shutil
 import struct
 import subprocess
 import sys
 import time
-import shutil
 
 import numpy as np
 
@@ -196,7 +196,6 @@ def phase_chen(gpu_ckpt: pathlib.Path, bin_path: pathlib.Path,
     ft      = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(ft)
 
-    import torch
 
     print(f"\n[Ch'en] CPU finetune: {steps} steps  batch={batch}  lr={lr:.2e}")
     print(f"        from: {gpu_ckpt.name}")
@@ -287,8 +286,8 @@ def phase_xul(final: pathlib.Path, elapsed: float, args) -> None:
     print(f"  ARC cache  : {GEODESIC_CACHE}")
     print(f"  final ckpt : {final}")
     print(f"{'='*62}")
-    print(f"\nNext steps:")
-    print(f"  Load in LM Studio or llama.cpp with the KXML math system prompt")
+    print("\nNext steps:")
+    print("  Load in LM Studio or llama.cpp with the KXML math system prompt")
     print(f"  Run more steps: --model {final} --gpu-steps 500 --cpu-steps 500")
     print(f"  Export GGUF:    python to_gguf.py {final} --out math_micronaut_q8.gguf")
 
@@ -341,7 +340,7 @@ def main():
     print(f"  [Pop]   tokenize {jsonl_path.name} domain={args.domain!r}")
     print(f"  [Sek]   iGPU pretrain  {args.gpu_steps} steps  lr={args.gpu_lr:.2e}  batch={args.gpu_batch}")
     print(f"  [Ch'en] CPU finetune   {args.cpu_steps} steps  lr={args.cpu_lr:.2e}  batch={args.cpu_batch}")
-    print(f"  [Xul]   save + summary")
+    print("  [Xul]   save + summary")
     print(f"  geodesic cache: {GEODESIC_CACHE}")
     print("=" * 62)
 

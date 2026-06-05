@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(__file__))
 
 from field_composition_enhanced import πFieldSystem
 
+
 def test_field_loading():
     """Test loading field specifications from JSON files"""
     print("Testing Field Specification Loading")

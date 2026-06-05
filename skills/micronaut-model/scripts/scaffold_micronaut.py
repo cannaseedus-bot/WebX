@@ -11,12 +11,10 @@ Usage:
 
 import argparse
 import json
-import os
 import re
 import sys
 from pathlib import Path
 from textwrap import dedent
-
 
 # ── Fold registry ──────────────────────────────────────────────────────────────
 
@@ -391,11 +389,11 @@ def build_bots_py(id: str, name: str, fold: str, backend: str, backend_opts: dic
 
     elif backend == "api_anthropic":
         backend_imports = "import anthropic"
-        backend_init = f"""\
+        backend_init = """\
         self.client = anthropic.Anthropic()
-        self.model = xjson.get("@model.core", {{}}).get("model", "claude-sonnet-4-6")
+        self.model = xjson.get("@model.core", {}).get("model", "claude-sonnet-4-6")
         self.backend = "api_anthropic"
-        logger.info(f"Anthropic backend: {{self.model}}")"""
+        logger.info(f"Anthropic backend: {self.model}")"""
         backend_infer = """\
         with self.client.messages.stream(
             model=self.model,

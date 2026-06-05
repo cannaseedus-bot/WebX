@@ -17,8 +17,8 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import pathlib
 import json
+import pathlib
 import struct
 import subprocess
 import sys
@@ -165,7 +165,7 @@ def run_stage(stage: str, model_path: pathlib.Path, base_out_dir: pathlib.Path,
         "--ckpt_every", str(ckpt_every),
     ]
 
-    print(f"  cmd: python finetune_toolcall_pt.py [args]")
+    print("  cmd: python finetune_toolcall_pt.py [args]")
     t0 = time.time()
     result = subprocess.run(cmd, cwd=str(TRAINER_DIR))
     elapsed = time.time() - t0
@@ -275,10 +275,10 @@ def main():
             ckpt_every=args.ckpt_every, max_records=args.max_records,
         )
 
-    print(f"\nAll stages complete.")
+    print("\nAll stages complete.")
     print(f"Final model: {current_model}")
-    print(f"\nTo test:")
-    print(f"  python test_toolcall_models.py")
+    print("\nTo test:")
+    print("  python test_toolcall_models.py")
 
 
 if __name__ == "__main__":

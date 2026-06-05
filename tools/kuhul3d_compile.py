@@ -15,8 +15,7 @@ import argparse
 import json
 import re
 from pathlib import Path
-from typing import Any, Dict, List
-
+from typing import Any
 
 COMMAND_RE      = re.compile(r"^\[(?P<body>.+?)\]\s*$")
 DX12_BLOCK_START_RE = re.compile(r"^\s*dx12\s*\{\s*$")
@@ -30,7 +29,7 @@ def normalize_line(line: str) -> str:
     return line.split("//", 1)[0].strip()
 
 
-def parse_command(line: str) -> Dict[str, Any]:
+def parse_command(line: str) -> dict[str, Any]:
     m = COMMAND_RE.match(line)
     if not m:
         return {}
@@ -46,7 +45,7 @@ def parse_command(line: str) -> Dict[str, Any]:
     }
 
 
-def parse_declaration(line: str) -> Dict[str, Any]:
+def parse_declaration(line: str) -> dict[str, Any]:
     m = DECL_RE.match(line)
     if not m:
         return {}
@@ -58,8 +57,8 @@ def parse_declaration(line: str) -> Dict[str, Any]:
     }
 
 
-def compile_source(text: str, source_name: str) -> Dict[str, Any]:
-    ops: List[Dict[str, Any]] = []
+def compile_source(text: str, source_name: str) -> dict[str, Any]:
+    ops: list[dict[str, Any]] = []
     lines = text.splitlines()
     i = 0
     while i < len(lines):
@@ -71,7 +70,7 @@ def compile_source(text: str, source_name: str) -> Dict[str, Any]:
 
         # dx12 { ... } block
         if DX12_BLOCK_START_RE.match(line):
-            block_lines: List[str] = []
+            block_lines: list[str] = []
             depth = 1
             while i < len(lines):
                 raw2  = lines[i]

@@ -4,17 +4,18 @@ Phase 3: SMGM-16 Training Pipeline
 Trains the Mixture-of-Experts model on combined datasets.
 """
 
-import json
-import yaml
-from pathlib import Path
-from typing import Dict, Any, Tuple
 import argparse
+import json
+import sys
+import time
+from pathlib import Path
+from typing import Any
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import yaml
 from torch.utils.data import DataLoader, Dataset, IterableDataset
-import sys
-import time
 
 # Import model from smgm16.py
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -34,7 +35,7 @@ class TrainingDataset(Dataset):
         self.tokenizer = tokenizer
         self.max_len = max_len
         
-        with open(jsonl_path, 'r', encoding='utf-8') as f:
+        with open(jsonl_path, encoding='utf-8') as f:
             for line in f:
                 if line.strip():
                     try:
@@ -134,7 +135,7 @@ class StreamingTrainingDataset(IterableDataset):
         self.max_len = max_len
 
     def __iter__(self):
-        with open(self.jsonl_path, 'r', encoding='utf-8') as f:
+        with open(self.jsonl_path, encoding='utf-8') as f:
             for line in f:
                 if not line.strip():
                     continue
@@ -154,9 +155,9 @@ class StreamingTrainingDataset(IterableDataset):
                 }
 
 
-def load_config(config_path: Path) -> Dict[str, Any]:
+def load_config(config_path: Path) -> dict[str, Any]:
     """Load YAML configuration."""
-    with open(config_path, 'r') as f:
+    with open(config_path) as f:
         return yaml.safe_load(f)
 
 
@@ -169,7 +170,7 @@ def load_tokenizer(tokenizer_path: str | None):
     return Tokenizer.from_file(str(path))
 
 
-def apply_overrides(config: Dict[str, Any], args: argparse.Namespace) -> Dict[str, Any]:
+def apply_overrides(config: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
     """Apply CLI overrides to the loaded configuration."""
     if args.device:
         config["device"] = args.device

@@ -14,7 +14,11 @@ XVM CPU cluster optimum (v0.1.0-xvm-cpu-thread-cluster):
 
 50% CPU: 4 threads (leaving 4 for routing model)
 """
-import subprocess, sys, pathlib, torch
+import pathlib
+import subprocess
+import sys
+
+import torch
 
 # Limit to 50% CPU before importing trainer
 torch.set_num_threads(4)

@@ -10,14 +10,12 @@ Usage:
 """
 
 import argparse
-import os
-import sys
-import json
 import hashlib
-import urllib.request
+import json
+import sys
 import urllib.error
+import urllib.request
 from pathlib import Path
-from typing import Optional
 
 # ─── OSS Weight Catalog ───────────────────────────────────────────────────────
 # Tested HuggingFace repos with license info and recommended GGUF files.
@@ -232,7 +230,7 @@ def download_file(url: str, dest: Path, show_progress: bool = True) -> Path:
 
 def fetch_weights(
     repo: str,
-    filename: Optional[str],
+    filename: str | None,
     out_dir: str,
     skip_existing: bool = True,
     verify: bool = False,
@@ -341,7 +339,7 @@ def main():
             print()
             # Show scaffold hint
             name = Path(result["filename"]).stem.replace("-", "_").replace(".", "_")
-            print(f"  Scaffold a micronaut with these weights:")
+            print("  Scaffold a micronaut with these weights:")
             print(f"  python scaffold_micronaut.py new <ID> <Name> --backend local_gguf --weights {result['path']} --fold COMPUTE")
 
     except (FileNotFoundError, RuntimeError, ValueError) as e:

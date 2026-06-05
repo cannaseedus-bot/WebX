@@ -12,13 +12,10 @@ from __future__ import annotations
 import ctypes
 import hashlib
 import json
-import os
 import re
-import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 # ---------------------------------------------------------------------------
 # TodoItem  —  mirrors the C++ struct in micronaut_todo_creator.hpp
@@ -413,7 +410,7 @@ class TraceLogger:
 # Optional ctypes binding to native shared library
 # ---------------------------------------------------------------------------
 
-def _try_load_native() -> Optional[ctypes.CDLL]:
+def _try_load_native() -> ctypes.CDLL | None:
     _here = Path(__file__).parent
     build_dir = _here.parent / "build"
     candidates = [
@@ -429,7 +426,7 @@ def _try_load_native() -> Optional[ctypes.CDLL]:
     return None
 
 
-_native_lib: Optional[ctypes.CDLL] = _try_load_native()
+_native_lib: ctypes.CDLL | None = _try_load_native()
 NATIVE_AVAILABLE: bool = _native_lib is not None
 
 

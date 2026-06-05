@@ -6,11 +6,9 @@ Run from the project root directory.
 """
 
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
-
 
 STACK_SIGNALS = [
     ("package.json",        "nodejs"),

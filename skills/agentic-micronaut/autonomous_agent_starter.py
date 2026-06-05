@@ -1,15 +1,15 @@
 # Python 3 - Agentic Micronaut Autonomous Agent Starter
 # Required baseline for autonomous-agent tasks
 
-import random
-from typing import List, Dict, Any, Optional
 import json
+import random
+from typing import Any
 
 
 class Agent:
     """Autonomous agent with goals, observations, and learning"""
     
-    def __init__(self, name: str, goals: List[str], agent_type: str = "generic"):
+    def __init__(self, name: str, goals: list[str], agent_type: str = "generic"):
         self.name = name
         self.goals = goals
         self.agent_type = agent_type
@@ -17,7 +17,7 @@ class Agent:
         self.state = "idle"
         self.tick = 0
     
-    def sense(self, environment: List[str]) -> str:
+    def sense(self, environment: list[str]) -> str:
         """Observe environment and return single observation"""
         observation = random.choice(environment)
         print(f"[{self.name}] Observed: {observation}")
@@ -31,7 +31,7 @@ class Agent:
                 return goal
         return "explore"
     
-    def act(self, action: str) -> Dict[str, Any]:
+    def act(self, action: str) -> dict[str, Any]:
         """Execute action and return result"""
         if action == "explore":
             print(f"[{self.name}] Exploring environment...")
@@ -47,13 +47,13 @@ class Agent:
             "tick": self.tick
         }
     
-    def learn(self, observation: str, action: str, result: Dict[str, Any]) -> None:
+    def learn(self, observation: str, action: str, result: dict[str, Any]) -> None:
         """Learn from experience"""
         key = f"{observation}_{action}"
         self.knowledge[key] = result
         print(f"[{self.name}] Knowledge updated: learned {len(self.knowledge)} patterns")
     
-    def step(self, environment: List[str]) -> Dict[str, Any]:
+    def step(self, environment: list[str]) -> dict[str, Any]:
         """Execute single agent step: sense -> decide -> act -> learn"""
         self.tick += 1
         observation = self.sense(environment)
@@ -62,7 +62,7 @@ class Agent:
         self.learn(observation, action, result)
         return result
     
-    def run(self, environment: List[str], steps: int = 5) -> List[Dict[str, Any]]:
+    def run(self, environment: list[str], steps: int = 5) -> list[dict[str, Any]]:
         """Run agent for N steps"""
         results = []
         for _ in range(steps):
@@ -75,7 +75,7 @@ class Agent:
 class MultiAgentSystem:
     """Coordinate multiple agents with shared environment"""
     
-    def __init__(self, agents: List[Agent]):
+    def __init__(self, agents: list[Agent]):
         self.agents = agents
         self.environment = []
         self.history = []
@@ -84,7 +84,7 @@ class MultiAgentSystem:
         """Add observation to shared environment"""
         self.environment.append(observation)
     
-    def step(self) -> Dict[str, Any]:
+    def step(self) -> dict[str, Any]:
         """Execute one step for all agents"""
         results = []
         for agent in self.agents:
@@ -99,7 +99,7 @@ class MultiAgentSystem:
         self.history.append(step_result)
         return step_result
     
-    def run(self, steps: int = 5) -> List[Dict[str, Any]]:
+    def run(self, steps: int = 5) -> list[dict[str, Any]]:
         """Run all agents for N steps"""
         for _ in range(steps):
             self.step()

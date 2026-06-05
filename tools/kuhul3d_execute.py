@@ -16,8 +16,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, List
-
+from typing import Any
 
 _DLL_CANDIDATES = [
     # Relative to CWD (original location when run from E:\models\MX2LM)
@@ -44,7 +43,7 @@ def _find_dll(override: str = "") -> Path | None:
                 return candidate
     return None
 
-def probe_d3d12_adapter(dll_override: str = "") -> Dict[str, Any]:
+def probe_d3d12_adapter(dll_override: str = "") -> dict[str, Any]:
     dll_path = _find_dll(dll_override)
     if not dll_path:
         searched = [str(Path.cwd() / r) for r in _DLL_CANDIDATES]
@@ -75,7 +74,7 @@ def probe_d3d12_adapter(dll_override: str = "") -> Dict[str, Any]:
         return {"available": False, "reason": str(exc)}
 
 
-def choose_backend(probe: Dict[str, Any]) -> str:
+def choose_backend(probe: dict[str, Any]) -> str:
     if probe.get("available"):
         code = probe.get("backend_code", 0)
         if code == 1:
@@ -85,7 +84,7 @@ def choose_backend(probe: Dict[str, Any]) -> str:
     return "cpu"
 
 
-def run_native_demo() -> Dict[str, Any]:
+def run_native_demo() -> dict[str, Any]:
     exe = Path("native/d3d12_compute/build/Release/d3d12_compute_demo.exe")
     if not exe.exists():
         return {"ok": False, "reason": f"missing executable: {exe.as_posix()}"}
@@ -120,7 +119,7 @@ def run_native_demo() -> Dict[str, Any]:
         return {"ok": False, "reason": "native demo timeout"}
 
 
-def _extract_semantic_op(op: Dict[str, Any]) -> str | None:
+def _extract_semantic_op(op: dict[str, Any]) -> str | None:
     if op.get("op") == "command":
         name = str(op.get("name", ""))
         args = op.get("args", [])
@@ -174,8 +173,8 @@ def _kernel_backend(kernel: str, preferred_backend: str) -> str:
     return "wgsl"
 
 
-def _dispatch_wgsl_jobs(kernels: List[str]) -> Dict[str, Any]:
-    results: List[Dict[str, Any]] = []
+def _dispatch_wgsl_jobs(kernels: list[str]) -> dict[str, Any]:
+    results: list[dict[str, Any]] = []
     for kernel in kernels:
         status = "ok"
         notes = "emulated WGSL dispatch"
@@ -195,15 +194,15 @@ def _dispatch_wgsl_jobs(kernels: List[str]) -> Dict[str, Any]:
     return {"ok": all(r["status"] == "ok" for r in results), "results": results}
 
 
-def execute_ir(ir: Dict[str, Any], backend: str) -> Dict[str, Any]:
-    trace: List[Dict[str, Any]] = []
-    d3d12_trace_indices: List[int] = []
-    wgsl_trace_indices: List[int] = []
-    d3d12_kernels: List[str] = []
-    wgsl_kernels: List[str] = []
+def execute_ir(ir: dict[str, Any], backend: str) -> dict[str, Any]:
+    trace: list[dict[str, Any]] = []
+    d3d12_trace_indices: list[int] = []
+    wgsl_trace_indices: list[int] = []
+    d3d12_kernels: list[str] = []
+    wgsl_kernels: list[str] = []
 
     for op in ir.get("ops", []):
-        entry: Dict[str, Any] = {"op": op.get("op"), "status": "skipped"}
+        entry: dict[str, Any] = {"op": op.get("op"), "status": "skipped"}
         if op.get("op") == "command":
             name = op.get("name", "")
             args = op.get("args", [])
@@ -255,8 +254,8 @@ def execute_ir(ir: Dict[str, Any], backend: str) -> Dict[str, Any]:
 
         trace.append(entry)
 
-    native_result: Dict[str, Any] = {"ok": True, "reason": "no d3d12 kernels dispatched"}
-    wgsl_result: Dict[str, Any] = {"ok": True, "reason": "no wgsl kernels dispatched"}
+    native_result: dict[str, Any] = {"ok": True, "reason": "no d3d12 kernels dispatched"}
+    wgsl_result: dict[str, Any] = {"ok": True, "reason": "no wgsl kernels dispatched"}
     fallback_applied = False
 
     if d3d12_kernels:

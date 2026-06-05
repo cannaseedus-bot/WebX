@@ -25,7 +25,14 @@ Resume config:
   Fibers:      32 shards, 4 OS threads (50% of 8-core)
 """
 from __future__ import annotations
-import subprocess, sys, pathlib, struct, math, time
+
+import math
+import pathlib
+import struct
+import subprocess
+import sys
+import time
+
 import numpy as np
 
 # ─── XVM cluster constants (mirrors xvm_core.h) ─────────────────────────────

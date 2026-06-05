@@ -9,7 +9,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-
 MAX_PLUGIN_NAME_LENGTH = 64
 DEFAULT_PLUGIN_PARENT = Path.cwd() / "plugins"
 DEFAULT_MARKETPLACE_PATH = Path.cwd() / ".agents" / "plugins" / "marketplace.json"

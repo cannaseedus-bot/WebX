@@ -10,13 +10,12 @@ This is the supernaut-integrated factory that:
 4. Coordinates composition and publishing
 """
 
+import hashlib
 import json
 import os
-import subprocess
-import hashlib
-from typing import Optional, Dict, Any, List
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 # Registry path (shared with supernaut)
 REGISTRY_PATH = "C:\\Users\\canna\\.claude\\commands\\micronaut_registry.json"
@@ -41,13 +40,13 @@ class MicronauntMeta:
 @dataclass
 class MicronauntSchema:
     meta: MicronauntMeta
-    targets: Dict[str, Any]
-    inputs: List[Dict[str, Any]]
-    outputs: List[Dict[str, Any]]
-    skills: List[Dict[str, Any]]
-    control: Dict[str, Any]
-    distribution: Dict[str, Any]
-    semantic: Optional[Dict[str, Any]] = None
+    targets: dict[str, Any]
+    inputs: list[dict[str, Any]]
+    outputs: list[dict[str, Any]]
+    skills: list[dict[str, Any]]
+    control: dict[str, Any]
+    distribution: dict[str, Any]
+    semantic: dict[str, Any] | None = None
 
 
 @dataclass
@@ -74,10 +73,10 @@ class MicronauntFactoryCoordinator:
     """
 
     def __init__(self):
-        self.instances: Dict[str, MicronauntInstance] = {}
+        self.instances: dict[str, MicronauntInstance] = {}
         self.registry = self._load_registry()
 
-    def _load_registry(self) -> Dict[str, Any]:
+    def _load_registry(self) -> dict[str, Any]:
         """Load supernaut registry (shared with micronaut_registry.json)"""
         if os.path.exists(REGISTRY_PATH):
             with open(REGISTRY_PATH) as f:
@@ -93,7 +92,7 @@ class MicronauntFactoryCoordinator:
         self, 
         schema_path: str,
         backend: str = "deterministic"
-    ) -> Optional[MicronauntInstance]:
+    ) -> MicronauntInstance | None:
         """
         Create micronaut from schema file
         
@@ -154,16 +153,16 @@ class MicronauntFactoryCoordinator:
         
         return instance
 
-    def _validate_schema(self, schema: Dict[str, Any]) -> bool:
+    def _validate_schema(self, schema: dict[str, Any]) -> bool:
         """Validate schema structure"""
         required_keys = ["meta", "targets", "skills", "control"]
         return all(k in schema for k in required_keys)
 
     def _invoke_native_factory(
         self,
-        schema_json: Dict[str, Any],
+        schema_json: dict[str, Any],
         backend: str
-    ) -> Optional[MicronauntInstance]:
+    ) -> MicronauntInstance | None:
         """
         Invoke native C++ factory
         
@@ -211,10 +210,10 @@ class MicronauntFactoryCoordinator:
         self.registry["micronauts"][micronaut_id]["replicas"] = replica_count
         self._save_registry()
         
-        print(f"  ✅ Published\n")
+        print("  ✅ Published\n")
         return True
 
-    def resolve(self, mna_uri: str) -> Optional[Dict[str, Any]]:
+    def resolve(self, mna_uri: str) -> dict[str, Any] | None:
         """Resolve mna:// URI"""
         if mna_uri in self.instances:
             inst = self.instances[mna_uri]
@@ -228,9 +227,9 @@ class MicronauntFactoryCoordinator:
 
     def compose(
         self,
-        micronaut_ids: List[str],
+        micronaut_ids: list[str],
         composition_name: str
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Compose multiple micronauts into one"""
         print(f"[Factory Coordinator] Composing {len(micronaut_ids)} micronauts")
         
@@ -271,7 +270,7 @@ class MicronauntFactoryCoordinator:
         print(f"  ✅ Composed: {composed_id}\n")
         return {"id": composed_id, "hash": merged_hash}
 
-    def list_instances(self) -> List[Dict[str, Any]]:
+    def list_instances(self) -> list[dict[str, Any]]:
         """List all created instances"""
         return [
             {
@@ -283,7 +282,7 @@ class MicronauntFactoryCoordinator:
             for inst in self.instances.values()
         ]
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get factory statistics"""
         return {
             "total_created": len(self.instances),

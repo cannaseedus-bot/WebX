@@ -23,7 +23,12 @@ K'UHUL phase → arithmetic/reasoning mapping:
 
 Output: tokens_kxml_unified.bin
 """
-import json, re, struct, pathlib, random, textwrap
+import json
+import pathlib
+import random
+import re
+import struct
+
 import tiktoken
 
 MATH_JSONL    = pathlib.Path(r"C:\Users\canna\.gpu_trainer\bin\xshard_jsonl\prompt_math_layer.jsonl")
@@ -249,14 +254,14 @@ def main():
 
     print()
     print("="*60)
-    print(f"  tokens_kxml_unified.bin")
+    print("  tokens_kxml_unified.bin")
     print(f"  {seqs:,} seqs x {BLOCK}  ({OUT.stat().st_size/1e6:.1f} MB)")
     print(f"  1 epoch at batch=4: {seqs//4:,} steps")
     print()
     print("  Layers:")
-    print(f"    math JSONL (KXML wrapped)    domain=math")
-    print(f"    instruct JSONL (KXML wrapped) domain=general")
-    print(f"    code JSONL (KXML wrapped)     domain=code")
+    print("    math JSONL (KXML wrapped)    domain=math")
+    print("    instruct JSONL (KXML wrapped) domain=general")
+    print("    code JSONL (KXML wrapped)     domain=code")
     print(f"    arithmetic KXML graphs        {len(arith)} records")
     print(f"    direct Q/A pairs              {len(qa)} records")
     print()

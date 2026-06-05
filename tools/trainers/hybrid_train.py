@@ -142,8 +142,6 @@ def phase_chen(ctx: dict, gpu_ckpt: pathlib.Path, steps: int,
     ft      = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(ft)
 
-    import torch
-    import torch.nn.functional as F
 
     out_dir = ctx["cfg"]["out_dir"]
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -187,7 +185,6 @@ def phase_xul(ctx: dict, weights: pathlib.Path) -> pathlib.Path:
     print(f"\n[Xul] converting to GGUF: {gguf_out.name}")
 
     # Remap bare keys to transformer.* prefix
-    import torch
     from safetensors.torch import load_file, save_file
     tmp = weights.with_suffix(".remap.safetensors")
     raw = load_file(str(weights))
@@ -235,7 +232,7 @@ def _update_registry(cfg: dict, gguf_path: pathlib.Path) -> None:
     if not reg_path.exists():
         return
     try:
-        with open(reg_path, "r", encoding="utf-8") as f:
+        with open(reg_path, encoding="utf-8") as f:
             reg = json.load(f)
         for m in reg["models"]:
             if m["id"] == cfg["registry_id"]:
@@ -278,7 +275,7 @@ def main() -> None:
     print("K'UHUL HYBRID TRAINER")
     print(f"  graph  : {args.graph}")
     print(f"  model  : {args.model}")
-    print(f"  Pop    : resolve config")
+    print("  Pop    : resolve config")
     print(f"  Sek    : GPU pretrain  {args.gpu_steps} steps  lr={args.gpu_lr:.2e}  batch={args.gpu_batch}")
     print(f"  Ch'en  : CPU finetune  {args.cpu_steps} steps  lr={args.cpu_lr:.2e}  batch={args.cpu_batch}")
     print(f"  Xul    : {'GGUF export + registry update' if not args.skip_export else 'skipped'}")
@@ -309,11 +306,11 @@ def main() -> None:
     elapsed = time.monotonic() - t_start
     print(f"\n{'=' * 62}")
     print(f"HYBRID TRAINING COMPLETE  ({elapsed/60:.1f} min)")
-    print(f"  Pop   : config resolved")
+    print("  Pop   : config resolved")
     print(f"  Sek   : GPU pretrain {'done' if args.gpu_steps > 0 else 'skipped'}")
-    print(f"  Ch'en : CPU finetune done")
+    print("  Ch'en : CPU finetune done")
     print(f"  Xul   : {gguf.name}")
-    print(f"\nNext: load with llama.cpp or LM Studio")
+    print("\nNext: load with llama.cpp or LM Studio")
     print(f"  {gguf}")
     print(f"{'=' * 62}")
 

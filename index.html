@@ -64,13 +64,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 #logo-name{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--gold)}
 #logo-sub{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
 
-/* Top nav links */
+/* Top nav buttons (converted from <a> to <button> to eliminate href="#" issues) */
 #top-nav{display:flex;align-items:center;gap:2px;padding:0 12px;flex:1}
 .tnav{
   padding:6px 12px;font-size:12px;color:var(--muted);
   border-radius:var(--radius);cursor:pointer;
   border:1px solid transparent;transition:all .15s;
-  text-decoration:none;
+  background:none;font-family:var(--font-ui);
+  text-decoration:none;outline:none;
 }
 .tnav:hover{color:var(--text);background:var(--bg3)}
 .tnav.active{color:var(--gold);border-color:var(--border2);background:var(--bg3)}
@@ -308,20 +309,20 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 <!-- ════════════════════════════════════ TOP BAR -->
 <header id="topbar">
 
-  <a id="logo" href="#" onclick="nav('home');return false">
+  <button id="logo" onclick="nav('home')" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:0 16px;height:100%;border-right:1px solid var(--border);min-width:var(--sidebar-w);text-decoration:none;color:inherit;">
     <span id="logo-glyph">⟁</span>
     <div id="logo-text">
       <span id="logo-name">KUHUL</span>
       <span id="logo-sub">WebX-3D · v3.5.0</span>
     </div>
-  </a>
+  </button>
 
   <nav id="top-nav">
-    <a class="tnav active" href="#" data-page="home"    onclick="nav('home');return false">Home</a>
-    <a class="tnav"        href="#" data-page="app"     onclick="nav('app');return false">⟁ 3D App</a>
-    <a class="tnav"        href="#" data-page="demos"   onclick="nav('demos');return false">Demos</a>
-    <a class="tnav"        href="#" data-page="docs"    onclick="nav('docs');return false">Docs</a>
-    <a class="tnav"        href="#" data-page="trainer" onclick="nav('trainer');return false">Trainer</a>
+    <button class="tnav active" data-page="home"    onclick="nav('home')">Home</button>
+    <button class="tnav"        data-page="app"     onclick="nav('app')">⟁ 3D App</button>
+    <button class="tnav"        data-page="demos"   onclick="nav('demos')">Demos</button>
+    <button class="tnav"        data-page="docs"    onclick="nav('docs')">Docs</button>
+    <button class="tnav"        data-page="trainer" onclick="nav('trainer')">Trainer</button>
   </nav>
 
   <span id="version-badge">v3.5.0-WebX</span>
@@ -742,62 +743,53 @@ function setTopNav(page){
   });
 }
 
-function nav(page, pushState=true){
-  currentPage=page;
+function nav(page){
+  currentPage = page;
   setTopNav(page);
-  // pushState changes URL without firing hashchange — no feedback loop with routeHash()
-  if(pushState) history.pushState({page}, '', page==='home' ? './' : '#'+page);
+  document.getElementById('src-toggle').style.display = 'none';
 
-  document.getElementById('src-toggle').style.display='none';
-
-  if(page==='home'){
+  if(page === 'home'){
     showPanel('splash');
-    setBreadcrumb('KUHUL','Home');
-  } else if(page==='app'){
-    setLoad(30);
+    setBreadcrumb('KUHUL', 'Home');
+
+  } else if(page === 'app'){
     showPanel('frame');
-    document.getElementById('content-frame').src='src/index.html';
-    setBreadcrumb('KUHUL','3D App');
-    setLoad(100);
-  } else if(page==='demos'){
-    loadDemo('mx2lm-directwrite-gpu', false);
-  } else if(page==='docs'){
+    document.getElementById('content-frame').src = 'src/index.html';
+    setBreadcrumb('KUHUL', '3D App');
+
+  } else if(page === 'demos'){
+    loadDemo('mx2lm-directwrite-gpu');
+
+  } else if(page === 'docs'){
     loadDoc('KUHUL');
-  } else if(page==='trainer'){
-    setLoad(30);
+
+  } else if(page === 'trainer'){
     showPanel('frame');
-    document.getElementById('content-frame').src='src/index.html';
-    setBreadcrumb('KUHUL','Trainer');
-    setLoad(100);
+    document.getElementById('content-frame').src = 'src/index.html';
+    setBreadcrumb('KUHUL', 'Trainer');
   }
 }
 
-function loadDemo(name, updateHash=true){
-  setLoad(30);
+function loadDemo(name){
   showPanel('frame');
-  document.getElementById('content-frame').src=`examples/${name}.html`;
-  const label=name.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  document.getElementById('content-frame').src = `examples/${name}.html`;
+  const label = name.replace(/-/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
   setBreadcrumb('Demos', label);
-  document.getElementById('src-toggle').style.display='inline-block';
+  document.getElementById('src-toggle').style.display = 'inline-block';
   setTopNav('demos');
-  if(updateHash) history.pushState({page:'demo',name}, '', `#demo:${name}`);
-  setLoad(100);
 }
 
 function loadJsDemo(name){
-  setLoad(30);
   showPanel('frame');
-  document.getElementById('content-frame').src=`examples/js/${name}.html`;
+  document.getElementById('content-frame').src = `examples/js/${name}.html`;
   setBreadcrumb('JS Examples', name);
   setTopNav('demos');
-  history.pushState({page:'demo',name:`js/${name}`}, '', `#demo:js/${name}`);
-  setLoad(100);
 }
 
 function loadDoc(name){
   setLoad(20);
   setTopNav('docs');
-  history.pushState({page:'doc',name}, '', `#doc:${name}`);
+  // URL not tracked — hash routing handled on initial load only
   showPanel('panel');
   document.getElementById('md-body').innerHTML=
     `<p style="color:var(--muted);font-family:monospace">Loading ${name}.md…</p>`;
@@ -961,27 +953,17 @@ setInterval(checkServer,8000);
 
 // ════════════════════════════════════════════════════════ HASH ROUTING
 
+// Route from URL hash on initial page load (bookmark support)
 function routeFromHash(){
   const h = location.hash.replace('#','').trim();
-  if(!h||h==='home')         { nav('home', false); return; }
-  if(h==='app')                nav('app',     false);
-  else if(h==='demos')         nav('demos',   false);
-  else if(h==='docs')          nav('docs',    false);
-  else if(h==='trainer')       nav('trainer', false);
-  else if(h.startsWith('demo:')) loadDemo(h.replace('demo:',''), false);
-  else if(h.startsWith('doc:'))  loadDoc(h.replace('doc:',''));
+  if(!h || h==='home')             nav('home');
+  else if(h==='app')               nav('app');
+  else if(h==='demos')             nav('demos');
+  else if(h==='docs')              nav('docs');
+  else if(h==='trainer')           nav('trainer');
+  else if(h.startsWith('demo:'))   loadDemo(h.replace('demo:',''));
+  else if(h.startsWith('doc:'))    loadDoc(h.replace('doc:',''));
 }
-
-// popstate handles browser back/forward (pushState navigation)
-window.addEventListener('popstate', e => {
-  const s = e.state;
-  if(!s)                      { nav('home', false); return; }
-  if(s.page==='demo')         loadDemo(s.name, false);
-  else if(s.page==='doc')     loadDoc(s.name);
-  else                        nav(s.page || 'home', false);
-});
-
-// On initial load, read the hash (bookmarks / direct links)
 routeFromHash();
 </script>
 </body>

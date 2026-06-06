@@ -124,4 +124,52 @@ import { KuhulLinter }   from './kuhul/tools/linter.js';
 
 ---
 
+## Kernel Process HTTP APIs
+
+### Data Harvester — port 25120
+
+Autonomous internet data harvester for MM-CODER training. Registered with coordinator as `kernel_process` on `⟁COMPUTE_FOLD⟁`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | `{ ok: true }` |
+| `GET` | `/status` | Running state, cycle count, error count, cache size |
+| `POST` | `/harvest` | Trigger an immediate harvest cycle (async, 202 Accepted) |
+| `POST` | `/stop` | Stop the background harvest loop |
+
+```js
+// Trigger manual harvest
+await fetch('http://127.0.0.1:25120/harvest', { method: 'POST' });
+
+// Check status
+const s = await fetch('http://127.0.0.1:25120/status').then(r => r.json());
+// { service, port, running, cycles, errors, cache_size, out_dir }
+```
+
+### Learning Engine — port 25121
+
+Continuous training pipeline connector. Spawns `internet_harvester.py`, hot-swaps model on completion.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | `{ ok: true }` |
+| `GET` | `/status` | Active flag, cycle count, last model, log tail |
+| `POST` | `/train` | Start training on a batch dir (async, 202 Accepted) |
+
+```js
+// Start training on harvested batch
+await fetch('http://127.0.0.1:25121/train', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    batch_dir: 'data/harvested',
+    model_out:  'E:\\models\\GPT2\\med-GPT',
+  }),
+});
+```
+
+**Start both services:** `node micronaut/data-harvester.mjs` and `node micronaut/learning-engine.mjs`, or via `launch-coordinator-and-services.ps1` (they start automatically after replay-engine).
+
+---
+
 *See also: [KUHUL.md](KUHUL.md), [COMPILER.md](COMPILER.md), [EXAMPLES.md](EXAMPLES.md)*

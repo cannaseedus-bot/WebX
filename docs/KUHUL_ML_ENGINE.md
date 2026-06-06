@@ -45,6 +45,48 @@ identical to the optimizer dynamics of gradient descent.
 
 ---
 
+## Internet Learning Pipeline
+
+The ML engine is extended with an autonomous internet data harvesting layer for MM-CODER continuous training.
+
+```
+Boot
+ └─ data-harvester.mjs starts (port 25120)
+ └─ learning-engine.mjs starts (port 25121)
+
+Every 5 minutes (K'ayab' learning_cycle):
+  ⟁Pop⟁ harvest_knowledge
+    → GitHub API (code repos, trending)
+    → StackOverflow API (Python Q&A)
+    → arXiv CS.LG (research papers)
+    → HuggingFace API (model metadata)
+    → Wikipedia, HN, NASA
+  ⟁Sek⟁ rate_limited_fetch   (1 req/domain/sec)
+  ⟁Wo⟁  data/harvested/batch_<ts>.jsonl
+
+  ⟁Pop⟁ train_on_new_data
+    → internet_harvester.py extracts (prompt, completion) pairs
+    → writes E:\models\GPT2\med-GPT\training\harvest_<ts>.jsonl
+    → learning-engine hot-swaps model
+    → coordinator notified via POST /notify
+
+  ⟁Xul⟁ — sleep 300s → next K'ayab' iteration
+```
+
+**Connection-aware:** harvesting pauses when offline; resumes automatically on reconnect.
+
+**K'UHUL PS control:**
+```powershell
+. .\micronaut\kuhul\autonomous_learning.ps1
+Start-AutonomousLearning          # infinite learning loop
+Get-LearningStatus                # inspect harvester + engine
+Invoke-HarvestKnowledge           # trigger one cycle manually
+```
+
+**Manifest:** `micronaut/internet-learning.xjson`
+
+---
+
 ## Win2D Codegen → KXML Type System
 
 Win2D's `tools/codegen/exe/` reads `Settings.xml` and emits typed C++

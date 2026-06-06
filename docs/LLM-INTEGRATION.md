@@ -46,6 +46,28 @@ const typeResult = validator.validateTypes('⊕',
 );
 ```
 
+### MM-CODER Internet Data Integration
+
+MM-CODER (CoderMicronaut, `⟁COMPUTE_FOLD⟁`) is augmented with a live internet data pipeline that continuously harvests coding knowledge and fine-tunes the model in the background.
+
+```typescript
+// Trigger a harvest + train cycle from application code
+await fetch('http://127.0.0.1:25120/harvest', { method: 'POST' });
+
+// After harvester writes data/harvested/batch_<ts>.jsonl:
+await fetch('http://127.0.0.1:25121/train', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ batch_dir: 'data/harvested', model_out: 'E:\\models\\GPT2\\med-GPT' }),
+});
+```
+
+Sources: GitHub (code repos), StackOverflow (Python Q&A), arXiv CS.LG (papers), HuggingFace (model metadata). Each source is rate-limited to 1 request/second.
+
+The learning engine notifies the coordinator when a new model checkpoint is ready, enabling hot-swap without downtime. See `micronaut/internet-learning.xjson` for the full config and `micronaut/kuhul/autonomous_learning.ps1` for the K'UHUL PS control module.
+
+---
+
 ### LLMOptimizer (`kuhul/llm/optimizer.ts`)
 
 Suggests optimizations for a Geometric IR program.

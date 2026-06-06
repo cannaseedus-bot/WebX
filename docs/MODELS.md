@@ -136,6 +136,42 @@ import { ShardRegistry }                   from 'kuhul-es/kxml';
 
 ---
 
+## Real Micronauts — MM-1 Variants (In Progress)
+
+Three domain-specialist micronauts are being built on the MM-1 (ModelMicronaut) slot, all bound to `⟁COMPUTE_FOLD⟁`. All three can chat.
+
+| ID | Name | Base | Path | Fine-tune |
+|----|------|------|------|-----------|
+| MM-MATH | MathMicronaut | GPT-2 medium 117M | `E:\models\GPT2\math-GPT` | Math reasoning + KXML step-by-step |
+| MM-CODER | CoderMicronaut | GPT-2 medium 117M + C++ engine | `micronaut-coder\build-cmake-targets-vs2022\bin\Release\micronaut_coder.exe` | 7M+ coding Q&A |
+| MM-TOOLCALL | ToolcallMicronaut | GPT-2 medium 117M | `E:\models\GPT2\med-GPT` | Toolcall dispatch + geodesic ARC attention |
+
+Registry: `micronaut/micronaut.registry.xjson` (authoritative). Fold system: `micronaut/folds.toml` (15 folds, mutation forbidden).
+
+### MM-CODER Internet Learning Pipeline
+
+MM-CODER is augmented with an autonomous data harvesting pipeline that continuously feeds new training data from public APIs:
+
+```
+data-harvester.mjs (port 25120)
+  └─ fetches: GitHub API, StackOverflow, arXiv CS.LG, HuggingFace, HN, NASA
+  └─ rate-limited: 1 req/domain/sec
+  └─ writes: data/harvested/batch_<ts>.jsonl
+        ↓
+internet_harvester.py
+  └─ extracts (prompt, completion) pairs fold-tagged ⟁COMPUTE_FOLD⟁
+  └─ writes: E:\models\GPT2\med-GPT\training\harvest_<ts>.jsonl
+        ↓
+learning-engine.mjs (port 25121)
+  └─ spawns trainer per batch
+  └─ hot-swaps improved model
+  └─ notifies coordinator of model update
+```
+
+Config: `micronaut/internet-learning.xjson`. K'UHUL PS module: `micronaut/kuhul/autonomous_learning.ps1`.
+
+---
+
 ## Training Infrastructure
 
 | Component | Path |

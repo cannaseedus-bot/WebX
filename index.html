@@ -14,6 +14,7 @@
   --gold:#ffd93d;--gold2:#ffec80;--gold3:#c49a00;
   --purple:#7c5ce7;--cyan:#3ecfcf;--green:#52c77a;
   --red:#e05555;--pink:#d966a8;--blue:#4a9eff;--orange:#f09020;
+  --bg4:#28304a;
   --sidebar-w:230px;--topbar-h:48px;
   --font-mono:'Cascadia Code','Courier New',monospace;
   --font-ui:'Segoe UI',system-ui,sans-serif;
@@ -63,6 +64,28 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 #logo-text{display:flex;flex-direction:column;gap:0}
 #logo-name{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--gold)}
 #logo-sub{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+
+/* ════ ASX Atomic Button Rules ════
+   Attribute-selector buttons from the ASX Atomic HTML guide.
+   Use: <button btn> <button btn btn-gold> <button btn btn-cyan> */
+[btn]{
+  all:unset;
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  padding:4px 12px;border-radius:999px;font-size:11px;
+  letter-spacing:.06em;text-transform:uppercase;
+  border:1px solid var(--border2);background:var(--bg3);
+  color:var(--muted);cursor:pointer;
+  transition:background 110ms,border-color 110ms,transform 80ms,color 110ms;
+  user-select:none;font-family:var(--font-mono);box-sizing:border-box;
+}
+[btn]:hover{background:var(--bg4);border-color:#3a4560;color:var(--text);transform:translateY(-1px)}
+[btn]:active{transform:translateY(0)}
+[btn-gold]{border-color:rgba(255,217,61,.55);color:var(--gold);background:rgba(255,217,61,.06)}
+[btn-gold]:hover{background:rgba(255,217,61,.15);border-color:var(--gold)}
+[btn-cyan]{border-color:rgba(62,207,207,.5);color:var(--cyan);background:rgba(62,207,207,.05)}
+[btn-cyan]:hover{background:rgba(62,207,207,.13);border-color:var(--cyan)}
+[btn-purple]{border-color:rgba(108,92,231,.5);color:#a58cf7;background:rgba(108,92,231,.07)}
+[btn-purple]:hover{background:rgba(108,92,231,.17);border-color:var(--purple)}
 
 /* Top nav buttons (converted from <a> to <button> to eliminate href="#" issues) */
 #top-nav{display:flex;align-items:center;gap:2px;padding:0 12px;flex:1}
@@ -323,6 +346,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <button class="tnav"        data-page="demos"   onclick="nav('demos')">Demos</button>
     <button class="tnav"        data-page="docs"    onclick="nav('docs')">Docs</button>
     <button class="tnav"        data-page="trainer" onclick="nav('trainer')">Trainer</button>
+    <button class="tnav"        data-page="studio"  onclick="nav('studio')">Studio</button>
   </nav>
 
   <span id="version-badge">v3.5.0-WebX</span>
@@ -482,6 +506,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
     <div class="sb-sep"></div>
 
+    <!-- STUDIO -->
+    <div class="sb-section">
+      <div class="sb-heading">Studio</div>
+      <a class="sb-item" href="#" onclick="nav('studio');return false">
+        <span class="sb-icon">◈</span>GUIX HUD Chat
+        <span class="sb-badge">new</span>
+      </a>
+    </div>
+
+    <div class="sb-sep"></div>
+
     <!-- REGISTRY -->
     <div class="sb-section">
       <div class="sb-heading">Registry</div>
@@ -510,8 +545,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <span id="bc-page">Home</span>
     </div>
     <div id="content-bar-right">
-      <button class="cb-btn" onclick="nav('app')" title="Open 3D runtime">⟁ 3D App</button>
-      <button class="cb-btn" id="src-toggle" onclick="toggleSourceView()" style="display:none">‹/›</button>
+      <button btn btn-gold onclick="nav('app')" title="Open 3D runtime">⟁ 3D App</button>
+      <button btn id="src-toggle" onclick="toggleSourceView()" style="display:none">‹/›</button>
     </div>
   </div>
 
@@ -523,8 +558,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <div id="splash-sub">K'uhul π Geometric Compute Runtime</div>
       <div id="splash-version">v3.5.0 · D12WebX · SVG-3D · 7-Brain Topology · Hybrid Trainer</div>
       <div id="splash-actions">
-        <button class="splash-btn primary" onclick="nav('app')">⟁ Launch 3D App</button>
-        <button class="splash-btn secondary" onclick="loadDemo('mx2lm-directwrite-gpu')">View Demos</button>
+        <button btn btn-gold onclick="nav('app')" style="padding:10px 24px;font-size:13px;letter-spacing:1.5px">⟁ Launch 3D App</button>
+        <button btn btn-cyan onclick="loadDemo('mx2lm-directwrite-gpu')" style="padding:10px 20px;font-size:12px;letter-spacing:1px">View Demos</button>
       </div>
       <div id="splash-stats">
         <div class="s-stat"><div class="s-val">172</div><div class="s-lbl">Exports</div></div>
@@ -570,6 +605,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         <div class="hcard-title">LLM Integration</div>
         <div class="hcard-desc">KXML semantic execution, tool-call format, PowerShell retry cycles</div>
         <div class="hcard-tag">docs</div>
+      </div>
+      <div class="hcard" onclick="nav('studio')" style="border-color:rgba(108,92,231,.3)">
+        <div class="hcard-icon">◈</div>
+        <div class="hcard-title">GUIX Studio</div>
+        <div class="hcard-desc">Black glass HUD — session history, K3D/KXML code editor, KUHUL agent chat</div>
+        <div class="hcard-tag" style="color:#a58cf7;background:rgba(108,92,231,.12)">studio · new</div>
       </div>
     </div>
   </div>
@@ -767,6 +808,12 @@ function nav(page){
     showPanel('frame');
     document.getElementById('content-frame').src = 'src/index.html';
     setBreadcrumb('KUHUL', 'Trainer');
+
+  } else if(page === 'studio'){
+    showPanel('frame');
+    document.getElementById('content-frame').src = 'examples/studio.html';
+    setBreadcrumb('KUHUL', 'Studio');
+    document.getElementById('src-toggle').style.display = 'inline-flex';
   }
 }
 
@@ -961,6 +1008,7 @@ function routeFromHash(){
   else if(h==='demos')             nav('demos');
   else if(h==='docs')              nav('docs');
   else if(h==='trainer')           nav('trainer');
+  else if(h==='studio')            nav('studio');
   else if(h.startsWith('demo:'))   loadDemo(h.replace('demo:',''));
   else if(h.startsWith('doc:'))    loadDoc(h.replace('doc:',''));
 }

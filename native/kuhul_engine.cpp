@@ -26,8 +26,11 @@
 #include "runtime/domain_runtime.h"
 #include "runtime/task_engine.h"
 #include "runtime/task_executor_abi.h"
+#include <cstdlib>
 #include "runtime/atomic_shell_manifest.h"
 #include "runtime/opengl_frame_adapter.h"
+#include "runtime/world_tile.h"
+#include "runtime/instant_agent.h"
 #include "source/kuhul_source.h"
 #include <iostream>
 #include <filesystem>
@@ -213,6 +216,16 @@ static void printUsage(const char* argv0) {
               << "                     Load and render an OBJ scene\n"
               << "  opengl-game-smoke MANIFEST [FRAMES|--interactive]\n"
               << "                     Render a GAME manifest scene\n"
+              << "  world-tile-smoke X Z [SIZE] [SEED]\n"
+              << "                     Generate a deterministic bounded world tile\n"
+              << "  opengl-world-tile-smoke X Z [SIZE] [SEED] [FRAMES|--interactive]\n"
+              << "                     Render a generated terrain tile in OpenGL\n"
+              << "  opengl-strategy-globe [FRAMES|--interactive]\n"
+              << "                     Render the strategy Ghost HUD and globe\n"
+              << "  opengl-particle-smoke EFFECT [COUNT] [SEED] [FRAMES|--interactive]\n"
+              << "                     Render a deterministic particle effect\n"
+              << "  instant-agent-smoke ROLE [SEED] [FRAMES|--interactive]\n"
+              << "                     Spawn and render an instant in-game agent\n"
               << "  --Atomic.DOM [PATH] [--chat|--login|--game]\n"
               << "                     Launch the Atomic DOM terminal menu\n"
               << "  stream-xshard PATH [MAX_LAYER] [MAX_TILES]\n"
@@ -273,6 +286,7 @@ static void printUsage(const char* argv0) {
               << "  --infer-llama MODEL PROMPT [tokens]\n"
               << "                     Run native llama.cpp CPU inference\n"
               << "  --serve [port]      Run the localhost HTTP API server\n"
+              << "  strategy-host [port] Run an opt-in public strategy host\n"
               << "  --prompt <text>    Forge and execute a Micronaut network\n"
               << "  --forge <text>     Forge artifacts from semantic intent\n"
               << "  --help             Show this message\n";
@@ -605,6 +619,35 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    if (command == "strategy-host") {
+        uint16_t port = 8743;
+        if (argc >= 3) {
+            try {
+                const unsigned long parsed = std::stoul(argv[2]);
+                if (parsed == 0 || parsed > 65535) throw std::out_of_range("port");
+                port = static_cast<uint16_t>(parsed);
+            } catch (const std::exception&) {
+                std::cerr << "Invalid strategy host port\n";
+                return 2;
+            }
+        }
+        HttpApiServer server(port, true, true);
+        if (!server.start()) {
+            std::cerr << "Strategy host failed to start: "
+                      << server.error() << "\n";
+            return 1;
+        }
+        std::cout << "Strategy host listening on http://+:"
+                  << port << "\n"
+                  << "Join endpoint: http://<HOST-IP>:" << port
+                  << "/v1/strategy/session\n"
+                  << "Session token: " << server.strategyToken() << "\n"
+                  << "Host-authoritative proposal/commit endpoints enabled\n"
+                  << "Use an explicit firewall rule and share only with trusted players\n";
+        server.run();
+        return 0;
+    }
+
     if (command == "version") {
         std::cout << "K'UHUL Semantic Engine v3.5.0-WebX (unified native runtime)\n";
         return 0;
@@ -681,13 +724,23 @@ int main(int argc, char** argv) {
         bool chat = false;
         bool login = false;
         bool page = false;
+        bool grid = false;
+        bool scene = false;
         bool game = false;
+        bool strategy = false;
+        bool multiplayer = false;
+        bool sidecars = false;
         for (int i = manifestArg; i < argc; ++i) {
             render = render || std::string(argv[i]) == "--render";
             chat = chat || std::string(argv[i]) == "--chat";
             login = login || std::string(argv[i]) == "--login";
             page = page || std::string(argv[i]) == "--page";
+            grid = grid || std::string(argv[i]) == "--grid";
+            scene = scene || std::string(argv[i]) == "--scene";
             game = game || std::string(argv[i]) == "--game";
+            strategy = strategy || std::string(argv[i]) == "--strategy";
+            multiplayer = multiplayer || std::string(argv[i]) == "--multiplayer";
+            sidecars = sidecars || std::string(argv[i]) == "--sidecars";
         }
         if (render) {
             std::cout << "\n+---------------- ATOMIC FRAME ----------------+\n"
@@ -791,6 +844,212 @@ int main(int argc, char** argv) {
                           << "+------------------- FOOTER ---------------------+\n"
                           << "| AtomicDOM page ready                            |\n"
                           << "+------------------------------------------------+\n";
+            } else if (grid) {
+                std::cout << "\n+================ STATION GRID =================+\n"
+                          << "| route: world://station-grid                  |\n"
+                          << "| dimensions: 5 x 1 x 5     cells: 6          |\n"
+                          << "+------------------- PALETTE ------------------+\n"
+                          << "| [ ] empty  [R] room  [C] corridor             |\n"
+                          << "| [#] wall   [D] door  [S] stairs               |\n"
+                          << "+-------------------- MAP ---------------------+\n"
+                          << "| [R]-[C]-[D]-[R]                               |\n"
+                          << "                   |                            |\n"
+                          << "                 [S]-[#]                        |\n"
+                          << "+---------------- CONNECTIONS -----------------+\n"
+                          << "| c0 -> c1 path    c1 -> c2 path                |\n"
+                          << "| c2 -> c3 path    c3 -> c4 vertical            |\n"
+                          << "+------------------- ACTIONS ------------------+\n"
+                          << "| place select remove connect clear save load   |\n"
+                          << "+-----------------------------------------------+\n"
+                          << "grid state: manifest-admitted\n";
+            } else if (sidecars) {
+                std::cout << "\n+================ SIDECAR STORE ================+\n"
+                          << "| route: sidecar://store    feed: /api/sidecars |\n"
+                          << "+----------------------------------------------+\n";
+                // Resolve the host-authoritative feed into the frame (presentation
+                // only; sidecars are candidate/compute-only and are never mutated
+                // here). Reuses the verified terminal renderer.
+                int rc = std::system(
+                    "pwsh -NoProfile -File bin/json-runtime/Show-Sidecars.ps1");
+                if (rc != 0)
+                    std::cout << "| feed unavailable (start json_runtime :8787)  |\n"
+                              << "+----------------------------------------------+\n";
+                std::cout << "sidecar store: host-authoritative, read-only\n";
+            } else if (scene) {
+                std::cout << "\n+============== STATION SCENE EDITOR ============+\n"
+                          << "| route: scene://station-editor                 |\n"
+                          << "| tile:  x=3 z=2 size=32 seed=42                |\n"
+                          << "+------------------- CONTROLS -----------------+\n"
+                          << "| arrows orbit   W/S zoom   H mirror   T tabletop|\n"
+                          << "| close window to exit                           |\n"
+                          << "+------------------ EDIT ACTIONS ---------------+\n"
+                          << "| select paint erase connect save                |\n"
+                          << "+-----------------------------------------------+\n"
+                          << "scene state: manifest-admitted\n";
+            } else if (strategy) {
+                int treasury = 50;
+                int legitimacy = 60;
+                int tension = 35;
+                int actionPoints = 12;
+                int skillLevel = 1;
+                int interactions = 0;
+                int weapons = 0;
+                int scientists = 1;
+                int alliances = 0;
+                int intel = 0;
+                int doubleAgents = 0;
+                int militaryPoints = 6;
+                int politicalPoints = 6;
+                unsigned turn = 1;
+                std::cout << "\n+=========== THIRD WORLD STRATEGY ===========+\n"
+                          << "| route: strategy://station-world             |\n"
+                          << "| map: terrain tile (3,2)  seed: 42           |\n"
+                          << "+----------------- FACTIONS -----------------+\n"
+                          << "| Meridian Union     diplomacy / trade        |\n"
+                          << "| Northstar Compact  security / borders       |\n"
+                          << "| Free Cities        media / public support   |\n"
+                          << "| Iron League        sanctions / known plot   |\n"
+                          << "| Hydra Cells        infiltration / emergent   |\n"
+                          << "+------------------- STATE ------------------+\n";
+                if (multiplayer) {
+                    std::cout << "multiplayer: session admitted\n"
+                              << "authority: host validates and commits turns\n"
+                              << "slots: host / guest-alpha / guest-beta\n"
+                              << "proposal route: task://multiplayer.propose\n"
+                              << "commit route: task://multiplayer.commit\n";
+                }
+                while (true) {
+                    std::cout << "| turn " << turn
+                              << " treasury=" << treasury
+                              << " legitimacy=" << legitimacy
+                              << " tension=" << tension << "             |\n"
+                    << "| points=" << actionPoints
+                    << " skill=" << skillLevel
+                    << " weapons=" << weapons
+                    << " scientists=" << scientists
+                    << " alliances=" << alliances
+                    << " intel=" << intel
+                    << " mil=" << militaryPoints
+                    << " pol=" << politicalPoints << " |\n"
+                              << "+------------------ CHOICES -----------------+\n"
+                              << "| 1 Trade accord      +treasury, -tension     |\n"
+                              << "| 2 Security pact     +legitimacy, +tension   |\n"
+                              << "| 3 Media campaign    +legitimacy, -treasury  |\n"
+                              << "| 4 Forge weapon      cost 4 points          |\n"
+                              << "| 5 Hire scientist    cost 3 points          |\n"
+                              << "| 6 Defense alliance  cost 2 points          |\n"
+                              << "| 7 Secret agent intel cost 2 points         |\n"
+                              << "| 8 Recruit double agent cost 3 points      |\n"
+                              << "| 9 Military tactics cost 3 military points |\n"
+                              << "| 0 Political maneuver cost 3 political pts |\n"
+                              << "| Q Exit                                     |\n"
+                              << "+---------------------------------------------+\n"
+                              << "choice> " << std::flush;
+                    std::string choice;
+                    if (!std::getline(std::cin, choice) ||
+                        choice == "q" || choice == "Q") {
+                        break;
+                    }
+                    if (choice == "1" || choice == "2" || choice == "3") {
+                        if (actionPoints < 1) {
+                            std::cout << "decision rejected: no action points\n";
+                            continue;
+                        }
+                        --actionPoints;
+                        ++interactions;
+                        if (interactions % 3 == 0) ++skillLevel;
+                    }
+                    if (choice == "1") {
+                        treasury += 12;
+                        tension = std::max(0, tension - 8);
+                        std::cout << "decision: task://strategy.choose trade_accord\n"
+                                  << "result: Meridian Union opened a trade corridor\n";
+                    } else if (choice == "2") {
+                        legitimacy += 7;
+                        tension = std::min(100, tension + 10);
+                        std::cout << "decision: task://strategy.choose security_pact\n"
+                                  << "result: Northstar Compact recognized a mutual defense line\n";
+                    } else if (choice == "3") {
+                        legitimacy += 10;
+                        treasury = std::max(0, treasury - 8);
+                        std::cout << "decision: task://strategy.choose media_campaign\n"
+                                  << "result: Free Cities shifted public sentiment\n";
+                    } else if (choice == "4") {
+                        if (actionPoints < 4) {
+                            std::cout << "decision rejected: forging requires 4 points\n";
+                            continue;
+                        }
+                        actionPoints -= 4;
+                        ++weapons;
+                        std::cout << "decision: task://strategy.forge weapon\n"
+                                  << "result: weapon forged at skill " << skillLevel
+                                  << "\n";
+                    } else if (choice == "5") {
+                        if (actionPoints < 3) {
+                            std::cout << "decision rejected: research hire requires 3 points\n";
+                            continue;
+                        }
+                        actionPoints -= 3;
+                        ++scientists;
+                        std::cout << "decision: task://strategy.hire scientist\n"
+                                  << "result: research capacity increased\n";
+                    } else if (choice == "6") {
+                        if (actionPoints < 2) {
+                            std::cout << "decision rejected: alliance requires 2 points\n";
+                            continue;
+                        }
+                        actionPoints -= 2;
+                        ++alliances;
+                        tension = std::max(0, tension - 6);
+                        std::cout << "decision: task://strategy.form_alliance\n"
+                                  << "result: defensive alliance formed; border risk reduced\n";
+                    } else if (choice == "7") {
+                        if (actionPoints < 2) {
+                            std::cout << "decision rejected: intel requires 2 points\n";
+                            continue;
+                        }
+                        actionPoints -= 2;
+                        ++intel;
+                        std::cout << "decision: task://strategy.secret_intel\n"
+                                  << "result: agent feed exposed a league route and a hydra signal\n";
+                    } else if (choice == "8") {
+                        if (actionPoints < 3) {
+                            std::cout << "decision rejected: double agent operation requires 3 points\n";
+                            continue;
+                        }
+                        actionPoints -= 3;
+                        ++doubleAgents;
+                        ++intel;
+                        std::cout << "decision: task://strategy.recruit_double_agent\n"
+                                  << "result: double-agent possibility opened; loyalty must be tested\n";
+                    } else if (choice == "9") {
+                        if (militaryPoints < 3) {
+                            std::cout << "decision rejected: military points exhausted\n";
+                            continue;
+                        }
+                        militaryPoints -= 3;
+                        tension = std::max(0, tension - 4);
+                        std::cout << "decision: task://strategy.military_tactics\n"
+                                  << "result: defensive maneuver secured a resource corridor\n";
+                    } else if (choice == "0") {
+                        if (politicalPoints < 3) {
+                            std::cout << "decision rejected: political points exhausted\n";
+                            continue;
+                        }
+                        politicalPoints -= 3;
+                        legitimacy = std::min(100, legitimacy + 6);
+                        std::cout << "decision: task://strategy.political_maneuver\n"
+                                  << "result: coalition vote shifted without open conflict\n";
+                    } else {
+                        std::cout << "decision rejected: choose 1, 2, 3, or Q\n";
+                        continue;
+                    }
+                    legitimacy = std::min(100, legitimacy);
+                    ++turn;
+                    std::cout << "state: state://strategy.world updated\n";
+                    if (multiplayer)
+                        std::cout << "turn commit: state://multiplayer.replay_log\n";
+                }
             } else if (game) {
                 if (manifest.id == "station-game") {
                     std::cout << "game mode: manifest-bound OpenGL FRAME\n"
@@ -910,6 +1169,248 @@ int main(int argc, char** argv) {
             : "OpenGL GAME smoke rendered frames=" + std::to_string(frames))
                   << std::endl;
         return 0;
+    }
+
+    if (command == "opengl-strategy-globe") {
+        unsigned frames = 1;
+        bool interactive = false;
+        if (argc >= 3) {
+            if (std::string(argv[2]) == "--interactive") {
+                interactive = true;
+            } else {
+                try {
+                    frames = static_cast<unsigned>(std::stoul(argv[2]));
+                } catch (const std::exception&) {
+                    std::cerr << "OpenGL strategy globe failed: invalid frame count\n";
+                    return 2;
+                }
+            }
+        }
+        Kuhul::Runtime::OpenGLFrameAdapter adapter;
+        if (!adapter.renderStrategyGlobe(frames, interactive,
+                                         {"HEADER", "FEED", "GAME", "GRID",
+                                          "FOOTER"})) {
+            std::cerr << "OpenGL strategy globe failed: "
+                      << adapter.error() << "\n";
+            return 1;
+        }
+        std::cout << (interactive
+            ? "OpenGL strategy globe interactive FRAME closed"
+            : "OpenGL strategy globe rendered frames=" +
+              std::to_string(frames)) << std::endl;
+        return 0;
+    }
+
+    if (command == "world-tile-smoke") {
+        if (argc < 4) {
+            std::cerr << "Usage: world-tile-smoke X Z [SIZE] [SEED]\n";
+            return 2;
+        }
+        try {
+            const int x = std::stoi(argv[2]);
+            const int z = std::stoi(argv[3]);
+            const unsigned size = argc >= 5
+                ? static_cast<unsigned>(std::stoul(argv[4])) : 16;
+            const std::uint32_t seed = argc >= 6
+                ? static_cast<std::uint32_t>(std::stoul(argv[5])) : 1U;
+            Kuhul::Runtime::WorldTile tile;
+            std::string error;
+            if (!Kuhul::Runtime::generateWorldTile(x, z, size, seed, tile,
+                                                   error)) {
+                std::cerr << "World tile smoke failed: " << error << "\n";
+                return 1;
+            }
+            const auto& sample = tile.samples.front();
+            std::cout << "World tile generated"
+                      << " coordinate=(" << tile.x << "," << tile.z << ")"
+                      << " size=" << tile.width << "x" << tile.depth
+                      << " domain=" << tile.domain
+                      << " first_rgba=("
+                      << static_cast<unsigned>(sample.red) << ","
+                      << static_cast<unsigned>(sample.green) << ","
+                      << static_cast<unsigned>(sample.blue) << ","
+                      << static_cast<unsigned>(sample.alpha) << ")"
+                      << " first_elevation=" << sample.elevation
+                      << "\n";
+            return 0;
+        } catch (const std::exception&) {
+            std::cerr << "World tile smoke failed: invalid coordinates or "
+                         "parameters\n";
+            return 2;
+        }
+    }
+
+    if (command == "opengl-world-tile-smoke") {
+        if (argc < 4) {
+            std::cerr << "Usage: opengl-world-tile-smoke X Z "
+                         "[SIZE] [SEED] [FRAMES|--interactive]\n";
+            return 2;
+        }
+
+        try {
+            const int x = std::stoi(argv[2]);
+            const int z = std::stoi(argv[3]);
+            unsigned frames = 1;
+            bool interactive = false;
+            int next = 4;
+            unsigned size = 32;
+            std::uint32_t seed = 1U;
+            bool neighbors = false;
+            bool sizeSet = false;
+            bool seedSet = false;
+            while (argc > next) {
+                const std::string argument = argv[next++];
+                if (argument == "--interactive") {
+                    interactive = true;
+                } else if (argument == "--neighbors") {
+                    neighbors = true;
+                } else if (!sizeSet) {
+                    size = static_cast<unsigned>(std::stoul(argument));
+                    sizeSet = true;
+                } else if (!seedSet) {
+                    seed = static_cast<std::uint32_t>(std::stoul(argument));
+                    seedSet = true;
+                } else {
+                    frames = static_cast<unsigned>(std::stoul(argument));
+                }
+            }
+            Kuhul::Runtime::WorldTile tile;
+            std::string error;
+            const bool generated = neighbors
+                ? Kuhul::Runtime::generateWorldNeighborhood(
+                    x, z, size, 1, seed, tile, error)
+                : Kuhul::Runtime::generateWorldTile(x, z, size, seed, tile,
+                                                    error);
+            if (!generated) {
+                std::cerr << "OpenGL world tile failed: " << error << "\n";
+                return 1;
+            }
+            Kuhul::Runtime::OpenGLFrameAdapter adapter;
+            if (!adapter.renderObjSmoke("", frames, interactive, {}, &tile)) {
+                std::cerr << "OpenGL world tile failed: "
+                          << adapter.error() << "\n";
+                return 1;
+            }
+            if (interactive) {
+                std::cout << "OpenGL world tile interactive FRAME closed"
+                          << std::endl;
+            } else {
+                std::cout << "OpenGL world tile rendered frames="
+                          << frames << std::endl;
+            }
+            return 0;
+        } catch (const std::exception&) {
+            std::cerr << "OpenGL world tile failed: invalid parameters\n";
+            return 2;
+        }
+    }
+
+    if (command == "opengl-particle-smoke") {
+        if (argc < 3) {
+            std::cerr << "Usage: opengl-particle-smoke EFFECT "
+                         "[COUNT] [SEED] [FRAMES|--interactive]\n";
+            return 2;
+        }
+        try {
+            const std::string kind = argv[2];
+            const unsigned count = argc >= 4
+                ? static_cast<unsigned>(std::stoul(argv[3])) : 256;
+            const std::uint32_t seed = argc >= 5
+                ? static_cast<std::uint32_t>(std::stoul(argv[4])) : 1U;
+            unsigned frames = 1;
+            bool interactive = false;
+            if (argc >= 6) {
+                if (std::string(argv[5]) == "--interactive") {
+                    interactive = true;
+                } else {
+                    frames = static_cast<unsigned>(std::stoul(argv[5]));
+                }
+            }
+            Kuhul::Runtime::ParticleEffect effect;
+            std::string error;
+            if (!Kuhul::Runtime::createParticleEffect(kind, count, seed,
+                                                      effect, error)) {
+                std::cerr << "OpenGL particle smoke failed: " << error << "\n";
+                return 1;
+            }
+            Kuhul::Runtime::OpenGLFrameAdapter adapter;
+            if (!adapter.renderObjSmoke("", frames, interactive, {}, nullptr,
+                                        &effect)) {
+                std::cerr << "OpenGL particle smoke failed: "
+                          << adapter.error() << "\n";
+                return 1;
+            }
+            std::cout << (interactive
+                ? "OpenGL particle interactive FRAME closed"
+                : "OpenGL particle smoke rendered frames=" +
+                  std::to_string(frames)) << std::endl;
+            return 0;
+        } catch (const std::exception&) {
+            std::cerr << "OpenGL particle smoke failed: invalid parameters\n";
+            return 2;
+        }
+    }
+
+    if (command == "instant-agent-smoke") {
+        if (argc < 3) {
+            std::cerr << "Usage: instant-agent-smoke ROLE "
+                         "[SEED] [FRAMES|--interactive]\n";
+            return 2;
+        }
+        try {
+            const std::string role = argv[2];
+            const std::uint32_t seed = argc >= 4
+                ? static_cast<std::uint32_t>(std::stoul(argv[3])) : 1U;
+            unsigned frames = 1;
+            bool interactive = false;
+            if (argc >= 5) {
+                if (std::string(argv[4]) == "--interactive") {
+                    interactive = true;
+                } else {
+                    frames = static_cast<unsigned>(std::stoul(argv[4]));
+                }
+            }
+            Kuhul::Runtime::InstantAgent agent;
+            std::string error;
+            if (!Kuhul::Runtime::createInstantAgent(role, seed, agent,
+                                                    error)) {
+                std::cerr << "Instant agent smoke failed: " << error << "\n";
+                return 1;
+            }
+            Kuhul::Runtime::ParticleEffect effect;
+            const std::string effectKind =
+                agent.effect == "spark" ? "spell" : agent.effect;
+            if (!Kuhul::Runtime::createParticleEffect(
+                    effectKind, 128, seed, effect, error)) {
+                std::cerr << "Instant agent smoke failed: " << error << "\n";
+                return 1;
+            }
+            for (auto& particle : effect.particles) {
+                particle.red = agent.red;
+                particle.green = agent.green;
+                particle.blue = agent.blue;
+            }
+            Kuhul::Runtime::OpenGLFrameAdapter adapter;
+            if (!adapter.renderObjSmoke("", frames, interactive, {}, nullptr,
+                                        &effect, &agent)) {
+                std::cerr << "Instant agent smoke failed: "
+                          << adapter.error() << "\n";
+                return 1;
+            }
+            std::cout << "Instant agent spawned id=" << agent.id
+                      << " role=" << agent.role
+                      << " effect=" << agent.effect
+                      << " position=(" << agent.x << "," << agent.y << ","
+                      << agent.z << ")"
+                      << (interactive
+                          ? " interactive FRAME closed"
+                          : " frames=" + std::to_string(frames))
+                      << std::endl;
+            return 0;
+        } catch (const std::exception&) {
+            std::cerr << "Instant agent smoke failed: invalid parameters\n";
+            return 2;
+        }
     }
 
     if (command == "task-engine" || command == "task" || command == "-task" ||

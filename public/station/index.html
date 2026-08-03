@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Station Control — Sidecars</title>
+<!--
+  AtomicDOM station shell (browser surface) rendering the XJSON sidecar store as a
+  LIVE, read-only feed. Presentation only: the frame never mutates the store
+  (sidecars are candidate/compute-only). Host-authoritative data comes from
+  json_runtime at /api/sidecars -- same authority model as AtomicWar's host/API.
+  Feed contract: native/runtime/atomic.page.manifest.json -> feeds["sidecar://store"].
+-->
+<style>
+  :root{
+    --accent:#62e6a7; --surface:#07131b; --panel:#0b1e29; --line:#123244;
+    --text:#e8fff4; --muted:#7fa8a0; --down:#e0663a; --up:#62e6a7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--surface);color:var(--text);
+       font:14px/1.5 "Cascadia Code","JetBrains Mono",Consolas,monospace}
+  .frame{max-width:860px;margin:24px auto;padding:0 16px}
+  .block{border:1px solid var(--line);border-radius:0;margin:12px 0;background:var(--panel)}
+  .block > h2{margin:0;padding:8px 14px;font-size:12px;letter-spacing:.14em;
+       text-transform:uppercase;color:var(--accent);border-bottom:1px solid var(--line)}
+  .head{display:flex;justify-content:space-between;align-items:baseline;
+       padding:14px;border:1px solid var(--line);background:var(--panel)}
+  .head .title{font-size:18px;letter-spacing:.04em}
+  .head .route{color:var(--muted);font-size:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;padding:14px}
+  .card{border:1px solid var(--line);padding:10px 12px;background:#08161f}
+  .card .name{font-weight:600}
+  .card .meta{color:var(--muted);font-size:12px;margin-top:2px}
+  .pill{display:inline-block;padding:0 6px;border:1px solid var(--line);font-size:11px;margin-right:4px}
+  .up{color:var(--up);border-color:var(--up)}
+  .down{color:var(--down);border-color:var(--down)}
+  .status{display:flex;gap:22px;padding:12px 14px;color:var(--muted);font-size:12px}
+  .status b{color:var(--text)}
+  .err{color:var(--down);padding:12px 14px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);margin-right:6px}
+  .dot.live{background:var(--up)}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="head">
+    <div>
+      <div class="title">Station Control</div>
+      <div class="route">page://station-control &nbsp;·&nbsp; feed: sidecar://store &nbsp;·&nbsp; backend: browser</div>
+    </div>
+    <div class="route"><span id="dot" class="dot"></span><span id="conn">connecting…</span></div>
+  </div>
+
+  <div class="block">
+    <h2>Sidecars</h2>
+    <div id="grid" class="grid"><div class="err">loading /api/sidecars…</div></div>
+  </div>
+
+  <div class="block">
+    <h2>Status</h2>
+    <div id="status" class="status"></div>
+  </div>
+</div>
+
+<script>
+  // Host-authoritative feed. Read-only: this surface presents, never mutates.
+  const FEED = "http://127.0.0.1:8787/api/sidecars";
+  const grid = document.getElementById("grid");
+  const statusEl = document.getElementById("status");
+  const conn = document.getElementById("conn");
+  const dot = document.getElementById("dot");
+
+  function card(s){
+    const nops = Array.isArray(s.ops) ? s.ops.length : 0;
+    const up = !!s.available;
+    return `<div class="card">
+      <div class="name">${s.name ?? ""}</div>
+      <div class="meta">
+        <span class="pill">${s.kind ?? ""}</span>
+        ${s.lane ? `<span class="pill">${s.lane}</span>` : ""}
+        <span class="pill ${up ? "up" : "down"}">${up ? "up" : "down"}</span>
+        <span class="pill">ops:${nops}</span>
+      </div>
+      <div class="meta">${s.authority ?? "candidate_only"}${s.phase ? " · phase:" + s.phase : ""}</div>
+    </div>`;
+  }
+
+  async function tick(){
+    try{
+      const r = await fetch(FEED, {cache:"no-store"});
+      const doc = await r.json();
+      // The station route wraps the store under .store; the raw endpoint returns it directly.
+      const list = (doc.store && doc.store.sidecars) || doc.sidecars || [];
+      grid.innerHTML = list.length ? list.map(card).join("") : `<div class="err">no sidecars registered</div>`;
+      const total = list.length, avail = list.filter(s => s.available).length;
+      statusEl.innerHTML =
+        `<div>total: <b>${total}</b></div>
+         <div>available: <b>${avail}</b></div>
+         <div>authority: <b>candidate_only</b></div>
+         <div>feed: <b>${FEED}</b></div>`;
+      conn.textContent = "live"; dot.classList.add("live");
+    }catch(e){
+      grid.innerHTML = `<div class="err">feed unavailable — is json_runtime up on :8787? (${e.message})</div>`;
+      conn.textContent = "offline"; dot.classList.remove("live");
+    }
+  }
+  tick();
+  setInterval(tick, 3000);   // live like a multiplayer feed
+</script>
+</body>
+</html>

@@ -46,3 +46,6 @@ native/**/*.log
 
 # embedded git repo (not part of the CMake build)
 native/semantic-kernel/
+
+# Quantum is its own repo now (github.com/cannaseedus-bot/Quantum.git)
+native/Quantum/

@@ -1,0 +1,9 @@
+// Execution fold: run admitted nodes through capability providers.
+
+Fold Sek {
+    input: ExecutionQueue
+    output: ExecutionResults
+    operator: Execute
+    provider_contract: capability_only
+    capabilities [Memory, Compute, Shader, Training, Storage]
+}

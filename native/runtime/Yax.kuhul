@@ -1,0 +1,23 @@
+// Evaluation fold: pressure is evidence; admission is the decision.
+
+Fold Yax {
+    input: [WorkingSet, PressureField, MicronautRegistry, BackendRegistry]
+    output: [AdmittedNodes, RejectedNodes, ExecutionQueue]
+    operator: Evaluate
+
+    admission {
+        threshold: 0.50
+        admit pressure >= threshold
+        reject pressure < threshold
+        sources: [intent, relevance, confidence, locality]
+    }
+
+    effects: [
+        update_pressure,
+        sort_by_pressure,
+        reuse_or_forge_micronaut,
+        reuse_or_compile_shader,
+        reuse_or_emit_tensor,
+        resolve_capabilities
+    ]
+}

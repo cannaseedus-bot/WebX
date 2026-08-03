@@ -1,0 +1,6 @@
+Node Storage {
+    kind Storage
+    inputs [Tensor, SnapshotCommand]
+    outputs [SnapshotState]
+    capability Storage
+}

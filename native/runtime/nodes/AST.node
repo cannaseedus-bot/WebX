@@ -1,0 +1,6 @@
+Node AST {
+    kind AST
+    inputs [CandidateFields]
+    outputs [ASTGraph]
+    capability Compiler
+}

@@ -1,0 +1,6 @@
+Node Compute {
+    kind Compute
+    inputs [Tensor, Weights]
+    outputs [Tensor]
+    capability Compute
+}

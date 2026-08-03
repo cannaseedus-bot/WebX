@@ -1,0 +1,15 @@
+// Runtime verification fold. It observes execution without execution authority.
+
+Fold MetaFold {
+    id: "meta.fold"
+    micronaut: "VM-2"
+    phase: Chen
+    provider_capabilities: [Debug, Cache]
+    entry_point: "CS_MetaFold"
+    artifact: "native/shaders/bin/d3d11/kuhul_fold_meta.cso"
+    authority: observer
+
+    imports: [RouterLogitsI8, TrunkOutput, ControlFlags, ProofBuffer]
+    exports: [StepHashes, ChainHash, MetadataHash, MerkleRoot,
+              VerificationResult, Attestation]
+}

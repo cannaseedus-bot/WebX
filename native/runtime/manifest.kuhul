@@ -1,0 +1,36 @@
+Manifest {
+    id "kuhul.runtime"
+    version "1.0"
+    runtime "runtime.kuhul"
+    graph "../FieldGraph.kuhul"
+    folds [
+        "Pop.kuhul"
+        "Wo.kuhul"
+        "Yax.kuhul"
+        "Sek.kuhul"
+        "Chen.kuhul"
+        "Xul.kuhul"
+    ]
+    runtime_folds [
+        "folds/ComputeFold.kuhul"
+        "folds/MetaFold.kuhul"
+        "folds/StorageFold.kuhul"
+    ]
+    nodes [
+        "nodes/Parse.node"
+        "nodes/AST.node"
+        "nodes/Compute.node"
+        "nodes/Tensor.node"
+        "nodes/Storage.node"
+        "nodes/Verification.node"
+        "nodes/Memory.node"
+    ]
+    micronauts [
+        "Personality.kuhul"
+    ]
+    dispatch {
+        Sek [ComputeFold]
+        Chen [MetaFold]
+        Xul [StorageFold]
+    }
+}

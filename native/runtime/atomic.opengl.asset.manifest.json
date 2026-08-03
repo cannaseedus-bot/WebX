@@ -1,0 +1,11 @@
+{
+  "$schema": "atomics://local.dns.route",
+  "id": "scene-frame",
+  "block": "FRAME",
+  "version": "1.0.0",
+  "backend": "opengl",
+  "asset_format": "glb",
+  "feed_parser": "xcfe://tree-sitter-wasm",
+  "execution_gated": true,
+  "blocks": ["HEADER", "BODY", "FEED", "FOOTER"]
+}

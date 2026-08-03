@@ -1,0 +1,24 @@
+// Personality Micronaut: policy for selecting and configuring node work.
+// It does not execute nodes or alter the six-fold control algebra.
+
+Micronaut Personality {
+    id: "PT-0001"
+    role: personality_policy
+    authority: user
+    status: BOUND
+
+    owns_nodes: [Parse, AST, Compute, Tensor, Storage,
+                 Verification, Memory]
+    capabilities: [NodeSelection, PressurePolicy, ProviderPreference,
+                   StylePolicy]
+
+    inputs: [Intent, FieldGraph, NodeHistory, RuntimeContext]
+    outputs: [NodePriority, NodeConfiguration, ProviderPreference]
+
+    policy {
+        affects: [node_discovery, node_priority, node_parameters,
+                  provider_preference]
+        preserves: [node_determinism, fold_order, runtime_contract]
+        execution_owner: false
+    }
+}

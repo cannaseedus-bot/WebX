@@ -1,0 +1,59 @@
+// K'UHUL runtime algebra.
+// This contract is interpreted by a native host; it is not a provider.
+
+Runtime {
+    id: "kuhul.runtime"
+    version: "1.0"
+    context: RuntimeContext
+
+    imports [
+        "FieldGraph.kuhul",
+        "Pop.kuhul",
+        "Wo.kuhul",
+        "Yax.kuhul",
+        "Sek.kuhul",
+        "Chen.kuhul",
+        "Xul.kuhul"
+    ]
+
+    composition {
+        runtime(x) = Xul(Chen(Sek(Yax(Wo(Pop(x))))))
+    }
+
+    // Domains specialize the payload and operators, not the fold sequence.
+    // Providers implement requested capabilities without changing semantics.
+    algebras {
+        SymbolicExecution {
+            folds: [Parse, Rewrite, Prove, Evaluate, Reflect, Persist]
+            capabilities: [Symbolic, Compiler]
+        }
+        NeuralTraining {
+            folds: [Ingest, Batch, Admit, ForwardBackward, Reward, Checkpoint]
+            capabilities: [TensorCompute, Storage]
+        }
+        Inference {
+            folds: [Tokenize, Stage, Admit, Generate, Validate, Cache]
+            capabilities: [TensorCompute, Memory, Storage]
+        }
+        ShaderCompilation {
+            folds: [Load, Organize, Select, Compile, Validate, Cache]
+            capabilities: [ShaderCompiler, Cache]
+        }
+        MicronautForging {
+            folds: [Intent, Graph, Admit, Forge, Validate, Retire]
+            capabilities: [Orchestration, Compiler, Cache]
+        }
+        ProviderResolution {
+            folds: [Discover, Rank, Admit, Bind, Verify, Release]
+            capabilities: [ProviderRegistry, Diagnostics]
+        }
+        SCXWorkingSet {
+            folds: [Load, Page, Admit, Schedule, Reflect, Persist]
+            capabilities: [Cache, Residency, Pressure]
+        }
+    }
+
+    provider_resolution: capability_first
+    persistence: SCX
+    host_policy: enforce_contract
+}

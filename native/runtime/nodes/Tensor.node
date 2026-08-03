@@ -1,0 +1,6 @@
+Node Tensor {
+    kind Tensor
+    inputs [Tensor]
+    outputs [Tensor]
+    capability TensorCompute
+}

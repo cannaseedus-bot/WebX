@@ -1,0 +1,8 @@
+// Reflection fold: update evidence and provenance after execution.
+
+Fold Chen {
+    input: [ExecutionResults, PressureField]
+    output: [Confidence, PressureField, Provenance]
+    operator: Reflect
+    effects: [update_confidence, update_pressure, update_statistics, record_provenance]
+}

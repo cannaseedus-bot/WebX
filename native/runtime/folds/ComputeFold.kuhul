@@ -1,0 +1,14 @@
+// Runtime capability fold. The control cycle remains defined by runtime.kuhul.
+
+Fold ComputeFold {
+    id: "compute.fold"
+    micronaut: "MM-1"
+    phase: Sek
+    provider_capabilities: [TensorCompute, KernelCompute, GraphicsAPI]
+    entry_point: "CS_ComputeFold"
+    artifact: "native/shaders/bin/d3d11/kuhul_fold_compute.cso"
+
+    imports: [InputTokens, ControlFlags, TrunkWeights, RouterWeights,
+              ExpertWeights, TrunkScales, RouterScales, ExpertScales]
+    exports: [TrunkOutput, RouterLogitsI8, ExpertSelected, TokenOutput]
+}

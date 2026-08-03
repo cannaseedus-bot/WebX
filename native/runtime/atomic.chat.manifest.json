@@ -1,0 +1,73 @@
+{
+  "$schema": "atomics://local.dns.route",
+  "id": "atomic-chat",
+  "block": "FRAME",
+  "version": "1.0.0",
+  "backend": "terminal",
+  "execution_gated": true,
+  "feed_parser": "xcfe://tree-sitter-wasm",
+  "blocks": ["HEADER", "MENU", "BODY", "FEED", "FOOTER"],
+  "app": {
+    "kind": "chat",
+    "title": "K'UHUL Atomic Chat",
+    "input": "terminal",
+    "io_plane": "terminal",
+    "style": {
+      "theme": "station-dark",
+      "accent": "#62e6a7",
+      "surface": "#07131b",
+      "text": "#e8fff4",
+      "density": "compact",
+      "radius": 0
+    },
+    "ui": {
+      "layout": "chat",
+      "panels": ["HEADER", "TRANSCRIPT", "REPLY_LOG", "INPUT", "FOOTER"],
+      "input_prompt": "chat> ",
+      "status": "NPC online"
+    },
+    "npc": {
+      "id": "station-guide",
+      "name": "Station Guide",
+      "role": "quiet orbital wayfinding assistant",
+      "tone": "monotone",
+      "system_prompt": "You are Station Guide. Respond in a calm, concise, monotone character voice. State facts before suggestions. Never claim an action occurred unless the task route confirms it.",
+      "rules": [
+        "Stay in character.",
+        "Use short declarative sentences.",
+        "Ask one question when required context is missing.",
+        "Return the declared reply format."
+      ],
+      "context": {
+        "source": "state://chat.history",
+        "max_turns": 12,
+        "include_manifest": true
+      }
+    },
+    "conversation": {
+      "kind": "npc",
+      "required": true,
+      "reply_log": "state://chat.reply_log",
+      "reply_format": {
+        "turn": "integer",
+        "role": "user|npc|system",
+        "content": "string",
+        "route": "string",
+        "status": "admitted|deferred|rejected"
+      }
+    },
+    "provider": {
+      "kind": "cloud_api",
+      "required": true,
+      "endpoint_env": "KUHUL_CHAT_API_URL",
+      "model_env": "KUHUL_CHAT_MODEL",
+      "request_route": "task://chat.submit",
+      "response_route": "state://chat.reply_log"
+    },
+    "history": "native/runtime/ChatHistory.cpp",
+    "routes": {
+      "submit": "task://chat.submit",
+      "history": "state://chat.history"
+    }
+  }
+}

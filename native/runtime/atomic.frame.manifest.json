@@ -1,0 +1,9 @@
+{
+  "$schema": "atomics://local.dns.route",
+  "id": "main-frame",
+  "block": "FRAME",
+  "version": "1.0.0",
+  "execution_gated": true,
+  "blocks": ["HEADER", "MENU", "BODY", "GRID", "FEED", "FOOTER"],
+  "feed_parser": "xcfe://tree-sitter-wasm"
+}

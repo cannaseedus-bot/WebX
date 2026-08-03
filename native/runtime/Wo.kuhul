@@ -1,0 +1,9 @@
+// Organization fold: construct the bounded working set.
+
+Fold Wo {
+    input: [CandidateFields, RuntimeCache, MemoryState]
+    output: WorkingSet
+    operator: Organize
+    effects: [update_cache, page_memory, build_working_set]
+    providers: []
+}

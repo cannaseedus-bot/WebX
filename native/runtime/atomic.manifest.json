@@ -1,0 +1,7 @@
+{
+  "$schema": "atomics://local.dns.route",
+  "id": "body",
+  "block": "BODY",
+  "version": "1.0.0",
+  "execution_gated": true
+}

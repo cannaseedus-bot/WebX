@@ -1,0 +1,27 @@
+{
+  "$schema": "atomics://local.dns.route",
+  "id": "station-game",
+  "block": "FRAME",
+  "version": "1.0.0",
+  "backend": "opengl",
+  "asset_format": "obj",
+  "asset_uri": "native/runtime/atomic.triangle.obj",
+  "feed_parser": "xcfe://tree-sitter-wasm",
+  "execution_gated": true,
+  "style": {
+    "theme": "station-dark",
+    "accent": "#62e6a7",
+    "surface": "#07131b",
+    "text": "#e8fff4",
+    "density": "spacious",
+    "radius": 0
+  },
+  "blocks": ["HEADER", "BODY", "GRID", "GAME", "FEED", "FOOTER"],
+  "game": {
+    "kind": "npc-scene",
+    "npc_manifest": "native/runtime/atomic.chat.manifest.json",
+    "frame_route": "game://station-game",
+    "renderer": "opengl-frame-smoke",
+    "asset_upload": "native-opengl"
+  }
+}

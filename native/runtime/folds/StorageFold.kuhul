@@ -1,0 +1,14 @@
+// Runtime persistence fold. Xul owns persistence; this fold does not alter
+// the control algebra or provider selection policy.
+
+Fold StorageFold {
+    id: "storage.fold"
+    micronaut: "SM-1"
+    phase: Xul
+    provider_capabilities: [Storage, Cache, Memory]
+    entry_point: "CS_StorageFold"
+    artifact: "native/shaders/bin/d3d11/kuhul_fold_storage.cso"
+
+    imports: [TrunkOutput, SnapshotCommand, SnapshotHash, ReplayCommand]
+    exports: [SnapshotState, RetrievedBuffer, SealBuffer, ReplayState]
+}

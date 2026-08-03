@@ -1,0 +1,9 @@
+{
+  "$schema": "atomics://local.dns.route",
+  "id": "terminal-widgets",
+  "block": "BODY",
+  "version": "1.0.0",
+  "backend": "terminal",
+  "execution_gated": true,
+  "blocks": ["HEADER", "TEXT", "BUTTON", "IMAGE", "VIDEO", "INPUT", "FOOTER"]
+}

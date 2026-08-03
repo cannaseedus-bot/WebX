@@ -1,0 +1,796 @@
+// FieldGraph.kuhul — Canonical Semantic Graph Contract
+// Version: 2.0
+// Status: Canonical Draft
+//
+// FieldGraph is the authoritative semantic model for the K'UHUL runtime.
+// SCX, Micronauts, pressure scheduling, the fold cycle, and the Micronaut
+// Forge all derive behavior from this graph description.
+//
+// This file is NOT executable code. It is the semantic description of the
+// runtime graph: fields, cards, tokens, fibers, ownership, pressure,
+// confidence, residency, fold bindings, provider bindings, and forge targets.
+
+FieldGraph {
+
+    metadata {
+        name: "K'UHUL WebX v3.5.0 Semantic Graph"
+        version: "2.0"
+        fold_cycle: [Pop, Wo, Yax, Sek, Ch'en, Xul]
+        design: field_centric
+        default_residency: GPU
+        default_pressure_source: RM-0001
+        admission_policy: pressure_before_execution
+        runtime_contract: "native/runtime/runtime.kuhul"
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Execution Flow
+    //
+    //   User Prompt / Reply
+    //        │
+    //        ▼
+    //   K'UHUL (Pop → Wo → Yax → Sek → Ch'en → Xul)
+    //        │
+    //        ▼
+    //   FieldGraph.kuhul  ← canonical semantic model
+    //        │
+    //        ├── Fields
+    //        ├── Cards
+    //        ├── Tokens
+    //        ├── Fibers
+    //        ├── Edges
+    //        ├── Pressure
+    //        ├── Confidence
+    //        ├── Residency
+    //        ├── WorkingSet
+    //        ├── ProviderBindings
+    //        ├── MicronautBindings
+    //        └── ForgeTargets
+    //        │
+    //        ▼
+    //   Micronaut Forge
+    //        │
+    //        ▼
+    //   Provider Manager
+    //        │
+    //   ┌────┼───────────────┬─────────────┐
+    //   ▼    ▼               ▼             ▼
+    //   Graphics  Compute   Compiler     Cache
+    //   │         │           │            │
+    //   D3D12   DirectML    Clang      D3DSCache
+    //   D3D11   OpenCL      D3DCompiler
+    //        │
+    //        ▼
+    //   Runtime Artifact
+    //        │
+    //        ▼
+    //   SCX Cache
+    //        │
+    //        ▼
+    //   Execute
+    //
+    // Micronauts are ephemeral runtime artifacts manufactured by the Forge.
+    // Native DLLs are providers, not Micronauts.
+    // Pressure is the admission policy before execution.
+    // ─────────────────────────────────────────────────────────────
+
+    // ─────────────────────────────────────────────────────────────
+    // Native Provider Registry
+    // Providers are platform-specific libraries used by the Micronaut Forge.
+    // They are NOT folds and they are NOT Micronauts.
+    // ─────────────────────────────────────────────────────────────
+
+    Providers {
+        Provider {
+            id: d3dcompiler
+            capability: ShaderCompiler
+            library: "D3DCompiler_47.dll"
+            outputs: [hlsl_bytecode, cso]
+            priority: 1
+        }
+        Provider {
+            id: shader_cache
+            capability: Cache
+            library: "D3DSCache.dll"
+            outputs: [compiled_shaders, artifacts]
+            priority: 1
+        }
+        Provider {
+            id: igfxcmjit64
+            capability: JITBackend
+            library: "igfxcmjit64.dll"
+            outputs: [jitted_kernels]
+            priority: 2
+        }
+        Provider {
+            id: directml
+            capability: TensorCompute
+            library: "DirectML.dll"
+            outputs: [tensor_graph, inference_kernel]
+            priority: 1
+        }
+        Provider {
+            id: directml_debug
+            capability: Debug
+            library: "DirectML.Debug.dll"
+            outputs: [diagnostics, validation]
+            priority: 1
+        }
+        Provider {
+            id: directml_debug
+            capability: Debug
+            library: "DirectML.Debug.dll"
+            outputs: [diagnostics, validation]
+            priority: 1
+        }
+        Provider {
+            id: opencl
+            capability: KernelCompute
+            library: "IntelOpenCL64.dll"
+            outputs: [opencl_kernel, buffer]
+            priority: 2
+        }
+        Provider {
+            id: intel_opencl_icd
+            capability: KernelCompute
+            library: "Intel_OpenCL_ICD64.dll"
+            outputs: [opencl_icd]
+            priority: 2
+        }
+        Provider {
+            id: opencl_cpu_device
+            capability: KernelCompute
+            library: "ocl_cpu_cpu_device64.dll"
+            outputs: [cpu_opencl_device]
+            priority: 3
+        }
+        Provider {
+            id: opencl_cpu_runtime_impl
+            capability: KernelCompute
+            library: "ocl_cpu_IntelOpenCL64.dll"
+            outputs: [cpu_opencl_runtime]
+            priority: 3
+        }
+        Provider {
+            id: opencl_cpu_runtime
+            capability: KernelCompute
+            library: "ocl_cpu_intelocl64.dll"
+            outputs: [cpu_opencl_kernel, buffer]
+            priority: 3
+        }
+        Provider {
+            id: opencl_cpu_executor
+            capability: KernelCompute
+            library: "ocl_cpu_task_executor64.dll"
+            outputs: [cpu_task_executor]
+            priority: 4
+        }
+        Provider {
+            id: opencl_cpu_clang
+            capability: JITBackend
+            library: "ocl_cpu_clang_compiler64.dll"
+            outputs: [opencl_cpu_ir]
+            priority: 3
+        }
+        Provider {
+            id: clang
+            capability: NativeCompiler
+            library: "common_clang64.dll"
+            outputs: [exe, dll, obj, wasm, llvm_ir]
+            priority: 1
+        }
+        Provider {
+            id: d3d12
+            capability: GraphicsAPI
+            library: "D3D12.dll"
+            outputs: [command_list, resource, pso]
+            priority: 1
+        }
+        Provider {
+            id: d3d12core
+            capability: GraphicsRuntime
+            library: "D3D12Core.dll"
+            outputs: [low_level_device]
+            priority: 1
+        }
+        Provider {
+            id: d3d11
+            capability: GraphicsAPI
+            library: "d3d11.dll"
+            outputs: [device, context, shader]
+            priority: 2
+        }
+        Provider {
+            id: intel_opengl_icd
+            capability: GraphicsAPI
+            library: "ig8icd64.dll"
+            outputs: [opengl_context, shader]
+            priority: 3
+        }
+        Provider {
+            id: intel_d3d12_user
+            capability: GraphicsAPI
+            library: "igd12umd64.dll"
+            outputs: [d3d12_device, shader]
+            priority: 3
+        }
+        Provider {
+            id: intel_graphics_jit
+            capability: JITBackend
+            library: "igc64.dll"
+            outputs: [jitted_kernels, shader_ir]
+            priority: 2
+        }
+        Provider {
+            id: d3d11on12
+            capability: Compatibility
+            library: "d3d11on12.dll"
+            outputs: [interop_device]
+            priority: 3
+        }
+        Provider {
+            id: d3d10warp
+            capability: SoftwareRasterizer
+            library: "d3d10warp.dll"
+            outputs: [cpu_rasterized_surface]
+            priority: 4
+        }
+        Provider {
+            id: d3dx10
+            capability: LegacyUtility
+            library: "d3dx10.dll"
+            outputs: [legacy_mesh, legacy_effect]
+            priority: 5
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Provider Groups (capabilities selected by the Forge)
+    // ─────────────────────────────────────────────────────────────
+
+    ProviderGroups {
+        Graphics  [d3d12, d3d11, d3d11on12, d3d10warp]
+        Compute   [directml, opencl, d3d12, d3d11]
+        Compiler  [clang, d3dcompiler]
+        Cache     [shader_cache]
+        Debug     [directml_debug]
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Micronaut Forge Configuration
+    // The Forge manufactures Micronauts and artifacts from semantic intent.
+    // ─────────────────────────────────────────────────────────────
+
+    Forge {
+        id: MicronautForge
+        input: FieldGraph
+        output: [Micronaut, Artifact]
+
+        lifecycle: [Parse, BuildGraph, Analyze, ReuseOrForge, Compile, Validate,
+                    Register, Execute, Reflect, UpdatePressure, Cache, Retire]
+
+        // Forge targets map to emitter commands
+        targets: [hlsl, wgsl, dxil, llvm, opencl, directml, safetensors, lora,
+                  svg3d, scx, cso, fieldgraph]
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Tensor Contract
+    // Neutral tensor definition consumed by all emitters.
+    // ─────────────────────────────────────────────────────────────
+
+    TensorContract {
+        fields: [Shape, Layout, Precision, Metadata, Semantics, Storage]
+
+        Emitter {
+            id: safetensors
+            capability: MLInterchange
+            provider: directml
+        }
+        Emitter {
+            id: svg3d
+            capability: SemanticTensor
+            provider: clang
+        }
+        Emitter {
+            id: cso
+            capability: CompiledBinary
+            provider: d3dcompiler
+            micronaut: S7
+        }
+        Emitter {
+            id: lora
+            capability: Adaptation
+            provider: directml
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Working Set Configuration
+    // ─────────────────────────────────────────────────────────────
+
+    WorkingSet {
+        selector: HighestPressure
+        threshold: 0.50
+        max_cards: 512
+        max_fields: 128
+        max_tokens: 4096
+        max_fibers: 32
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Fields
+    // Every Field has exactly one primary owner (Micronaut) and one fold.
+    // ─────────────────────────────────────────────────────────────
+
+    field Memory {
+        id: Memory
+        owner: MM-0001
+        fold: Wo
+        domain: Memory
+        topology: Torus
+        shader: pi_field.wgsl
+        capability: Fiber
+
+        pressure {
+            value: 0.92
+            source: RM-0001
+            updated: 2026-07-30T21:18:00Z
+        }
+
+        confidence {
+            aggregate: 0.98
+            semantic: 0.97
+            domain: 0.99
+            constraint: 0.98
+            coherence: 0.98
+        }
+
+        residency: GPU
+
+        cards [
+            Card {
+                id: "memory.001"
+                pressure: 0.94
+                confidence: 0.98
+                residency: GPU
+                token_start: 0
+                token_count: 128
+            }
+        ]
+    }
+
+    field Reason {
+        id: Reason
+        owner: RM-0001
+        fold: Yax
+        domain: Execution
+        topology: Tetrahedron
+        shader: kuhul_fold_compute.hlsl
+        capability: Compute
+
+        pressure {
+            value: 0.88
+            source: RM-0001
+            updated: 2026-07-30T21:18:00Z
+        }
+
+        confidence {
+            aggregate: 0.95
+            semantic: 0.96
+            domain: 0.94
+            constraint: 0.95
+            coherence: 0.95
+        }
+
+        residency: GPU
+
+        cards []
+    }
+
+    field Shader {
+        id: Shader
+        owner: SM-0001
+        fold: Sek
+        domain: Compute
+        topology: Box
+        shader: neural_layer.klsl
+        capability: Graphics
+
+        pressure {
+            value: 0.85
+            source: CM-0001
+            updated: 2026-07-30T21:18:00Z
+        }
+
+        confidence {
+            aggregate: 0.93
+            semantic: 0.94
+            domain: 0.95
+            constraint: 0.92
+            coherence: 0.91
+        }
+
+        residency: GPU
+
+        cards []
+    }
+
+    field Parser {
+        id: Parser
+        owner: PM-0001
+        fold: Pop
+        domain: Compute
+        topology: Cylinder
+        shader: orchestrate.hlsl
+        capability: Compiler
+
+        pressure {
+            value: 0.76
+            source: PM-0001
+            updated: 2026-07-30T21:18:00Z
+        }
+
+        confidence {
+            aggregate: 0.91
+            semantic: 0.92
+            domain: 0.90
+            constraint: 0.91
+            coherence: 0.91
+        }
+
+        residency: CPU
+
+        cards []
+    }
+
+    field Compiler {
+        id: Compiler
+        owner: CM-0001
+        fold: Wo
+        domain: Execution
+        topology: Dodecahedron
+        shader: scxq2_infer_layer.hlsl
+        capability: Compiler
+
+        pressure {
+            value: 0.82
+            source: PM-0001
+            updated: 2026-07-30T21:18:00Z
+        }
+
+        confidence {
+            aggregate: 0.90
+            semantic: 0.89
+            domain: 0.91
+            constraint: 0.90
+            coherence: 0.90
+        }
+
+        residency: GPU
+
+        cards []
+    }
+
+    field Validator {
+        id: Validator
+        owner: VM-0001
+        fold: Yax
+        domain: Compute
+        topology: Icosahedron
+        shader: StabilizeCS.hlsl
+        capability: Compute
+
+        pressure {
+            value: 0.79
+            source: RM-0001
+            updated: 2026-07-30T21:18:00Z
+        }
+
+        confidence {
+            aggregate: 0.94
+            semantic: 0.95
+            domain: 0.93
+            constraint: 0.96
+            coherence: 0.92
+        }
+
+        residency: GPU
+
+        cards []
+    }
+
+    field Optical {
+        id: Optical
+        owner: OM-0001
+        fold: Sek
+        domain: Vision
+        topology: OpticalField
+        shader: optical_wave.klsl
+        capability: Compute
+
+        pressure {
+            value: 0.73
+            source: OM-0001
+            updated: 2026-07-30T21:18:00Z
+        }
+
+        confidence {
+            aggregate: 0.88
+            semantic: 0.87
+            domain: 0.90
+            constraint: 0.88
+            coherence: 0.87
+        }
+
+        residency: GPU
+
+        cards []
+    }
+
+    field Grammar {
+        id: Grammar
+        owner: GM-0001
+        fold: Pop
+        domain: Geometry
+        topology: GeoSphere
+        shader: xvm_compute.hlsl
+        capability: Compute
+
+        pressure {
+            value: 0.71
+            source: GM-0001
+            updated: 2026-07-30T21:18:00Z
+        }
+
+        confidence {
+            aggregate: 0.89
+            semantic: 0.88
+            domain: 0.90
+            constraint: 0.89
+            coherence: 0.89
+        }
+
+        residency: CPU
+
+        cards []
+    }
+
+    field Training {
+        id: Training
+        owner: TM-0001
+        fold: Ch'en
+        domain: Evolution
+        topology: Teapot
+        shader: evolution.hlsl
+        capability: Compute
+
+        pressure {
+            value: 0.81
+            source: TM-0001
+            updated: 2026-07-30T21:18:00Z
+        }
+
+        confidence {
+            aggregate: 0.86
+            semantic: 0.85
+            domain: 0.88
+            constraint: 0.86
+            coherence: 0.85
+        }
+
+        residency: GPU
+
+        cards []
+    }
+
+    field Execution {
+        id: Execution
+        owner: XM-0001
+        fold: Sek
+        domain: Execution
+        topology: Tetrahedron
+        shader: kuhul_fold_compute.hlsl
+        capability: Compute
+
+        pressure {
+            value: 0.90
+            source: XM-0001
+            updated: 2026-07-30T21:18:00Z
+        }
+
+        confidence {
+            aggregate: 0.92
+            semantic: 0.93
+            domain: 0.91
+            constraint: 0.92
+            coherence: 0.92
+        }
+
+        residency: GPU
+
+        cards []
+    }
+
+    field MicrosoftSDK {
+        id: MicrosoftSDK
+        owner: MS-0001
+        fold: runtime()
+        domain: Orchestration
+        topology: Graph
+        runtime: dotnet
+        capability: ToolCalling
+        phase_candidates: [Pop, Wo, Yax, Sek, Chen, Xul]
+        binding: "SCX::command::microsoft-sdk"
+        manager: "native/semantic-kernel/MicrosoftSDK.ps1"
+
+        // Baseline pressure is moderate because this node is optional and
+        // should activate only when the prompt needs external capabilities.
+        pressure {
+            value: 0.64
+            source: MS-0001
+            admission: intent_gated
+            updated: 2026-07-31T14:04:04-07:00
+        }
+
+        confidence {
+            aggregate: 0.91
+            semantic: 0.94
+            domain: 0.90
+            constraint: 0.93
+            coherence: 0.88
+        }
+
+        residency: CPU
+        model_agnostic: true
+        inference_owner: false
+        cards []
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Fibers — Semantic relationships between fields
+    // ─────────────────────────────────────────────────────────────
+
+    fibers [
+        Fiber {
+            from: Parser
+            to: Reason
+            type: semantic_dependency
+            weight: 0.95
+        }
+        Fiber {
+            from: Reason
+            to: Memory
+            type: pressure_update
+            weight: 0.92
+        }
+        Fiber {
+            from: Memory
+            to: Shader
+            type: working_set_flow
+            weight: 0.90
+        }
+        Fiber {
+            from: Shader
+            to: Validator
+            type: validation_request
+            weight: 0.88
+        }
+        Fiber {
+            from: Validator
+            to: Execution
+            type: execution_gate
+            weight: 0.87
+        }
+        Fiber {
+            from: Reason
+            to: MicrosoftSDK
+            type: capability_route
+            weight: 0.82
+        }
+        Fiber {
+            from: MicrosoftSDK
+            to: Execution
+            type: tool_result
+            weight: 0.80
+        }
+        Fiber {
+            from: Execution
+            to: Training
+            type: reward_signal
+            weight: 0.85
+        }
+        Fiber {
+            from: Training
+            to: Memory
+            type: memory_update
+            weight: 0.84
+        }
+        Fiber {
+            from: Optical
+            to: Parser
+            type: token_stream
+            weight: 0.80
+        }
+        Fiber {
+            from: Grammar
+            to: Parser
+            type: domain_constraint
+            weight: 0.82
+        }
+    ]
+
+    // ─────────────────────────────────────────────────────────────
+    // Fold Bindings — Which fold owns which fields
+    // ─────────────────────────────────────────────────────────────
+
+    FoldBindings {
+        // Pop: parse input, establish grammar/domain
+        Pop   [Parser, Grammar]
+
+        // Wo: compile and stage memory
+        Wo    [Memory, Compiler, MicrosoftSDK]
+
+        // Yax: compute pressure, select working set (@nodes)
+        Yax   [Reason, Validator, MicrosoftSDK]
+
+        // Sek: dispatch execution through shader Micronauts
+        Sek   [Execution, Shader, Optical]
+
+        // Ch'en: reward, reflect, update weights
+        Ch'en [Training, Memory]
+
+        // Xul: collapse state, persist graph
+        Xul   [Memory, Validator]
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Micronaut Bindings — Which Micronaut owns which fields
+    // ─────────────────────────────────────────────────────────────
+
+    MicronautBindings {
+        MM-0001 [Memory]
+        RM-0001 [Reason]
+        PM-0001 [Parser]
+        CM-0001 [Compiler]
+        SM-0001 [Shader]
+        XM-0001 [Execution]
+        VM-0001 [Validator]
+        OM-0001 [Optical]
+        GM-0001 [Grammar]
+        TM-0001 [Training]
+        MS-0001 [Orchestration, ToolCalling]
+        PT-0001 [NodeSelection, PressurePolicy, ProviderPreference, StylePolicy]
+    }
+
+    // Microsoft Semantic Kernel is a model-agnostic orchestration capability.
+    // It manages C# connectors, agents, plugins, and vector-data adapters;
+    // native model inference remains owned by kuhul_engine model nodes.
+    CapabilityBindings {
+        MS-0001 {
+            id: microsoft-sdk
+            binding: "SCX::command::microsoft-sdk"
+            source: "native/semantic-kernel/dotnet"
+            manager: "native/semantic-kernel/MicrosoftSDK.ps1"
+            capabilities: [Build, Test, Format, ConnectorDiscovery,
+                           AgentOrchestration, PluginInvocation, VectorData]
+            model_agnostic: true
+            inference_owner: false
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Provider Bindings — Which providers are preferred per capability
+    // ─────────────────────────────────────────────────────────────
+
+    ProviderBindings {
+        ShaderCompiler [d3dcompiler, clang]
+        TensorCompute  [directml, opencl, d3d12]
+        KernelCompute  [opencl, directml]
+        NativeCompiler [clang, d3dcompiler]
+        GraphicsAPI    [d3d12, d3d11, d3d11on12]
+        Cache          [shader_cache]
+        Debug          [directml_debug]
+    }
+
+}

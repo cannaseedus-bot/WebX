@@ -1,0 +1,9 @@
+// Admission fold: discover candidates without executing them.
+
+Fold Pop {
+    input: [Prompt, Session, FieldGraph]
+    output: [CandidateFields, CandidateCards]
+    operator: AdmitCandidates
+    effects: [load_graph_region, create_candidates]
+    providers: []
+}

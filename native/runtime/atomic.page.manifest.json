@@ -1,0 +1,28 @@
+{
+  "$schema": "atomics://local.dns.route",
+  "id": "station-page",
+  "block": "FRAME",
+  "version": "1.0.0",
+  "backend": "terminal",
+  "feed_parser": "xcfe://tree-sitter-wasm",
+  "execution_gated": true,
+  "style": {
+    "theme": "station-dark",
+    "accent": "#62e6a7",
+    "surface": "#07131b",
+    "text": "#e8fff4",
+    "density": "comfortable",
+    "radius": 0
+  },
+  "blocks": ["HEADER", "MENU", "BODY", "GRID", "FEED", "FOOTER"],
+  "page": {
+    "title": "Station Control",
+    "route": "page://station-control",
+    "actions": ["chat", "game", "exit"],
+    "cards": [
+      {"title": "NPC guide", "value": "Station Guide", "route": "chat://station-guide"},
+      {"title": "OpenGL scene", "value": "Station Game", "route": "game://station-game"},
+      {"title": "Execution", "value": "Manifest gated", "route": "state://runtime"}
+    ]
+  }
+}

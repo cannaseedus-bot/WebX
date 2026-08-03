@@ -1,0 +1,6 @@
+Node Parse {
+    kind Parse
+    inputs [Source]
+    outputs [CandidateFields]
+    capability Parser
+}

@@ -1,0 +1,6 @@
+Node Verification {
+    kind Verification
+    inputs [ExecutionResults]
+    outputs [Confidence, Provenance]
+    capability Verification
+}

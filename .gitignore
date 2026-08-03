@@ -1,0 +1,48 @@
+# ============================================================================
+# v3.5.0-WebX  --  minimal kuhul_engine system only
+# ============================================================================
+# Track ONLY what CMakeLists.txt actually builds: the native/ engine source +
+# build config + docs. Everything else in the working tree (example stacks --
+# AtomicDOM/WebX/micronauts/kuhul/...; vendored trees -- tree-sitter/bin/ggml;
+# build output; runtime state; .asx checkpoints; node/dotnet scaffolding) is
+# intentionally ignored.
+#
+# Strategy: ignore everything at root, then re-include the system.
+# ============================================================================
+
+/*
+
+# --- system: build config + native engine source ---
+!/.gitignore
+!/CMakeLists.txt
+!/native/
+
+# --- build scripts ---
+!/build_release.bat
+!/START.bat
+
+# --- docs (root markdown + release notes) ---
+!/*.md
+!/releases/
+
+# ============================================================================
+# Within native/: keep source, drop build output / binaries / stray artifacts
+# ============================================================================
+native/bin/
+native/**/build/
+native/**/build-*/
+native/**/*.tlog
+native/**/*.obj
+native/**/*.iobj
+native/**/*.ipdb
+native/**/*.pdb
+native/**/*.ilk
+native/**/*.exp
+native/**/*.lib
+native/**/*.dll
+native/**/*.exe
+native/**/*.o
+native/**/*.log
+
+# embedded git repo (not part of the CMake build)
+native/semantic-kernel/

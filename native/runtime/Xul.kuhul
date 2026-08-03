@@ -1,0 +1,8 @@
+// Collapse fold: persist state and prepare the next runtime tick.
+
+Fold Xul {
+    input: [RuntimeContext, SCX]
+    output: PersistedRuntimeContext
+    operator: Collapse
+    effects: [persist, evict, compress, prepare_next_tick]
+}

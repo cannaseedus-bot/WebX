@@ -1,0 +1,62 @@
+{
+  "$schema": "scx-cache-manifest-v1",
+  "version": "1.0.0",
+  "name": "K'UHUL Symbolic Cache Execution",
+  "graph": {
+    "source": "native/FieldGraph.kuhul",
+    "state": "persistent-dag",
+    "topology": "immutable-unless-versioned",
+    "nodes": [],
+    "edges": []
+  },
+  "execution": {
+    "folds": [
+      "Pop",
+      "Wo",
+      "Yax",
+      "Sek",
+      "Chen",
+      "Xul"
+    ],
+    "working_set": {
+      "selection": "pressure",
+      "ordering": "topological",
+      "incomplete_predecessor_policy": "pending"
+    },
+    "repair": {
+      "max_attempts": 3
+    }
+  },
+  "node_state": {
+    "required": [
+      "inputs",
+      "outputs",
+      "pressure",
+      "confidence",
+      "residency",
+      "provider",
+      "history",
+      "completion"
+    ]
+  },
+  "artifacts": {
+    "shader_cache": {
+      "provider": "shader_cache",
+      "library": "D3DSCache.dll",
+      "key": [
+        "node_id",
+        "provider",
+        "shader_hash",
+        "compiler_version",
+        "resource_contract",
+        "device_signature"
+      ],
+      "eviction": "recompile-or-select-provider"
+    }
+  },
+  "persistence": {
+    "write_phase": "Xul",
+    "resume_from": "last_committed_graph_state",
+    "preserve_provenance": true
+  }
+}

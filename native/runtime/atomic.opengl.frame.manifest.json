@@ -1,0 +1,9 @@
+{
+  "$schema": "atomics://local.dns.route",
+  "id": "opengl-frame",
+  "block": "FRAME",
+  "version": "1.0.0",
+  "backend": "opengl",
+  "execution_gated": true,
+  "blocks": ["HEADER", "BODY", "FEED", "FOOTER"]
+}

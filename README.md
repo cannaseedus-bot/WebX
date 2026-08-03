@@ -1,3 +1,5 @@
+<p align="center"><img src="./logo.svg" alt="WebX — K'UHUL Semantic Engine" width="620"></p>
+
 # WebX — K'UHUL Semantic Engine (`kuhul_engine`)
 
 A unified native Windows binary for field-centric semantic compute: the K'UHUL
@@ -49,3 +51,19 @@ D3D11-primary (measured on Intel HD 4600: feature level 11_1, with D3D12 used
 only as an 11_x bridge). DirectML provides hardware-accelerated GEMM; CPU /
 OpenCL is the fallback. Shaders are loaded at runtime via `D3DCompiler_47.dll`
 or precompiled offline.
+
+## AtomicDOM shell
+
+The station shell is manifest-bound (`native/runtime/atomic.*.manifest.json`) and
+renders as native terminal frames — no browser CSS. It can present host-authoritative
+feeds read-only; e.g. `atomic-shell <manifest> --sidecars` digitizes the XJSON
+sidecar store into a SIDECARS block. Presentation surfaces never mutate host state.
+
+## Related repositories
+
+| Repo | What |
+|---|---|
+| [NNC-K](https://github.com/cannaseedus-bot/NNC-K) | runtime home — C# runtime, Micronauts, UI, K'UHUL |
+| [WebX](https://github.com/cannaseedus-bot/WebX) | this repo — the `kuhul_engine` native binary |
+| [XJSON](https://github.com/cannaseedus-bot/XJSON) | manifest-driven JSON object-server runtime + sidecar store |
+| [Quantum](https://github.com/cannaseedus-bot/Quantum) | `quantum_trinity` candidate/compute sidecars |

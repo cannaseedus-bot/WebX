@@ -49,3 +49,6 @@ native/semantic-kernel/
 
 # Quantum is its own repo now (github.com/cannaseedus-bot/Quantum.git)
 native/Quantum/
+
+# logo
+!/logo.svg

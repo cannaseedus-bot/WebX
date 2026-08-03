@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 180" width="640" height="180" role="img" aria-label="WebX — K'UHUL Semantic Engine">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1e29"/><stop offset="1" stop-color="#07131b"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="180" rx="16" fill="url(#bg)"/>
+  <rect x="0.5" y="0.5" width="639" height="179" rx="16" fill="none" stroke="#123244"/>
+  <g transform="translate(58,90)" fill="#62e6a7">
+    <polygon points="34,0 17,-29.4 -17,-29.4 -34,0 -17,29.4 17,29.4" fill="none" stroke="#62e6a7" stroke-width="2.5" opacity="0.55"/>
+    <circle cx="34" cy="0" r="6"/>
+    <circle cx="17" cy="-29.4" r="6"/>
+    <circle cx="-17" cy="-29.4" r="6"/>
+    <circle cx="-34" cy="0" r="6"/>
+    <circle cx="-17" cy="29.4" r="6"/>
+    <circle cx="17" cy="29.4" r="6"/>
+    <circle cx="0" cy="0" r="7" fill="#07131b" stroke="#62e6a7" stroke-width="2.5"/>
+  </g>
+  <text x="146" y="80" font-family="Cascadia Code, JetBrains Mono, Consolas, monospace" font-size="46" font-weight="700" fill="#e8fff4">WebX</text>
+  <rect x="148" y="94" width="120" height="3" fill="#62e6a7"/>
+  <text x="150" y="122" font-family="Cascadia Code, Consolas, monospace" font-size="15" fill="#7fa8a0">K'UHUL Semantic Engine — unified native binary (kuhul_engine)</text>
+</svg>

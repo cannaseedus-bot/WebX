@@ -15,13 +15,23 @@
     "radius": 0
   },
   "blocks": ["HEADER", "MENU", "BODY", "GRID", "FEED", "FOOTER"],
+  "feeds": {
+    "sidecar://store": {
+      "source": "http://127.0.0.1:8787/api/sidecars",
+      "authority": "host",
+      "render": "SIDECARS",
+      "readonly": true,
+      "note": "Host-authoritative live feed of the XJSON sidecar store; the frame presents it, never mutates it (candidate/compute-only sidecars). Same authority model as AtomicWar's host/API."
+    }
+  },
   "page": {
     "title": "Station Control",
     "route": "page://station-control",
-    "actions": ["chat", "game", "exit"],
+    "actions": ["chat", "game", "sidecars", "exit"],
     "cards": [
       {"title": "NPC guide", "value": "Station Guide", "route": "chat://station-guide"},
       {"title": "OpenGL scene", "value": "Station Game", "route": "game://station-game"},
+      {"title": "Sidecars", "value": "Sidecar Store", "route": "sidecar://store"},
       {"title": "Execution", "value": "Manifest gated", "route": "state://runtime"}
     ]
   }
